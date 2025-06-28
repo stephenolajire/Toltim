@@ -1,5 +1,6 @@
 import React, { useState} from "react";
 import { Heart, Clock, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FormErrors {
   fullname?: string;
@@ -298,8 +299,8 @@ const SignUp: React.FC = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{" "}
-              <a
-                href="#"
+              <Link
+                to="/login"
                 className="font-medium text-green-600 hover:text-green-500"
                 onClick={(e) => {
                   e.preventDefault();
@@ -307,7 +308,7 @@ const SignUp: React.FC = () => {
                 }}
               >
                 Sign in
-              </a>
+              </Link>
             </p>
           </div>
         </div>

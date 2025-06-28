@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const Hero: React.FC = () => {
   // Animation variants
@@ -68,14 +69,16 @@ const Hero: React.FC = () => {
         assessment and matching system.
       </motion.p>
 
-      <motion.button
-        variants={buttonVariants}
-        whileHover="hover"
-        whileTap="tap"
-        className="mt-6 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-900 transition duration-300 capitalize"
-      >
-        Start your health journey
-      </motion.button>
+      <Link to='/register'>
+        <motion.button
+          variants={buttonVariants}
+          whileHover="hover"
+          whileTap="tap"
+          className="mt-6 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-900 transition duration-300 capitalize"
+        >
+          Start your health journey
+        </motion.button>
+      </Link>
     </motion.section>
   );
 };
