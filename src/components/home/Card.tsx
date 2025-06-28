@@ -52,7 +52,7 @@ const Card: React.FC<CardProps> = ({
       >
         <div className="text-3xl">{icon}</div>
       </motion.div>
-      <h3 className="text-xl font-medium mb-5">{title}</h3>
+      <h3 className="text-xl text-black/80 font-medium mb-5">{title}</h3>
       <p className="text-gray-500 text-center text-lg md:text-lg">
         {description}
       </p>

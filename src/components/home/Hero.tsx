@@ -46,7 +46,7 @@ const Hero: React.FC = () => {
     >
       <motion.h1
         variants={itemVariants}
-        className="text-black text-4xl md:text-5xl lg:text-6xl font-bold"
+        className="text-gray-900 text-4xl md:text-5xl lg:text-6xl font-bold"
       >
         Healthcare at Your{" "}
         <motion.span
