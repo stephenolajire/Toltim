@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { BiHeart } from "react-icons/bi";
+import { Link } from "react-router-dom";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -102,12 +103,12 @@ const Login: React.FC = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <a
-                href="#"
+              <Link
+                to="/register"
                 className="font-medium text-green-600 hover:text-green-500"
               >
                 Sign up here
-              </a>
+              </Link>
             </p>
           </div>
         </form>
