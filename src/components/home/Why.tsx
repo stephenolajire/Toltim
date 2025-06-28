@@ -7,7 +7,7 @@ const Why: React.FC = () => {
     <section className="w-full bg-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 px-4 sm:px-4 md:px-20 lg:px-50 py-12">
       <div>
         <h3 className="text-gray-900 text-3xl font-bold mb-8">
-          Why Choose Toltimed ?
+          Why Choose Toltimed?
         </h3>
         <div>
           <div className="flex flex-row gap-2 items-top mb-4">
@@ -48,7 +48,7 @@ const Why: React.FC = () => {
       </div>
       <div className="bg-gradient-to-r from-green-500 to-blue-400 p-8 rounded-lg shadow-lg h-auto flex flex-col justify-between">
         <h3 className="text-white text-2xl sm:text-3xl font-bold">
-          Ready to Get Started ?
+          Ready to Get Started?
         </h3>
         <p className="text-white my-5 md:my-4 lg:my-0">
           Join thousands of Nigerians who trust Toltimed for their healthcare
