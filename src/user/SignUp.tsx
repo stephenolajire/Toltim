@@ -1,4 +1,4 @@
-import React, { useState} from "react";
+import React, { useState } from "react";
 import { Heart, Clock, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -41,7 +41,7 @@ const SignUp: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e:React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (validateForm()) {
       console.log("Registration Data:", {
@@ -279,9 +279,9 @@ const SignUp: React.FC = () => {
           {userType && (
             <div className="bg-yellow-100 border border-yellow-200 py-4 px-3 rounded-lg">
               <p className="text-yellow-500 text-sm">
-                <span className="font-bold">Next Step: </span>After creating your account, you'll
-                complete our professional verification process including
-                document upload and credential review.
+                <span className="font-bold">Next Step: </span>After creating
+                your account, you'll complete our professional verification
+                process including document upload and credential review.
               </p>
             </div>
           )}
@@ -302,10 +302,6 @@ const SignUp: React.FC = () => {
               <Link
                 to="/login"
                 className="font-medium text-green-600 hover:text-green-500"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert("Sign in functionality would be implemented here");
-                }}
               >
                 Sign in
               </Link>
