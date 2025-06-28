@@ -1,5 +1,6 @@
 import React from 'react'
 import { LuClock4, LuMapPin, LuShield } from 'react-icons/lu';
+import { Link } from 'react-router-dom';
 
 const Why: React.FC = () => {
   return (
@@ -49,13 +50,15 @@ const Why: React.FC = () => {
         <h3 className="text-white text-2xl sm:text-3xl font-bold">
           Ready to Get Started ?
         </h3>
-        <p className='text-white my-5 md:my-4 lg:my-0'>
+        <p className="text-white my-5 md:my-4 lg:my-0">
           Join thousands of Nigerians who trust Toltimed for their healthcare
           needs.
         </p>
-        <button className='bg-white text-base w-full py-2 rounded-lg font-semibold cursor-pointer hover:bg-gray-300'>
+        <Link to='/register' className='no-underline'>
+          <button className="bg-white text-base w-full py-2 rounded-lg font-semibold cursor-pointer hover:bg-gray-300">
             Create Your Account
-        </button>
+          </button>
+        </Link>
       </div>
     </section>
   );
