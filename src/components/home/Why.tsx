@@ -10,7 +10,7 @@ const Why: React.FC = () => {
         </h3>
         <div>
           <div className="flex flex-row gap-2 items-top mb-4">
-            <LuShield className="text-green-500 text-2xl" />
+            <LuShield className="text-green-500 text-4xl" />
             <div>
               <h4 className="text-black font-semibold text-base">
                 Licensed Professionals
@@ -22,7 +22,7 @@ const Why: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-row gap-2 items-top mb-4">
-            <LuMapPin className="text-green-500 text-2xl" />
+            <LuMapPin className="text-green-500 text-4xl" />
             <div>
               <h4 className="text-black font-semibold text-base">
                 Nationwide Coverage
@@ -46,7 +46,7 @@ const Why: React.FC = () => {
         </div>
       </div>
       <div className="bg-gradient-to-r from-green-500 to-blue-400 p-8 rounded-lg shadow-lg h-auto flex flex-col justify-between">
-        <h3 className="text-white text-3xl font-bold">
+        <h3 className="text-white text-2xl sm:text-3xl font-bold">
           Ready to Get Started ?
         </h3>
         <p className='text-white my-5 md:my-4 lg:my-0'>
