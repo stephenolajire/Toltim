@@ -22,9 +22,9 @@ const Header: React.FC = () => {
             </div>
           </div>
 
-          <div className="h-auto w-auto flex items-center lg:space-x-2">
+          {/* <div className="h-auto w-auto flex items-center lg:space-x-2">
             <img className="h-10 w-10 rounded-full" src="/logo.jpeg" />
-          </div>
+          </div> */}
 
           <div>
             <Link to="/">
