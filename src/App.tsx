@@ -14,11 +14,11 @@ import CaregiverServicesBooking from "./userdashboard/Caregiver";
 import PaymentHistory from "./userdashboard/Payments";
 import PatientFundingPayments from "./userdashboard/Funding";
 import NurseLayout from "./layout/NurseLayout";
-import NurseDashboard from "./nursedashboard/components/NurseDashboard";
-import ActivePatient from "./nursedashboard/components/ActivePatient";
-import Appointment from "./nursedashboard/components/Appointment"
-import Wallet from "./nursedashboard/components/Wallet";
-import IDCard from "./nursedashboard/components/IDCard";
+import NurseDashboard from "./nursedashboard/NurseDashboard";
+import ActivePatient from "./nursedashboard/ActivePatient";
+import Appointment from "./nursedashboard/Appointment"
+import Wallet from "./nursedashboard/Wallet";
+import IDCard from "./nursedashboard/IDCard";
 
 const App: React.FC = () => {
   return (
