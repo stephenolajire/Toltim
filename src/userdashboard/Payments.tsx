@@ -5,6 +5,7 @@ import {
   Calendar,
   Wallet,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Transaction {
   id: string;
@@ -184,9 +185,11 @@ const PaymentHistory: React.FC = () => {
             </h3>
           </div>
           <p className="text-2xl font-bold text-gray-900 mb-4">₦45,000</p>
-          <button className="w-full bg-green-500 text-white py-2 px-4 rounded-md font-medium hover:bg-green-600 transition-colors">
-            Fund Wallet
-          </button>
+          <Link to='/dashboard/funding'>
+            <button className="w-full bg-green-500 text-white py-2 px-4 rounded-md font-medium hover:bg-green-600 transition-colors">
+              Fund Wallet
+            </button>
+          </Link>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -334,10 +337,12 @@ const PaymentHistory: React.FC = () => {
           Quick Actions
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-2 rounded-md font-medium hover:bg-green-600 transition-colors">
-            <Wallet className="w-5 h-5" />
-            Fund Wallet
-          </button>
+          <Link to="/dashboard/funding" className="w-full">
+            <button className="flex w-full items-center justify-center gap-2 bg-green-500 text-white px-6 py-2 rounded-md font-medium hover:bg-green-600 transition-colors">
+              <Wallet className="w-5 h-5" />
+              Fund Wallet
+            </button>
+          </Link>
           <button className="flex items-center justify-center gap-2 bg-white text-gray-700 px-6 py-2 rounded-md font-medium border hover:bg-gray-50 transition-colors">
             <Download className="w-5 h-5" />
             Download Statement

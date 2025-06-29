@@ -13,6 +13,12 @@ import NursingProcedures from "./userdashboard/Nursing";
 import CaregiverServicesBooking from "./userdashboard/Caregiver";
 import PaymentHistory from "./userdashboard/Payments";
 import PatientFundingPayments from "./userdashboard/Funding";
+import NurseLayout from "./layout/NurseLayout";
+import NurseDashboard from "./nursedashboard/components/NurseDashboard";
+import ActivePatient from "./nursedashboard/components/ActivePatient";
+import Appointment from "./nursedashboard/components/Appointment"
+import Wallet from "./nursedashboard/components/Wallet";
+import IDCard from "./nursedashboard/components/IDCard";
 
 const App: React.FC = () => {
   return (
@@ -29,18 +35,30 @@ const App: React.FC = () => {
         {/* user dashboard */}
         <Route path="/dashboard" element={<UserLayout />}>
           <Route index element={<Home />} />
-          <Route path="/dashboard/profile" element={<MedicalProfileForm />} />
-          <Route path="/dashboard/health" element={<HealthAssessmentForm />} />
-          <Route path="/dashboard/test" element={<TestAssessment />} />
-          <Route path="/dashboard/nursing" element={<NursingProcedures />} />
-          <Route path="/dashboard/payment" element={<PaymentHistory />} />
-          <Route path="/dashboard/funding" element={<PatientFundingPayments/>} />
+          <Route path="profile" element={<MedicalProfileForm />} />
+          <Route path="health" element={<HealthAssessmentForm />} />
+          <Route path="test" element={<TestAssessment />} />
+          <Route path="nursing" element={<NursingProcedures />} />
+          <Route path="payment" element={<PaymentHistory />} />
+          <Route
+            path="funding"
+            element={<PatientFundingPayments />}
+          />
         </Route>
 
         <Route
           path="/dashboard/caregiver"
           element={<CaregiverServicesBooking />}
         />
+
+        {/* nurse dashboard */}
+        <Route path="/nurse/dashboard" element={<NurseLayout />}>
+          <Route index element={<NurseDashboard />} />
+          <Route path="active-patient" element={<ActivePatient />} />
+          <Route path="appointment" element={<Appointment />} />
+          <Route path="wallet" element={<Wallet />} />
+          <Route path="id-card" element={<IDCard />} />
+        </Route>
       </Routes>
     </Router>
   );

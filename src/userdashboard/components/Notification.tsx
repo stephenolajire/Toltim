@@ -103,7 +103,7 @@ const Notification: React.FC = () => {
                     className="text-yellow-500"
                   />
                   <span className="text-sm font-bold text-yellow-500">
-                    Payment History
+                    Fund Wallet
                   </span>
                 </div>
               </Link>
