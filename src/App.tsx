@@ -23,6 +23,7 @@ import AdminLayout from "./admindashboard/AdminLayout";
 import Verification from "./admindashboard/Verification";
 import PaymentManagement from "./admindashboard/PaymentManagement";
 import DelayedSessions from "./admindashboard/DelayedSession";
+import RegisteredPatients from "./admindashboard/RegisterPatients";
 
 const App: React.FC = () => {
   return (
@@ -66,7 +67,7 @@ const App: React.FC = () => {
           <Route index element={<Verification />} />
           <Route path="payments" element={<PaymentManagement />} />
           <Route path="delayed-sessions" element={<DelayedSessions />} />
-          <Route path="wallet" element={<WalletEarnings />} />
+          <Route path="patients" element={<RegisteredPatients />} />
           <Route path="id-card" element={<IDCard />} />
         </Route>
       </Routes>
