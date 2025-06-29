@@ -137,7 +137,7 @@ const IDCard: React.FC = () => {
                   );
                 }}
               />
-              <div className="hidden w-full h-full bg-white/30 flex items-center justify-center text-2xl font-bold">
+              <div className="hidden w-full h-full bg-white/30 md:flex items-center justify-center text-2xl font-bold">
                 {professionalData.name.split(" ")[1]?.[0] || "N"}
               </div>
             </div>

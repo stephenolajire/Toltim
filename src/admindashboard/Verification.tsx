@@ -24,7 +24,7 @@ interface Professional {
   avatar: string;
 }
 
-const Verifications: React.FC = () => {
+const Verification: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [professionals] = useState<Professional[]>([
     {
@@ -128,43 +128,43 @@ const Verifications: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 sm:py-6 lg:py-8">
-      <div className="px-4 sm:px-4 md:px-8 lg:px-20 xl:px-50 max-w-full overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-100 py-6 sm:py-8">
+      <div className="px-2 sm:px-4 md:px-8 lg:px-20 xl:px-50">
         {/* Header Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col gap-4 sm:gap-6">
-            <div className="space-y-2 sm:space-y-3">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-3">
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 tracking-tight">
                 Professional Verifications
               </h1>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-green-700 font-semibold text-sm">
+                  <span className="text-green-700 font-semibold text-sm sm:text-base">
                     {verifiedCount} Verified
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <span className="text-yellow-700 font-semibold text-sm">
+                  <span className="text-yellow-700 font-semibold text-sm sm:text-base">
                     {pendingCount} Pending
                   </span>
                 </div>
-                <div className="text-gray-500 text-xs sm:text-sm">
-                  Total: {professionals.length}
+                <div className="text-gray-500 text-sm">
+                  Total: {professionals.length} professionals
                 </div>
               </div>
             </div>
 
             {/* Search Bar */}
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            <div className="relative w-full lg:w-auto">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search professionals..."
-                className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg sm:rounded-xl bg-white shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm sm:text-base"
+                placeholder="Search by name, specialty, or role..."
+                className="w-full lg:w-80 pl-12 pr-4 py-3 border border-gray-300 rounded-xl bg-white shadow-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -173,125 +173,118 @@ const Verifications: React.FC = () => {
         </div>
 
         {/* Professional Cards */}
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-6">
           {filteredProfessionals.map((professional) => (
             <div
               key={professional.id}
-              className={`bg-white rounded-lg sm:rounded-2xl shadow-lg hover:shadow-xl border-l-4 ${getCardBorderColor(
+              className={`bg-white rounded-2xl shadow-lg hover:shadow-xl border-l-4 ${getCardBorderColor(
                 professional.status
-              )} p-4 sm:p-6 lg:p-8 transition-all duration-300 hover:transform hover:-translate-y-1`}
+              )} p-6 lg:p-8 transition-all duration-300 hover:transform hover:-translate-y-1`}
             >
-              <div className="flex flex-col gap-4 sm:gap-6">
-                {/* Header Section */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                {/* Main Content */}
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 flex-1">
                   {/* Avatar */}
-                  <div className="flex-shrink-0 self-center sm:self-start">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl sm:rounded-2xl flex items-center justify-center text-2xl sm:text-3xl lg:text-4xl shadow-inner">
+                  <div className="flex-shrink-0">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-inner">
                       {professional.avatar}
                     </div>
                   </div>
 
-                  {/* Name, Status, and Role */}
-                  <div className="flex-1 min-w-0 text-center sm:text-left">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
+                  {/* Professional Info */}
+                  <div className="flex-1 space-y-4">
+                    {/* Name and Status */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                         {professional.name}
                       </h3>
-                      <div className="flex justify-center sm:justify-start">
-                        {getStatusBadge(professional.status)}
-                      </div>
+                      {getStatusBadge(professional.status)}
                     </div>
 
                     {/* Role Badge */}
-                    <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
-                      <Award className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                      <span className="inline-block bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm font-semibold">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-4 h-4 text-blue-600" />
+                      <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-sm font-semibold">
                         {professional.role}
                       </span>
                     </div>
 
                     {/* Specialty and Experience */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-gray-700 text-center sm:text-left">
-                      <span className="font-medium text-base sm:text-lg">
+                    <div className="flex flex-wrap items-center gap-4 text-gray-700">
+                      <span className="font-medium text-lg">
                         {professional.specialty}
                       </span>
-                      <span className="text-gray-400 hidden sm:inline">•</span>
-                      <span className="text-gray-600 text-sm sm:text-base">
+                      <span className="text-gray-400">•</span>
+                      <span className="text-gray-600">
                         {professional.experience} experience
                       </span>
                     </div>
-                  </div>
-                </div>
 
-                {/* Contact Info */}
-                <div className="grid grid-cols-1 gap-2 sm:gap-3 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600 break-all">
-                    <Mail className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                    <span className="break-all">{professional.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    <span>{professional.phone}</span>
-                  </div>
-                </div>
-
-                {/* Details Grid */}
-                <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 space-y-2 sm:space-y-3">
-                  <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                      <div className="flex items-center gap-2">
-                        <Award className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                        <span className="font-medium text-gray-700">
-                          License:
-                        </span>
+                    {/* Contact Info */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Mail className="w-4 h-4 text-blue-500" />
+                        <span className="break-all">{professional.email}</span>
                       </div>
-                      <span className="text-gray-600 font-mono text-xs sm:text-sm break-all">
-                        {professional.license}
-                      </span>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Phone className="w-4 h-4 text-green-500" />
+                        <span>{professional.phone}</span>
+                      </div>
                     </div>
-                    {professional.submitted && (
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+
+                    {/* Details Grid */}
+                    <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 text-sm">
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-orange-500 flex-shrink-0" />
+                          <Award className="w-4 h-4 text-purple-500" />
                           <span className="font-medium text-gray-700">
-                            Submitted:
+                            License:
+                          </span>
+                          <span className="text-gray-600 font-mono">
+                            {professional.license}
                           </span>
                         </div>
-                        <span className="text-gray-600">
-                          {professional.submitted}
-                        </span>
+                        {professional.submitted && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-orange-500" />
+                            <span className="font-medium text-gray-700">
+                              Submitted:
+                            </span>
+                            <span className="text-gray-600">
+                              {professional.submitted}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {professional.documents && (
-                      <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                      {professional.documents && (
+                        <div className="flex items-start gap-2">
+                          <FileText className="w-4 h-4 text-indigo-500 mt-0.5" />
                           <span className="font-medium text-gray-700">
                             Documents:
                           </span>
+                          <span className="text-gray-600">
+                            {professional.documents}
+                          </span>
                         </div>
-                        <span className="text-gray-600 break-words">
-                          {professional.documents}
-                        </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:min-w-fit">
                   {professional.status === "under-review" && (
                     <>
                       <button
                         onClick={() => handleApprove(professional.id)}
-                        className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
+                        className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
                       >
                         <span>✓</span>
                         <span>Approve</span>
                       </button>
                       <button
                         onClick={() => handleReject(professional.id)}
-                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
+                        className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
                       >
                         <span>✗</span>
                         <span>Reject</span>
@@ -300,9 +293,9 @@ const Verifications: React.FC = () => {
                   )}
                   <button
                     onClick={() => handleViewDetails(professional.id)}
-                    className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg border border-gray-300"
+                    className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 px-6 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg border border-gray-300"
                   >
-                    <Eye className="w-4 h-4 flex-shrink-0" />
+                    <Eye className="w-4 h-4" />
                     <span>View Details</span>
                   </button>
                 </div>
@@ -331,4 +324,4 @@ const Verifications: React.FC = () => {
   );
 };
 
-export default Verifications;
+export default Verification;

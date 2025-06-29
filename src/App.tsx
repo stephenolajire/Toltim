@@ -19,6 +19,10 @@ import ActivePatient from "./nursedashboard/ActivePatient";
 import Appointment from "./nursedashboard/Appointment"
 import WalletEarnings from "./nursedashboard/Wallet";
 import IDCard from "./nursedashboard/IDCard";
+import AdminLayout from "./admindashboard/AdminLayout";
+import Verification from "./admindashboard/Verification";
+import PaymentManagement from "./admindashboard/PaymentManagement";
+import DelayedSessions from "./admindashboard/DelayedSession";
 
 const App: React.FC = () => {
   return (
@@ -40,10 +44,7 @@ const App: React.FC = () => {
           <Route path="test" element={<TestAssessment />} />
           <Route path="nursing" element={<NursingProcedures />} />
           <Route path="payment" element={<PaymentHistory />} />
-          <Route
-            path="funding"
-            element={<PatientFundingPayments />}
-          />
+          <Route path="funding" element={<PatientFundingPayments />} />
         </Route>
 
         <Route
@@ -56,6 +57,15 @@ const App: React.FC = () => {
           <Route index element={<NurseDashboard />} />
           <Route path="active-patient" element={<ActivePatient />} />
           <Route path="appointment" element={<Appointment />} />
+          <Route path="wallet" element={<WalletEarnings />} />
+          <Route path="id-card" element={<IDCard />} />
+        </Route>
+
+        {/* admin dashboard */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Verification />} />
+          <Route path="payments" element={<PaymentManagement />} />
+          <Route path="delayed-sessions" element={<DelayedSessions />} />
           <Route path="wallet" element={<WalletEarnings />} />
           <Route path="id-card" element={<IDCard />} />
         </Route>
