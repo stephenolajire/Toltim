@@ -17,7 +17,7 @@ import NurseLayout from "./layout/NurseLayout";
 import NurseDashboard from "./nursedashboard/NurseDashboard";
 import ActivePatient from "./nursedashboard/ActivePatient";
 import Appointment from "./nursedashboard/Appointment"
-import Wallet from "./nursedashboard/Wallet";
+import WalletEarnings from "./nursedashboard/Wallet";
 import IDCard from "./nursedashboard/IDCard";
 
 const App: React.FC = () => {
@@ -56,7 +56,7 @@ const App: React.FC = () => {
           <Route index element={<NurseDashboard />} />
           <Route path="active-patient" element={<ActivePatient />} />
           <Route path="appointment" element={<Appointment />} />
-          <Route path="wallet" element={<Wallet />} />
+          <Route path="wallet" element={<WalletEarnings />} />
           <Route path="id-card" element={<IDCard />} />
         </Route>
       </Routes>

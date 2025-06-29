@@ -7,12 +7,14 @@ import NurseStat from '../components/common/nursedashboard/NurseStat'
 const NurseLayout:React.FC = () => {
   return (
     <div>
-      <Header/>
-      <NurseStat/>
-      <Outlet/>
-      <Footer/>
+      <div className='sticky'>
+        <Header />
+        <NurseStat />
+      </div>
+      <Outlet />
+      <Footer />
     </div>
-  )
+  );
 }
 
 export default NurseLayout
