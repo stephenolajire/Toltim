@@ -235,7 +235,7 @@ const PaymentHistory: React.FC = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto hide-scrollbar">
             <button
               onClick={() => setActiveTab("all")}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -244,7 +244,7 @@ const PaymentHistory: React.FC = () => {
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              All Transactions
+              AllTransactions
             </button>
             <button
               onClick={() => setActiveTab("service")}
@@ -254,7 +254,7 @@ const PaymentHistory: React.FC = () => {
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              Service Payments
+              ServicePayments
             </button>
             <button
               onClick={() => setActiveTab("wallet")}
@@ -264,7 +264,7 @@ const PaymentHistory: React.FC = () => {
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              Wallet Funding
+              WalletFunding
             </button>
             <button
               onClick={() => setActiveTab("pending")}
