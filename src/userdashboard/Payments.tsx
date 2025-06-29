@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  Download,
-  Filter,
-  Calendar,
-  Wallet,
-} from "lucide-react";
+import { Download, Filter, Calendar, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Transaction {
@@ -158,199 +153,259 @@ const PaymentHistory: React.FC = () => {
   };
 
   return (
-    <div className="w-full p-6 bg-gray-100 min-h-screen px-4 sm:px-4 md:px-20 lg:px-50">
-      {/* Header */}
-      {/* <div className="flex items-center justify-center mb-8">
-        <Heart className="w-6 h-6 text-green-500 mr-2" />
-        <h1 className="text-xl font-semibold text-gray-800">Toltimed</h1>
-      </div> */}
-
-      {/* Title */}
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Payment History
-        </h2>
-        <p className="text-gray-600">
-          Track your healthcare spending and wallet activity
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center mb-2">
-            <Wallet className="w-5 h-5 text-gray-400 mr-2" />
-            <h3 className="text-sm font-medium text-gray-600">
-              Wallet Balance
-            </h3>
-          </div>
-          <p className="text-2xl font-bold text-gray-900 mb-4">₦45,000</p>
-          <Link to='/dashboard/funding'>
-            <button className="w-full bg-green-500 text-white py-2 px-4 rounded-md font-medium hover:bg-green-600 transition-colors">
-              Fund Wallet
-            </button>
-          </Link>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center mb-2">
-            <span className="text-blue-500 text-lg mr-2">₦</span>
-            <h3 className="text-sm font-medium text-gray-600">Total Spent</h3>
-          </div>
-          <p className="text-2xl font-bold text-blue-500">₦156,000</p>
-          <p className="text-sm text-gray-500 mt-1">
-            All-time healthcare spending
+    <div className="w-full min-h-screen bg-gray-100">
+      <div className="px-4 py-6 sm:px-6 md:px-8 lg:px-16 xl:px-20">
+        {/* Title */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Payment History
+          </h2>
+          <p className="text-gray-600">
+            Track your healthcare spending and wallet activity
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center mb-2">
-            <span className="text-orange-500 text-lg mr-2">⏳</span>
-            <h3 className="text-sm font-medium text-gray-600">
-              Pending Payments
-            </h3>
-          </div>
-          <p className="text-2xl font-bold text-orange-500">₦22,000</p>
-          <p className="text-sm text-gray-500 mt-1">Ongoing treatments</p>
-        </div>
-      </div>
-
-      {/* Transaction History */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 mb-[-12px]">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Transaction History
-            </h3>
-            <div className="flex gap-2">
-              <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 border rounded-md hover:bg-gray-50 transition-colors">
-                <Download className="w-4 h-4" />
-                Export
-              </button>
-              <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 border rounded-md hover:bg-gray-50 transition-colors">
-                <Filter className="w-4 h-4" />
-                Filter
-              </button>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center mb-2">
+              <Wallet className="w-5 h-5 text-gray-400 mr-2" />
+              <h3 className="text-sm font-medium text-gray-600">
+                Wallet Balance
+              </h3>
             </div>
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+              ₦45,000
+            </p>
+            <Link to='/dashboard/funding'>
+              <button className="w-full bg-green-500 text-white py-2 px-4 rounded-md font-medium hover:bg-green-600 transition-colors text-sm sm:text-base">
+                Fund Wallet
+              </button>
+            </Link>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 overflow-x-auto hide-scrollbar">
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "all"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              AllTransactions
-            </button>
-            <button
-              onClick={() => setActiveTab("service")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "service"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              ServicePayments
-            </button>
-            <button
-              onClick={() => setActiveTab("wallet")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "wallet"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              WalletFunding
-            </button>
-            <button
-              onClick={() => setActiveTab("pending")}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "pending"
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              Pending
-            </button>
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center mb-2">
+              <span className="text-blue-500 text-lg mr-2">₦</span>
+              <h3 className="text-sm font-medium text-gray-600">Total Spent</h3>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-blue-500">
+              ₦156,000
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              All-time healthcare spending
+            </p>
+          </div>
+
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center mb-2">
+              <span className="text-orange-500 text-lg mr-2">⏳</span>
+              <h3 className="text-sm font-medium text-gray-600">
+                Pending Payments
+              </h3>
+            </div>
+            <p className="text-xl sm:text-2xl font-bold text-orange-500">
+              ₦22,000
+            </p>
+            <p className="text-sm text-gray-500 mt-1">Ongoing treatments</p>
           </div>
         </div>
 
-        {/* Transaction List */}
-        <div className="px-4 mt-3">
-          {getFilteredTransactions().map((transaction) => (
+        {/* Transaction History */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Transaction History
+              </h3>
+              <div className="flex gap-2">
+                <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 border rounded-md hover:bg-gray-50 transition-colors">
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Export</span>
+                </button>
+                <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 border rounded-md hover:bg-gray-50 transition-colors">
+                  <Filter className="w-4 h-4" />
+                  <span className="hidden sm:inline">Filter</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Tabs */}
             <div
-              key={transaction.id}
-              className="p-6 mb-3 rounded-lg flex items-center justify-between border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="flex gap-1 overflow-x-auto mb-6"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              <div className="flex items-center gap-4 ">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    transaction.status === "completed"
-                      ? "bg-green-500"
-                      : "bg-orange-500"
-                  }`}
-                />
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-1">
-                    {transaction.title}
-                  </h4>
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span>📅 {formatDate(transaction.date)}</span>
-                    <span>ID: {transaction.transactionId}</span>
-                    <span>{transaction.paymentMethod}</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {transaction.provider}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p
-                  className={`text-lg font-semibold ${
-                    transaction.amount >= 0 ? "text-green-500" : "text-red-500"
-                  }`}
-                >
-                  {formatAmount(transaction.amount)}
-                </p>
-                <span
-                  className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                    transaction.status === "completed"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-orange-100 text-orange-800"
-                  }`}
-                >
-                  {transaction.status === "completed" ? "Completed" : "Pending"}
-                </span>
-              </div>
+              <button
+                onClick={() => setActiveTab("all")}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                  activeTab === "all"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                All Transactions
+              </button>
+              <button
+                onClick={() => setActiveTab("service")}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                  activeTab === "service"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                Service Payments
+              </button>
+              <button
+                onClick={() => setActiveTab("wallet")}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                  activeTab === "wallet"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                Wallet Funding
+              </button>
+              <button
+                onClick={() => setActiveTab("pending")}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                  activeTab === "pending"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                Pending
+              </button>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* Quick Actions */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Quick Actions
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Link to="/dashboard/funding" className="w-full">
-            <button className="flex w-full items-center justify-center gap-2 bg-green-500 text-white px-6 py-2 rounded-md font-medium hover:bg-green-600 transition-colors">
+            {/* Transaction List */}
+            <div className="space-y-3">
+              {getFilteredTransactions().map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  {/* Mobile Layout */}
+                  <div className="block sm:hidden">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div
+                          className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                            transaction.status === "completed"
+                              ? "bg-green-500"
+                              : "bg-orange-500"
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-gray-900 mb-1 break-words">
+                            {transaction.title}
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-2 break-words">
+                            {transaction.provider}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p
+                          className={`text-lg font-semibold ${
+                            transaction.amount >= 0
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
+                        >
+                          {formatAmount(transaction.amount)}
+                        </p>
+                        <span
+                          className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                            transaction.status === "completed"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-orange-100 text-orange-800"
+                          }`}
+                        >
+                          {transaction.status === "completed"
+                            ? "Completed"
+                            : "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-1 text-xs text-gray-500 ml-5">
+                      <span>📅 {formatDate(transaction.date)}</span>
+                      <span>ID: {transaction.transactionId}</span>
+                      <span>{transaction.paymentMethod}</span>
+                    </div>
+                  </div>
+
+                  {/* Desktop Layout */}
+                  <div className="hidden sm:flex sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                      <div
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          transaction.status === "completed"
+                            ? "bg-green-500"
+                            : "bg-orange-500"
+                        }`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 mb-1 truncate">
+                          {transaction.title}
+                        </h4>
+                        <div className="flex items-center gap-4 text-sm text-gray-500 flex-wrap">
+                          <span>📅 {formatDate(transaction.date)}</span>
+                          <span>ID: {transaction.transactionId}</span>
+                          <span>{transaction.paymentMethod}</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-1 truncate">
+                          {transaction.provider}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <p
+                        className={`text-lg font-semibold ${
+                          transaction.amount >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {formatAmount(transaction.amount)}
+                      </p>
+                      <span
+                        className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                          transaction.status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-orange-100 text-orange-800"
+                        }`}
+                      >
+                        {transaction.status === "completed"
+                          ? "Completed"
+                          : "Pending"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <button className="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-md font-medium hover:bg-green-600 transition-colors">
               <Wallet className="w-5 h-5" />
               Fund Wallet
             </button>
-          </Link>
-          <button className="flex items-center justify-center gap-2 bg-white text-gray-700 px-6 py-2 rounded-md font-medium border hover:bg-gray-50 transition-colors">
-            <Download className="w-5 h-5" />
-            Download Statement
-          </button>
-          <button className="flex items-center justify-center gap-2 bg-white text-gray-700 py-2 px-6 rounded-md font-medium border hover:bg-gray-50 transition-colors">
-            <Calendar className="w-5 h-5" />
-            Payment Schedule
-          </button>
+            <button className="flex items-center justify-center gap-2 bg-white text-gray-700 px-6 py-3 rounded-md font-medium border hover:bg-gray-50 transition-colors">
+              <Download className="w-5 h-5" />
+              Download Statement
+            </button>
+            <button className="flex items-center justify-center gap-2 bg-white text-gray-700 px-6 py-3 rounded-md font-medium border hover:bg-gray-50 transition-colors sm:col-span-2 lg:col-span-1">
+              <Calendar className="w-5 h-5" />
+              Payment Schedule
+            </button>
+          </div>
         </div>
       </div>
     </div>
