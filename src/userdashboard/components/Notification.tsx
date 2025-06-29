@@ -63,7 +63,7 @@ const Notification: React.FC = () => {
               </span>
             </div>
             <div className="pt-4">
-              <Link to="/dashboard/surgery-care">
+              <Link to="/dashboard/nursing">
                 <div className="flex space-x-3 bg-green-100 border border-green-300 items-center p-3 rounded-lg hover:bg-green-200 mb-3">
                   <Heart height={16} width={16} className="text-green-500" />
                   <span className="text-sm font-bold text-green-500">
@@ -71,7 +71,7 @@ const Notification: React.FC = () => {
                   </span>
                 </div>
               </Link>
-              <Link to="/dashboard/vital-signs">
+              <Link to="/dashboard/nursing">
                 <div className="flex space-x-3 bg-blue-100 border border-blue-300 items-center p-3 rounded-lg hover:bg-blue-200 mb-3">
                   <TrendingUp
                     height={16}
@@ -83,7 +83,7 @@ const Notification: React.FC = () => {
                   </span>
                 </div>
               </Link>
-              <Link to="/dashboard/elder-care">
+              <Link to="/dashboard/caregiver">
                 <div className="flex space-x-3 bg-lime-100 border border-lime-300 items-center p-3 rounded-lg hover:bg-lime-200 mb-3">
                   <HeartHandshake
                     height={16}
@@ -95,7 +95,7 @@ const Notification: React.FC = () => {
                   </span>
                 </div>
               </Link>
-              <Link to="/dashboard/fund-wallet">
+              <Link to="/dashboard/funding">
                 <div className="flex space-x-3 bg-yellow-100 border border-yellow-300 items-center p-3 rounded-lg hover:bg-yellow-200 mb-3">
                   <CreditCard
                     height={16}
