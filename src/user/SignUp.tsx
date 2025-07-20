@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Heart, Clock, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Heart, Clock, Shield, Users } from "lucide-react";
 
 interface FormErrors {
   fullname?: string;
@@ -16,11 +15,14 @@ const SignUp: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullname, setFullname] = useState("");
   const [phone, setPhone] = useState("");
-  const [userType, setUserType] = useState(false);
+  const [userType, setUserType] = useState<"patient" | "nurse" | "chw">(
+    "patient"
+  );
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const handlePatient = () => setUserType(false);
-  const handleNurse = () => setUserType(true);
+  const handleUserTypeChange = (type: "patient" | "nurse" | "chw") => {
+    setUserType(type);
+  };
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -49,10 +51,92 @@ const SignUp: React.FC = () => {
         email,
         phone,
         password,
-        userType: userType ? "nurse" : "patient",
+        userType,
       });
       // Here you would typically send the data to your backend
       alert("Registration successful! (This is a demo)");
+    }
+  };
+
+  const getUserTypeBanner = () => {
+    switch (userType) {
+      case "nurse":
+        return (
+          <div className="w-full bg-green-50 border border-green-200 py-3 px-4 rounded-lg">
+            <div className="flex items-center mb-2">
+              <Shield className="text-green-600 text-xl" />
+              <span className="text-green-700 text-base font-semibold ml-2">
+                Nurse Registration
+              </span>
+            </div>
+            <p className="text-green-600 text-sm mb-2">
+              Join our platform as a verified healthcare professional
+            </p>
+            <div className="flex items-center">
+              <Clock className="text-green-600 text-sm" />
+              <span className="text-green-600 text-sm ml-2">
+                Verification process: 24-48 hours
+              </span>
+            </div>
+          </div>
+        );
+      case "chw":
+        return (
+          <div className="w-full bg-purple-50 border border-purple-200 py-3 px-4 rounded-lg">
+            <div className="flex items-center mb-2">
+              <Users className="text-purple-600 text-xl" />
+              <span className="text-purple-700 text-base font-semibold ml-2">
+                Community Health Worker Registration
+              </span>
+            </div>
+            <p className="text-purple-600 text-sm mb-2">
+              Connect communities with essential healthcare services
+            </p>
+            <div className="flex items-center">
+              <Clock className="text-purple-600 text-sm" />
+              <span className="text-purple-600 text-sm ml-2">
+                Verification process: 48-72 hours
+              </span>
+            </div>
+          </div>
+        );
+      default: // patient
+        return (
+          <div className="w-full bg-blue-50 border border-blue-200 py-3 px-4 rounded-lg">
+            <div className="flex items-center mb-2">
+              <Heart className="text-blue-600 text-xl" />
+              <span className="text-blue-700 text-base font-semibold ml-2">
+                Patient Registration
+              </span>
+            </div>
+            <p className="text-blue-600 text-sm">
+              Get instant access to qualified nurses and community health
+              workers for healthcare services
+            </p>
+          </div>
+        );
+    }
+  };
+
+  const getNameLabel = () => {
+    switch (userType) {
+      case "nurse":
+        return "Full Name (as on license)";
+      case "chw":
+        return "Full Name (as on certification)";
+      default:
+        return "Full Name";
+    }
+  };
+
+  const getEmailLabel = () => {
+    switch (userType) {
+      case "nurse":
+        return "Professional Email Address";
+      case "chw":
+        return "Professional Email Address";
+      default:
+        return "Email Address";
     }
   };
 
@@ -74,83 +158,54 @@ const SignUp: React.FC = () => {
 
         <div className="mt-8 space-y-6">
           {/* User Type Toggle */}
-          <div className="bg-gray-100 grid grid-cols-2 items-center h-10 p-1 rounded">
+          <div className="bg-gray-100 grid grid-cols-3 items-center h-10 p-1 rounded">
             <button
               type="button"
-              className={`w-full h-8 flex items-center justify-center text-sm font-medium rounded transition-all ${
-                !userType
+              className={`w-full h-8 flex items-center justify-center text-xs font-medium rounded transition-all ${
+                userType === "patient"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               }`}
-              onClick={handlePatient}
+              onClick={() => handleUserTypeChange("patient")}
             >
               Patient
             </button>
             <button
               type="button"
-              className={`w-full h-8 flex items-center justify-center text-sm font-medium rounded transition-all ${
-                userType
+              className={`w-full h-8 flex items-center justify-center text-xs font-medium rounded transition-all ${
+                userType === "nurse"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               }`}
-              onClick={handleNurse}
+              onClick={() => handleUserTypeChange("nurse")}
             >
               Nurse
+            </button>
+            <button
+              type="button"
+              className={`w-full h-8 flex items-center justify-center text-xs font-medium rounded transition-all ${
+                userType === "chw"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "bg-transparent text-gray-600 hover:text-gray-900"
+              }`}
+              onClick={() => handleUserTypeChange("chw")}
+            >
+              CHW
             </button>
           </div>
 
           {/* User Type Info Banner */}
-          {userType ? (
-            <div className="w-full bg-green-50 border border-green-200 py-3 px-4 rounded-lg">
-              <div className="flex items-center mb-2">
-                <Shield className="text-green-600 text-xl" />
-                <span className="text-green-700 text-base font-semibold ml-2">
-                  Nurse Registration
-                </span>
-              </div>
-              <p className="text-green-600 text-sm mb-2">
-                Join our platform as a verified healthcare professional
-              </p>
-              <div className="flex items-center">
-                <Clock className="text-green-600 text-sm" />
-                <span className="text-green-600 text-sm ml-2">
-                  Verification process: 24-48 hours
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full bg-blue-50 border border-blue-200 py-3 px-4 rounded-lg">
-              <div className="flex items-center mb-2">
-                <Heart className="text-blue-600 text-xl" />
-                <span className="text-blue-700 text-base font-semibold ml-2">
-                  Patient Registration
-                </span>
-              </div>
-              <p className="text-blue-600 text-sm">
-                Get instant access to qualified nurses for home healthcare
-                services
-              </p>
-            </div>
-          )}
+          {getUserTypeBanner()}
 
           {/* Form Fields */}
           <div className="space-y-4">
             <div>
-              {userType ? (
-                <label
-                  htmlFor="fullname"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Full Name (as on license)
-                </label>
-              ) : (
-                <label
-                  htmlFor="fullname"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Full Name
-                </label>
-              )}
+              <label
+                htmlFor="fullname"
+                className="block text-sm font-medium text-gray-700"
+              >
+                {getNameLabel()}
+              </label>
               <input
                 id="fullname"
                 name="fullname"
@@ -169,21 +224,12 @@ const SignUp: React.FC = () => {
             </div>
 
             <div>
-              {userType ? (
-                <label
-                  htmlFor="fullname"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Professional Email Address
-                </label>
-              ) : (
-                <label
-                  htmlFor="fullname"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Email Address
-                </label>
-              )}
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700"
+              >
+                {getEmailLabel()}
+              </label>
               <input
                 id="email"
                 name="email"
@@ -276,7 +322,7 @@ const SignUp: React.FC = () => {
             </div>
           </div>
 
-          {userType && (
+          {(userType === "nurse" || userType === "chw") && (
             <div className="bg-yellow-100 border border-yellow-200 py-4 px-3 rounded-lg">
               <p className="text-yellow-500 text-sm">
                 <span className="font-bold">Next Step: </span>After creating
@@ -299,12 +345,12 @@ const SignUp: React.FC = () => {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Already have an account?{" "}
-              <Link
-                to="/login"
+              <a
+                href="/login"
                 className="font-medium text-green-600 hover:text-green-500"
               >
                 Sign in
-              </Link>
+              </a>
             </p>
           </div>
         </div>

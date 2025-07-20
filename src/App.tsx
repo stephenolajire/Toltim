@@ -24,6 +24,13 @@ import Verification from "./admindashboard/Verification";
 import PaymentManagement from "./admindashboard/PaymentManagement";
 import DelayedSessions from "./admindashboard/DelayedSession";
 import RegisteredPatients from "./admindashboard/RegisterPatients";
+import PatientLayout from "./patient/Layout";
+import PatientDashboard from "./patient/PatientDashboard";
+import FindCare from "./patient/FindCare";
+import PatientAppointment from "./patient/Appointment";
+import PatientHistory from "./patient/PatientHistory";
+import PatientProfile from "./patient/Profile";
+import PatientMessages from "./patient/Message";
 
 const App: React.FC = () => {
   return (
@@ -69,6 +76,15 @@ const App: React.FC = () => {
           <Route path="delayed-sessions" element={<DelayedSessions />} />
           <Route path="patients" element={<RegisteredPatients />} />
           <Route path="id-card" element={<IDCard />} />
+        </Route>
+
+        <Route path="/patient" element={<PatientLayout />}>
+          <Route index element={<PatientDashboard />} />
+          <Route path="find-care" element={<FindCare />} />
+          <Route path="appointments" element={<PatientAppointment />} />
+          <Route path="history" element={<PatientHistory />} />
+          <Route path="profile" element={<PatientProfile />} />
+          <Route path="messages" element={<PatientMessages />} />
         </Route>
       </Routes>
     </Router>
