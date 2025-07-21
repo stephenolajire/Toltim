@@ -10,34 +10,6 @@ import {
   Printer,
 } from "lucide-react";
 
-interface ReceiptProps {
-  appointmentDetails: {
-    id: string;
-    date: string;
-    time: string;
-    service: {
-      name: string;
-      price: number;
-      duration: string;
-    };
-    practitioner: {
-      name: string;
-      title: string;
-      location: string;
-      profileImage: string;
-    };
-    patient: {
-      name: string;
-      email: string;
-      phone: string;
-      address: string;
-      relationship?: string;
-    };
-    bookingDate: string;
-    status: "confirmed" | "pending" | "cancelled";
-  };
-}
-
 const AppointmentReceipt: React.FC = () => {
   const appointmentDetails = {
     id: "APT-20250721-001",
