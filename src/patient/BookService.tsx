@@ -1,28 +1,17 @@
 import React, { useState, useEffect } from "react";
+import {Link} from "react-router-dom";
 import {
   ArrowLeft,
   Clock,
-//   MapPin,
-//   Star,
   Stethoscope,
   Heart,
   Baby,
-//   UserCheck,
-//   User,
-//   Home,
-//   Building,
   CheckCircle,
   XCircle,
-//   AlertCircle,
-//   Calendar,
   CreditCard,
   Plus,
   Minus,
-//   Filter,
   Search,
-//   Eye,
-//   Phone,
-//   MessageSquare,
   ShoppingCart,
   ChevronDown,
   ChevronUp,
@@ -32,13 +21,9 @@ import {
   Bed,
   HeartHandshake,
   Syringe,
-//   ThermometerSun,
-//   Pill,
   HelpCircle,
-//   HelpCircle,
   Info,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 
 // Types
 interface Service {
@@ -72,7 +57,7 @@ const nursingProcedures: Service[] = [
     price: 3500,
     duration: "30-45 minutes",
     category: "nursing",
-    icon: <HelpCircle className="w-6 h-6" />,
+    icon: <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "Sterile wound cleaning",
       "Antiseptic application",
@@ -93,7 +78,7 @@ const nursingProcedures: Service[] = [
     price: 2000,
     duration: "15-20 minutes",
     category: "nursing",
-    icon: <Syringe className="w-6 h-6" />,
+    icon: <Syringe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "IM/SC/IV injections",
       "Medication verification",
@@ -114,7 +99,7 @@ const nursingProcedures: Service[] = [
     price: 1500,
     duration: "20-30 minutes",
     category: "nursing",
-    icon: <Activity className="w-6 h-6" />,
+    icon: <Activity className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "Blood pressure check",
       "Temperature monitoring",
@@ -137,7 +122,7 @@ const careGiverServices: Service[] = [
     price: 8000,
     duration: "2-4 hours",
     category: "caregiver",
-    icon: <HeartHandshake className="w-6 h-6" />,
+    icon: <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "Bathing assistance",
       "Grooming and hygiene",
@@ -158,7 +143,7 @@ const careGiverServices: Service[] = [
     price: 6000,
     duration: "4-8 hours",
     category: "caregiver",
-    icon: <Users className="w-6 h-6" />,
+    icon: <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "Friendly companionship",
       "Safety monitoring",
@@ -179,7 +164,7 @@ const careGiverServices: Service[] = [
     price: 12000,
     duration: "6-8 hours",
     category: "caregiver",
-    icon: <Shield className="w-6 h-6" />,
+    icon: <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "Incision site monitoring",
       "Pain management support",
@@ -207,7 +192,7 @@ const inPatientServices: Service[] = [
     price: 35000,
     duration: "24 hours",
     category: "inpatient",
-    icon: <Bed className="w-6 h-6" />,
+    icon: <Bed className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "24/7 professional supervision",
       "Medication management",
@@ -235,7 +220,7 @@ const inPatientServices: Service[] = [
     price: 25000,
     duration: "12 hours",
     category: "inpatient",
-    icon: <Baby className="w-6 h-6" />,
+    icon: <Baby className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "Pediatric-trained nurses",
       "Child-friendly care approach",
@@ -262,7 +247,7 @@ const inPatientServices: Service[] = [
     price: 20000,
     duration: "8 hours",
     category: "inpatient",
-    icon: <HelpCircle className="w-6 h-6" />,
+    icon: <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
     features: [
       "Physical therapy support",
       "Occupational therapy assistance",
@@ -296,7 +281,6 @@ const BookService: React.FC = () => {
   // Simulate API fetch
   const fetchServices = async (department: string) => {
     setLoading(true);
-    // Simulate loading delay
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     switch (department) {
@@ -326,15 +310,16 @@ const BookService: React.FC = () => {
   );
 
   const getDepartmentIcon = (department: string) => {
+    const iconClass = "w-4 h-4 sm:w-5 sm:h-5";
     switch (department) {
       case "nursing":
-        return <Stethoscope className="w-5 h-5" />;
+        return <Stethoscope className={iconClass} />;
       case "caregiver":
-        return <HeartHandshake className="w-5 h-5" />;
+        return <HeartHandshake className={iconClass} />;
       case "inpatient":
-        return <Bed className="w-5 h-5" />;
+        return <Bed className={iconClass} />;
       default:
-        return <Heart className="w-5 h-5" />;
+        return <Heart className={iconClass} />;
     }
   };
 
@@ -357,12 +342,10 @@ const BookService: React.FC = () => {
     );
 
     if (existingIndex >= 0) {
-      // Remove service if already selected
       setSelectedServices((prev) =>
         prev.filter((s) => s.service.id !== service.id)
       );
     } else {
-      // Add new service
       const newSelection: SelectedService = {
         service,
         quantity: 1,
@@ -441,30 +424,30 @@ const BookService: React.FC = () => {
         }`}
       >
         {/* Service Header */}
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           <div className="flex items-start justify-between mb-3">
-            <div className="flex items-start space-x-3 flex-1">
+            <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
               <div
-                className={`w-12 h-12 rounded-lg flex items-center justify-center ${getDepartmentColor(
+                className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${getDepartmentColor(
                   service.category
                 )}`}
               >
                 {service.icon}
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 text-lg mb-1">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 text-sm sm:text-base md:text-lg mb-1 line-clamp-2">
                   {service.name}
                 </h3>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
                   {service.shortDescription}
                 </p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <div className="flex flex-col xs:flex-row xs:items-center xs:space-x-4 space-y-1 xs:space-y-0 text-xs sm:text-sm text-gray-500">
                   <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{service.duration}</span>
+                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                    <span className="truncate">{service.duration}</span>
                   </div>
                   <div className="flex items-center space-x-1">
-                    <CreditCard className="w-4 h-4" />
+                    <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                     <span className="font-semibold text-green-600">
                       ₦{service.price.toLocaleString()}
                     </span>
@@ -473,23 +456,23 @@ const BookService: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 ml-4">
+            <div className="flex items-center space-x-1 sm:space-x-2 ml-2 flex-shrink-0">
               <button
                 onClick={() =>
                   setExpandedService(isExpanded ? null : service.id)
                 }
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
               >
                 {isExpanded ? (
-                  <ChevronUp className="w-5 h-5" />
+                  <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : (
-                  <ChevronDown className="w-5 h-5" />
+                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                 )}
               </button>
 
               <button
                 onClick={() => handleServiceSelect(service)}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 rounded-lg font-medium transition-colors text-xs sm:text-sm ${
                   isSelected
                     ? "bg-green-600 text-white hover:bg-green-700"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -497,8 +480,8 @@ const BookService: React.FC = () => {
               >
                 {isSelected ? (
                   <div className="flex items-center space-x-1">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Selected</span>
+                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Selected</span>
                   </div>
                 ) : (
                   "Select"
@@ -511,23 +494,23 @@ const BookService: React.FC = () => {
           {isExpanded && (
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="mb-4">
-                <p className="text-gray-700 text-sm leading-relaxed">
+                <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
                   {service.description}
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 mb-2">
+                  <h4 className="font-medium text-gray-900 mb-2 text-xs sm:text-sm">
                     What's Included:
                   </h4>
                   <ul className="space-y-1">
                     {service.features.map((feature, index) => (
                       <li
                         key={index}
-                        className="flex items-center space-x-2 text-sm text-gray-600"
+                        className="flex items-start space-x-2 text-xs sm:text-sm text-gray-600"
                       >
-                        <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                        <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -536,16 +519,16 @@ const BookService: React.FC = () => {
 
                 {service.requirements && (
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">
+                    <h4 className="font-medium text-gray-900 mb-2 text-xs sm:text-sm">
                       Requirements:
                     </h4>
                     <ul className="space-y-1">
                       {service.requirements.map((requirement, index) => (
                         <li
                           key={index}
-                          className="flex items-center space-x-2 text-sm text-gray-600"
+                          className="flex items-start space-x-2 text-xs sm:text-sm text-gray-600"
                         >
-                          <Info className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                          <Info className="w-3 h-3 text-blue-500 flex-shrink-0 mt-0.5" />
                           <span>{requirement}</span>
                         </li>
                       ))}
@@ -559,65 +542,67 @@ const BookService: React.FC = () => {
           {/* Quantity Controls (only show if selected) */}
           {isSelected && selectedService && (
             <div className="mt-4 pt-4 border-t border-green-200 bg-green-25">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Quantity
                   </label>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
                     <button
                       onClick={() =>
                         updateServiceQuantity(service.id, "quantity", false)
                       }
-                      className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
-                    <span className="font-semibold text-gray-900 min-w-[2rem] text-center">
+                    <span className="font-semibold text-gray-900 min-w-[1.5rem] sm:min-w-[2rem] text-center text-sm sm:text-base">
                       {selectedService.quantity}
                     </span>
                     <button
                       onClick={() =>
                         updateServiceQuantity(service.id, "quantity", true)
                       }
-                      className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Days
                   </label>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
                     <button
                       onClick={() =>
                         updateServiceQuantity(service.id, "days", false)
                       }
-                      className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
-                    <span className="font-semibold text-gray-900 min-w-[2rem] text-center">
+                    <span className="font-semibold text-gray-900 min-w-[1.5rem] sm:min-w-[2rem] text-center text-sm sm:text-base">
                       {selectedService.days}
                     </span>
                     <button
                       onClick={() =>
                         updateServiceQuantity(service.id, "days", true)
                       }
-                      className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
               </div>
 
               <div className="mt-3 text-right">
-                <span className="text-sm text-gray-600">Total: </span>
-                <span className="text-lg font-semibold text-green-600">
+                <span className="text-xs sm:text-sm text-gray-600">
+                  Total:{" "}
+                </span>
+                <span className="text-sm sm:text-lg font-semibold text-green-600">
                   ₦{selectedService.totalAmount.toLocaleString()}
                 </span>
               </div>
@@ -630,19 +615,21 @@ const BookService: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="flex items-center mb-4">
             <button
               onClick={() => window.history.back()}
-              className="mr-4 p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg hover:bg-white"
+              className="mr-2 sm:mr-4 p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg hover:bg-white"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Book Service</h1>
-              <p className="text-gray-600">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+                Book Service
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600">
                 Choose from our comprehensive healthcare services
               </p>
             </div>
@@ -650,37 +637,41 @@ const BookService: React.FC = () => {
 
           {/* Department Tabs */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-            <div className="grid grid-cols-3 gap-1 overflow-x-auto">
+            <div className="grid grid-cols-3 gap-1">
               {[
                 {
                   key: "nursing",
-                  label: "Nursing Procedures",
+                  label: "Nursing",
+                  fullLabel: "Nursing Procedures",
                   count: nursingProcedures.length,
                 },
                 {
                   key: "caregiver",
                   label: "CareGiver",
+                  fullLabel: "CareGiver",
                   count: careGiverServices.length,
                 },
                 {
                   key: "inpatient",
                   label: "InPatient",
+                  fullLabel: "InPatient",
                   count: inPatientServices.length,
                 },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-all ${
+                  className={`flex items-center justify-center space-x-1 sm:space-x-2 py-2 sm:py-3 px-2 sm:px-4 rounded-lg font-medium transition-all text-xs sm:text-sm ${
                     activeTab === tab.key
                       ? "bg-green-600 text-white shadow-sm"
                       : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   }`}
                 >
                   {getDepartmentIcon(tab.key)}
-                  <span>{tab.label}</span>
+                  <span className="hidden sm:inline">{tab.fullLabel}</span>
+                  <span className="sm:hidden">{tab.label}</span>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
+                    className={`text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full ${
                       activeTab === tab.key ? "bg-green-500" : "bg-gray-200"
                     }`}
                   >
@@ -692,19 +683,19 @@ const BookService: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Services List */}
           <div className="lg:col-span-2 space-y-4">
             {/* Search Bar */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
               <div className="relative">
-                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Search services..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -715,14 +706,14 @@ const BookService: React.FC = () => {
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="bg-white rounded-lg p-6 animate-pulse"
+                    className="bg-white rounded-lg p-4 sm:p-6 animate-pulse"
                   >
                     <div className="flex items-start space-x-3">
-                      <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-200 rounded-lg"></div>
                       <div className="flex-1">
-                        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        <div className="h-2 sm:h-3 bg-gray-200 rounded w-full mb-2"></div>
+                        <div className="h-2 sm:h-3 bg-gray-200 rounded w-1/2"></div>
                       </div>
                     </div>
                   </div>
@@ -733,14 +724,14 @@ const BookService: React.FC = () => {
                 {filteredServices.length > 0 ? (
                   filteredServices.map(renderServiceCard)
                 ) : (
-                  <div className="bg-white rounded-lg p-8 text-center">
+                  <div className="bg-white rounded-lg p-6 sm:p-8 text-center">
                     <div className="text-gray-400 mb-4">
-                      <Search className="w-12 h-12 mx-auto" />
+                      <Search className="w-8 h-8 sm:w-12 sm:h-12 mx-auto" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                       No services found
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                       Try adjusting your search terms
                     </p>
                   </div>

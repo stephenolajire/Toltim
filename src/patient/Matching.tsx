@@ -5,32 +5,18 @@ import {
   Clock,
   MapPin,
   Star,
-//   Stethoscope,
-//   Heart,
-//   Baby,
-//   UserCheck,
   User,
   CheckCircle,
   Calendar,
-//   CreditCard,
   Search,
-//   Phone,
   MessageSquare,
   ChevronDown,
   ChevronUp,
-//   Activity,
-//   Shield,
   Users,
-//   Bed,
-//   HeartHandshake,
-//   Syringe,
   Award,
   Verified,
   BookOpen,
   ThumbsUp,
-//   DollarSign,
-//   Mail,
-//   Home,
 } from "lucide-react";
 
 // Types
@@ -106,7 +92,8 @@ const mockPractitioners: Practitioner[] = [
     experience: "8 years",
     rating: 4.9,
     reviewCount: 127,
-    profileImage: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+    profileImage:
+      "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
     location: "Victoria Island, Lagos",
     distance: "2.3 km away",
     priceRange: "₦3,000 - ₦5,000",
@@ -120,17 +107,17 @@ const mockPractitioners: Practitioner[] = [
     availability: [
       {
         date: "2025-07-22",
-        slots: ["09:00", "11:00", "14:00", "16:00"]
+        slots: ["09:00", "11:00", "14:00", "16:00"],
       },
       {
         date: "2025-07-23",
-        slots: ["08:00", "10:00", "13:00", "15:00", "17:00"]
+        slots: ["08:00", "10:00", "13:00", "15:00", "17:00"],
       },
       {
         date: "2025-07-24",
-        slots: ["09:00", "12:00", "14:00"]
-      }
-    ]
+        slots: ["09:00", "12:00", "14:00"],
+      },
+    ],
   },
   {
     id: "prac-002",
@@ -140,13 +127,22 @@ const mockPractitioners: Practitioner[] = [
     experience: "5 years",
     rating: 4.7,
     reviewCount: 89,
-    profileImage: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+    profileImage:
+      "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
     location: "Ikeja, Lagos",
     distance: "4.1 km away",
     priceRange: "₦2,500 - ₦4,000",
     languages: ["English", "Igbo"],
-    qualifications: ["LPN License", "Basic Life Support", "First Aid Certified"],
-    services: ["Vital Signs Monitoring", "Medication Reminders", "Basic Nursing Care"],
+    qualifications: [
+      "LPN License",
+      "Basic Life Support",
+      "First Aid Certified",
+    ],
+    services: [
+      "Vital Signs Monitoring",
+      "Medication Reminders",
+      "Basic Nursing Care",
+    ],
     isVerified: true,
     responseTime: "Usually responds within 1 hour",
     completedCases: 156,
@@ -154,17 +150,17 @@ const mockPractitioners: Practitioner[] = [
     availability: [
       {
         date: "2025-07-22",
-        slots: ["08:00", "10:00", "15:00"]
+        slots: ["08:00", "10:00", "15:00"],
       },
       {
         date: "2025-07-23",
-        slots: ["09:00", "11:00", "14:00", "16:00"]
+        slots: ["09:00", "11:00", "14:00", "16:00"],
       },
       {
         date: "2025-07-24",
-        slots: ["08:00", "13:00", "15:00", "17:00"]
-      }
-    ]
+        slots: ["08:00", "13:00", "15:00", "17:00"],
+      },
+    ],
   },
   {
     id: "prac-003",
@@ -174,12 +170,17 @@ const mockPractitioners: Practitioner[] = [
     experience: "6 years",
     rating: 4.8,
     reviewCount: 203,
-    profileImage: "https://images.unsplash.com/photo-1594824884763-8b88ca397d7e?w=150&h=150&fit=crop&crop=face",
+    profileImage:
+      "https://images.unsplash.com/photo-1594824884763-8b88ca397d7e?w=150&h=150&fit=crop&crop=face",
     location: "Lekki, Lagos",
     distance: "1.8 km away",
     priceRange: "₦4,000 - ₦8,000",
     languages: ["English", "Yoruba", "Hausa"],
-    qualifications: ["CNA Certification", "Geriatric Care Training", "CPR Certified"],
+    qualifications: [
+      "CNA Certification",
+      "Geriatric Care Training",
+      "CPR Certified",
+    ],
     services: ["Personal Care", "Companionship", "Mobility Assistance"],
     isVerified: true,
     responseTime: "Usually responds within 15 minutes",
@@ -188,22 +189,22 @@ const mockPractitioners: Practitioner[] = [
     availability: [
       {
         date: "2025-07-22",
-        slots: ["07:00", "12:00", "18:00"]
+        slots: ["07:00", "12:00", "18:00"],
       },
       {
         date: "2025-07-23",
-        slots: ["07:00", "09:00", "12:00", "15:00", "18:00"]
+        slots: ["07:00", "09:00", "12:00", "15:00", "18:00"],
       },
       {
         date: "2025-07-24",
-        slots: ["07:00", "10:00", "14:00", "16:00"]
-      }
-    ]
+        slots: ["07:00", "10:00", "14:00", "16:00"],
+      },
+    ],
   },
 ];
 
 const HealthPractitionersMatching: React.FC = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<
     "practitioners" | "scheduling" | "booking"
   >("practitioners");
@@ -298,10 +299,10 @@ const HealthPractitionersMatching: React.FC = () => {
         key={practitioner.id}
         className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
       >
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Header */}
-          <div className="flex items-start space-x-4">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="relative flex-shrink-0 self-center sm:self-start">
               <img
                 src={practitioner.profileImage}
                 alt={practitioner.name}
@@ -314,24 +315,24 @@ const HealthPractitionersMatching: React.FC = () => {
               )}
             </div>
 
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-                    <span>{practitioner.name}</span>
+            <div className="flex-1 w-full min-w-0">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between space-y-2 sm:space-y-0">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2 flex-wrap">
+                    <span className="truncate">{practitioner.name}</span>
                     {practitioner.isVerified && (
-                      <Verified className="w-4 h-4 text-blue-500" />
+                      <Verified className="w-4 h-4 text-blue-500 flex-shrink-0" />
                     )}
                   </h3>
-                  <p className="text-green-600 font-medium">
+                  <p className="text-green-600 font-medium text-sm sm:text-base">
                     {practitioner.title}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 truncate">
                     {practitioner.specialization}
                   </p>
                 </div>
 
-                <div className="text-right">
+                <div className="text-left sm:text-right flex-shrink-0">
                   <div className="flex items-center space-x-1 mb-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-current" />
                     <span className="text-sm font-medium">
@@ -348,27 +349,31 @@ const HealthPractitionersMatching: React.FC = () => {
               </div>
 
               {/* Stats */}
-              <div className="flex items-center space-x-4 mt-3 text-sm text-gray-600">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm text-gray-600">
                 <div className="flex items-center space-x-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>{practitioner.distance}</span>
+                  <MapPin className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{practitioner.distance}</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Award className="w-4 h-4" />
-                  <span>{practitioner.experience} experience</span>
+                  <Award className="w-4 h-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">
+                    {practitioner.experience} experience
+                  </span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <ThumbsUp className="w-4 h-4" />
-                  <span>{practitioner.completedCases} cases</span>
+                  <ThumbsUp className="w-4 h-4 flex-shrink-0" />
+                  <span className="whitespace-nowrap">
+                    {practitioner.completedCases} cases
+                  </span>
                 </div>
               </div>
 
               {/* Languages */}
-              <div className="flex items-center space-x-2 mt-2">
+              <div className="flex flex-wrap items-center gap-2 mt-2">
                 {practitioner.languages.map((language, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+                    className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full whitespace-nowrap"
                   >
                     {language}
                   </span>
@@ -398,8 +403,8 @@ const HealthPractitionersMatching: React.FC = () => {
 
           {/* Response Time */}
           <div className="mt-3 text-sm text-green-600 flex items-center space-x-1">
-            <Clock className="w-4 h-4" />
-            <span>{practitioner.responseTime}</span>
+            <Clock className="w-4 h-4 flex-shrink-0" />
+            <span className="break-words">{practitioner.responseTime}</span>
           </div>
 
           {/* Expanded Details */}
@@ -407,7 +412,9 @@ const HealthPractitionersMatching: React.FC = () => {
             <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">About</h4>
-                <p className="text-gray-700 text-sm">{practitioner.bio}</p>
+                <p className="text-gray-700 text-sm leading-relaxed">
+                  {practitioner.bio}
+                </p>
               </div>
 
               <div>
@@ -416,9 +423,11 @@ const HealthPractitionersMatching: React.FC = () => {
                 </h4>
                 <div className="space-y-1">
                   {practitioner.qualifications.map((qual, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <BookOpen className="w-3 h-3 text-blue-500" />
-                      <span className="text-sm text-gray-700">{qual}</span>
+                    <div key={index} className="flex items-start space-x-2">
+                      <BookOpen className="w-3 h-3 text-blue-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 break-words">
+                        {qual}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -443,12 +452,12 @@ const HealthPractitionersMatching: React.FC = () => {
           )}
 
           {/* Actions */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mt-4 pt-4 border-t border-gray-200 space-y-3 sm:space-y-0">
             <button
               onClick={() =>
                 setExpandedPractitioner(isExpanded ? null : practitioner.id)
               }
-              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+              className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center justify-center sm:justify-start space-x-1"
             >
               <span>{isExpanded ? "Show Less" : "Show More"}</span>
               {isExpanded ? (
@@ -458,13 +467,13 @@ const HealthPractitionersMatching: React.FC = () => {
               )}
             </button>
 
-            <div className="flex items-center space-x-3">
-              <button className="p-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50">
+            <div className="flex items-center justify-center space-x-3">
+              <button className="p-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0">
                 <MessageSquare className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handlePractitionerSelect(practitioner)}
-                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex-shrink-0"
               >
                 Select
               </button>
@@ -481,15 +490,15 @@ const HealthPractitionersMatching: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Selected Practitioner Summary */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center space-x-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
             <img
               src={selectedPractitioner.profileImage}
               alt={selectedPractitioner.name}
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover self-center sm:self-start flex-shrink-0"
             />
-            <div>
-              <h3 className="font-semibold text-gray-900">
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <h3 className="font-semibold text-gray-900 truncate">
                 {selectedPractitioner.name}
               </h3>
               <p className="text-green-600">{selectedPractitioner.title}</p>
@@ -497,11 +506,11 @@ const HealthPractitionersMatching: React.FC = () => {
                 {selectedService.name} - {selectedService.duration}
               </p>
             </div>
-            <div className="ml-auto text-right">
+            <div className="text-center sm:text-right flex-shrink-0">
               <p className="font-semibold text-green-600">
                 ₦{selectedService.price.toLocaleString()}
               </p>
-              <div className="flex items-center space-x-1 text-sm">
+              <div className="flex items-center justify-center sm:justify-end space-x-1 text-sm">
                 <Star className="w-3 h-3 text-yellow-400 fill-current" />
                 <span>{selectedPractitioner.rating}</span>
               </div>
@@ -510,7 +519,7 @@ const HealthPractitionersMatching: React.FC = () => {
         </div>
 
         {/* Time Slots */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Select Date & Time
           </h3>
@@ -521,17 +530,17 @@ const HealthPractitionersMatching: React.FC = () => {
                 key={availability.date}
                 className="border border-gray-200 rounded-lg p-4"
               >
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">
                   {formatDate(availability.date)}
                 </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
                   {availability.slots.map((slot) => (
                     <button
                       key={slot}
                       onClick={() =>
                         handleTimeSlotSelect(availability.date, slot)
                       }
-                      className={`p-3 text-sm rounded-lg border transition-colors ${
+                      className={`p-2 sm:p-3 text-sm rounded-lg border transition-colors ${
                         selectedDate === availability.date &&
                         selectedTime === slot
                           ? "bg-green-600 text-white border-green-600"
@@ -548,19 +557,19 @@ const HealthPractitionersMatching: React.FC = () => {
 
           {selectedDate && selectedTime && (
             <div className="mt-6 p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-2 text-green-700">
-                <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">
+              <div className="flex items-start space-x-2 text-green-700">
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <span className="font-medium text-sm sm:text-base break-words">
                   Selected: {formatDate(selectedDate)} at {selectedTime}
                 </span>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between mt-6">
+          <div className="flex flex-col sm:flex-row justify-between mt-6 space-y-3 sm:space-y-0">
             <button
               onClick={() => setCurrentStep("practitioners")}
-              className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Practitioners</span>
@@ -583,31 +592,35 @@ const HealthPractitionersMatching: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Booking Summary */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Booking Summary
           </h3>
 
-          <div className="space-y-3">
-            <div className="flex justify-between">
+          <div className="space-y-3 text-sm sm:text-base">
+            <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
               <span className="text-gray-600">Service:</span>
-              <span className="font-medium">{selectedService.name}</span>
+              <span className="font-medium break-words">
+                {selectedService.name}
+              </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
               <span className="text-gray-600">Practitioner:</span>
-              <span className="font-medium">{selectedPractitioner?.name}</span>
+              <span className="font-medium break-words">
+                {selectedPractitioner?.name}
+              </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
               <span className="text-gray-600">Date & Time:</span>
-              <span className="font-medium">
+              <span className="font-medium break-words">
                 {formatDate(selectedDate)} at {selectedTime}
               </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
               <span className="text-gray-600">Duration:</span>
               <span className="font-medium">{selectedService.duration}</span>
             </div>
-            <div className="flex justify-between text-lg">
+            <div className="flex flex-col sm:flex-row sm:justify-between text-lg space-y-1 sm:space-y-0 pt-2 border-t border-gray-200">
               <span className="font-semibold">Total:</span>
               <span className="font-semibold text-green-600">
                 ₦{selectedService.price.toLocaleString()}
@@ -618,7 +631,7 @@ const HealthPractitionersMatching: React.FC = () => {
 
         {/* Booking For Self Question */}
         {bookingForSelf === null && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Who is this appointment for?
             </h3>
@@ -626,22 +639,22 @@ const HealthPractitionersMatching: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button
                 onClick={() => setBookingForSelf(true)}
-                className="p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-center"
+                className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-center"
               >
                 <User className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-semibold text-gray-900">Myself</h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mt-1">
                   Book this appointment for yourself
                 </p>
               </button>
 
               <button
                 onClick={() => setBookingForSelf(false)}
-                className="p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-center"
+                className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-center"
               >
                 <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
                 <h4 className="font-semibold text-gray-900">Someone Else</h4>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 mt-1">
                   Book for a family member or friend
                 </p>
               </button>
@@ -651,7 +664,7 @@ const HealthPractitionersMatching: React.FC = () => {
 
         {/* Booking Details Form (if booking for someone else) */}
         {bookingForSelf === false && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Patient Details
             </h3>
@@ -670,7 +683,7 @@ const HealthPractitionersMatching: React.FC = () => {
                       firstName: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
 
@@ -687,7 +700,7 @@ const HealthPractitionersMatching: React.FC = () => {
                       lastName: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
 
@@ -704,7 +717,7 @@ const HealthPractitionersMatching: React.FC = () => {
                       email: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
 
@@ -721,7 +734,7 @@ const HealthPractitionersMatching: React.FC = () => {
                       phone: e.target.value,
                     }))
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                 />
               </div>
 
@@ -738,7 +751,7 @@ const HealthPractitionersMatching: React.FC = () => {
                     }))
                   }
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base resize-none"
                 />
               </div>
 
