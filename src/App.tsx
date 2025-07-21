@@ -31,6 +31,10 @@ import PatientAppointment from "./patient/Appointment";
 import PatientHistory from "./patient/PatientHistory";
 import PatientProfile from "./patient/Profile";
 import PatientMessages from "./patient/Message";
+import BookService from "./patient/BookService";
+// import PractitionerMatching from "./patient/Matching";
+import HealthPractitionersMatching from "./patient/Matching";
+import AppointmentReceipt from "./patient/PatientReceipts";
 
 const App: React.FC = () => {
   return (
@@ -81,10 +85,13 @@ const App: React.FC = () => {
         <Route path="/patient" element={<PatientLayout />}>
           <Route index element={<PatientDashboard />} />
           <Route path="find-care" element={<FindCare />} />
-          <Route path="appointments" element={<PatientAppointment />} />
+          <Route path="booking" element={<PatientAppointment />} />
           <Route path="history" element={<PatientHistory />} />
           <Route path="profile" element={<PatientProfile />} />
           <Route path="messages" element={<PatientMessages />} />
+          <Route path="services" element={<BookService />} />
+          <Route path="matching" element={<HealthPractitionersMatching />} />
+          <Route path="receipt" element={<AppointmentReceipt />} />
         </Route>
       </Routes>
     </Router>

@@ -2,7 +2,7 @@ import {
   Heart,
   X,
   Home,
-//   Calendar,
+  Calendar,
   User,
   MessageCircle,
 //   CreditCard,
@@ -13,6 +13,7 @@ import {
   Clock,
 } from "lucide-react";
 import { useState } from "react";
+import { FaServicestack } from "react-icons/fa";
 import { NavLink } from "react-router-dom";
 
 // Define the props interface
@@ -24,13 +25,13 @@ interface SidebarProps {
 const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
   const navigationItems = [
     { name: "Dashboard", href: "/patient", icon: Home },
+    { name: "Book Services", href: "/patient/services", icon: FaServicestack },
+    { name: "Book", href: "/patient/booking", icon: Calendar },
     { name: "Find Care", href: "/patient/find-care", icon: Search },
     { name: "History", href: "/patient/history", icon: Clock },
     { name: "Profile", href: "/patient/profile", icon: User },
-    // { name: "Billing", href: "/billing", icon: CreditCard },
     { name: "Messages", href: "/patient/messages", icon: MessageCircle },
     // { name: "Settings", href: "/settings", icon: Settings },
-    // { name: "Appointments", href: "/patient/appointments", icon: Calendar },
     // { name: "My Location", href: "/location", icon: MapPin },
   ];
 

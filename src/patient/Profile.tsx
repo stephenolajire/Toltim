@@ -119,7 +119,7 @@ const PatientProfile: React.FC = () => {
   const tabs: Tab[] = [
     { id: "personal", name: "PersonalInfo", icon: User },
     { id: "medical", name: "MedicalInfo", icon: Heart },
-    { id: "insurance", name: "Insurance", icon: Shield },
+    // { id: "insurance", name: "Insurance", icon: Shield },
     { id: "preferences", name: "Preferences", icon: Settings },
   ];
 
