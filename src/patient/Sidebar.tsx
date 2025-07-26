@@ -26,11 +26,11 @@ const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
   const navigationItems = [
     { name: "Dashboard", href: "/patient", icon: Home },
     { name: "Book Services", href: "/patient/services", icon: FaServicestack },
-    { name: "Book", href: "/patient/booking", icon: Calendar },
-    { name: "Find Care", href: "/patient/find-care", icon: Search },
+    // { name: "Book", href: "/patient/booking", icon: Calendar },
+    // { name: "Find Care", href: "/patient/find-care", icon: Search },
     { name: "History", href: "/patient/history", icon: Clock },
-    { name: "Profile", href: "/patient/profile", icon: User },
     { name: "Messages", href: "/patient/messages", icon: MessageCircle },
+    { name: "Profile", href: "/patient/profile", icon: User },
     // { name: "Settings", href: "/settings", icon: Settings },
     // { name: "My Location", href: "/location", icon: MapPin },
   ];
