@@ -17,7 +17,7 @@ interface FormErrors {
   nin?: string;
 }
 
-const VerificationFlow: React.FC = () => {
+const EmailVerificationFlow: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<FlowStep>("otp");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [nin, setNin] = useState("");
@@ -42,7 +42,7 @@ const VerificationFlow: React.FC = () => {
 
   // Auto-navigation intervals
   useEffect(() => {
-    let interval: ReturnType<typeof setTimeout>;
+    let interval: ReturnType<typeof setTimeout> | null = null;
 
     if (currentStep === "otp-success") {
       interval = setTimeout(() => {
@@ -52,8 +52,8 @@ const VerificationFlow: React.FC = () => {
       interval = setTimeout(() => {
         // Navigate to dashboard or next step
         console.log("Navigating to dashboard...");
-      }, 10000);
-      navigate("/patient");
+        navigate("/patient");
+      }, 3000);
     }
 
     return () => {
@@ -79,10 +79,7 @@ const VerificationFlow: React.FC = () => {
     }
   };
 
-  const handleOtpKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
@@ -145,9 +142,9 @@ const VerificationFlow: React.FC = () => {
   };
 
   const renderOtpStep = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-2 sm:px-4 py-8">
+      <div className="max-w-md w-full mx-2">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 text-center">
           <div className="mb-6">
             <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
               <Mail className="w-8 h-8 text-blue-600" />
@@ -161,18 +158,18 @@ const VerificationFlow: React.FC = () => {
           </div>
 
           <div className="mb-6">
-            <div className="flex justify-center space-x-3 mb-4">
+            <div className="flex justify-center space-x-2 sm:space-x-3 mb-4 px-2">
               {otp.map((digit, index) => (
                 <input
                   key={index}
-                  ref={(el: any) => (otpRefs.current[index] = el)}
+                  ref={(el:any) => (otpRefs.current[index] = el)}
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  className={`w-12 h-12 text-center text-lg font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                  className={`w-10 h-10 sm:w-12 sm:h-12 text-center text-base sm:text-lg font-semibold border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
                     errors.otp ? "border-red-300" : "border-gray-300"
                   } ${digit ? "border-blue-500 bg-blue-50" : ""}`}
                   disabled={isVerifying}
@@ -378,4 +375,4 @@ const VerificationFlow: React.FC = () => {
   }
 };
 
-export default VerificationFlow;
+export default EmailVerificationFlow;

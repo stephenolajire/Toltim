@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import {
   ArrowLeft,
   Clock,
-//   Stethoscope,
-//   Heart,
-//   Baby,
+  //   Stethoscope,
+  //   Heart,
+  //   Baby,
   CheckCircle,
   XCircle,
   CreditCard,
@@ -15,14 +15,15 @@ import {
   ChevronDown,
   ChevronUp,
   Activity,
-//   Shield,
-//   Users,
-//   Bed,
-//   HeartHandshake,
+  //   Shield,
+  //   Users,
+  //   Bed,
+  //   HeartHandshake,
   Syringe,
   HelpCircle,
   Info,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Types
 interface Service {
@@ -115,6 +116,7 @@ const NursingProcedures: React.FC = () => {
   );
   const [expandedService, setExpandedService] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const filteredServices = nursingProcedures.filter(
     (service) =>
@@ -189,6 +191,12 @@ const NursingProcedures: React.FC = () => {
 
   const getSelectedService = (serviceId: string) => {
     return selectedServices.find((s) => s.service.id === serviceId);
+  };
+
+  const handleProceed = () => {
+    alert("Proceeding to booking/payment page");
+    // Navigate to booking/payment page
+    navigate("/patient/matching");
   };
 
   const renderServiceCard = (service: Service) => {
@@ -477,7 +485,10 @@ const NursingProcedures: React.FC = () => {
                       </div>
                     </div>
 
-                    <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
+                    <button
+                      onClick={handleProceed}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                    >
                       <span>Proceed</span>
                       <ArrowLeft className="w-4 h-4 rotate-180" />
                     </button>

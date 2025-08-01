@@ -9,6 +9,7 @@ import {
   User,
 
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Types
 interface CaregiverType {
@@ -82,6 +83,14 @@ const CaregiverBooking: React.FC = () => {
     specialRequirements: "",
     period: 30,
   });
+
+  const navigate = useNavigate();
+
+  const handleBooking = () => {
+    // Handle booking logic here
+    alert("Booking confirmed!");
+    navigate("/patient/receipt");
+  };
 
   const handleCaregiverSelect = (caregiver: CaregiverType) => {
     setBookingData((prev) => ({
@@ -494,6 +503,7 @@ const CaregiverBooking: React.FC = () => {
                     </div>
 
                     <button
+                      onClick={handleBooking}
                       className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
                       disabled={
                         !bookingData.patientName ||
