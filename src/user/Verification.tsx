@@ -52,7 +52,7 @@ const VerificationFlow: React.FC = () => {
       interval = setTimeout(() => {
         // Navigate to dashboard or next step
         console.log("Navigating to dashboard...");
-      }, 3000);
+      }, 10000);
       navigate("/patient");
     }
 
