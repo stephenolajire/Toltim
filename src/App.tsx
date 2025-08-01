@@ -26,8 +26,8 @@ import DelayedSessions from "./admindashboard/DelayedSession";
 import RegisteredPatients from "./admindashboard/RegisterPatients";
 import PatientLayout from "./patient/Layout";
 import PatientDashboard from "./patient/PatientDashboard";
-import FindCare from "./patient/FindCare";
-import PatientAppointment from "./patient/Appointment";
+// import FindCare from "./patient/FindCare";
+// import PatientAppointment from "./patient/Appointment";
 import PatientHistory from "./patient/PatientHistory";
 import PatientProfile from "./patient/Profile";
 import PatientMessages from "./patient/Message";
@@ -35,6 +35,9 @@ import BookService from "./patient/BookService";
 // import PractitionerMatching from "./patient/Matching";
 import HealthPractitionersMatching from "./patient/Matching";
 import AppointmentReceipt from "./patient/PatientReceipts";
+import CaregiverBooking from "./patient/CareGiver";
+import InPatientCaregiverService from "./patient/InPatient";
+import VerificationFlow from "./user/Verification";
 
 const App: React.FC = () => {
   return (
@@ -47,6 +50,7 @@ const App: React.FC = () => {
         {/* user auth */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<SignUp />} />
+        <Route path="/verification" element={<VerificationFlow />} />
 
         {/* user dashboard */}
         <Route path="/dashboard" element={<UserLayout />}>
@@ -84,12 +88,12 @@ const App: React.FC = () => {
 
         <Route path="/patient" element={<PatientLayout />}>
           <Route index element={<PatientDashboard />} />
-          <Route path="find-care" element={<FindCare />} />
-          <Route path="booking" element={<PatientAppointment />} />
+          <Route path="in-patient" element={<InPatientCaregiverService />} />
+          <Route path="caregiver" element={<CaregiverBooking />} />
           <Route path="history" element={<PatientHistory />} />
           <Route path="profile" element={<PatientProfile />} />
           <Route path="messages" element={<PatientMessages />} />
-          <Route path="services" element={<BookService />} />
+          <Route path="procedures" element={<BookService />} />
           <Route path="matching" element={<HealthPractitionersMatching />} />
           <Route path="receipt" element={<AppointmentReceipt />} />
         </Route>

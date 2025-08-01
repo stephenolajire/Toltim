@@ -2,15 +2,12 @@ import {
   Heart,
   X,
   Home,
-//   Calendar,
   User,
   MessageCircle,
-//   CreditCard,
-//   Settings,
+  HeartHandshake,
   LogOut,
-//   Search,
-//   MapPin,
   Clock,
+  Bed,
 } from "lucide-react";
 import { useState } from "react";
 import { FaServicestack } from "react-icons/fa";
@@ -25,9 +22,9 @@ interface SidebarProps {
 const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
   const navigationItems = [
     { name: "Dashboard", href: "/patient", icon: Home },
-    { name: "Book Services", href: "/patient/services", icon: FaServicestack },
-    // { name: "Book", href: "/patient/booking", icon: Calendar },
-    // { name: "Find Care", href: "/patient/find-care", icon: Search },
+    { name: "Nursing Procedures", href: "/patient/procedures", icon: FaServicestack },
+    { name: "Care Giver", href: "/patient/caregiver", icon: HeartHandshake },
+    { name: "In Patient", href: "/patient/in-patient", icon: Bed },
     { name: "History", href: "/patient/history", icon: Clock },
     { name: "Messages", href: "/patient/messages", icon: MessageCircle },
     { name: "Profile", href: "/patient/profile", icon: User },

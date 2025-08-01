@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Heart, Clock, Shield, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface FormErrors {
   fullname?: string;
@@ -23,6 +24,8 @@ const SignUp: React.FC = () => {
   const handleUserTypeChange = (type: "patient" | "nurse" | "chw") => {
     setUserType(type);
   };
+
+  const navigate = useNavigate();
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -55,6 +58,7 @@ const SignUp: React.FC = () => {
       });
       // Here you would typically send the data to your backend
       alert("Registration successful! (This is a demo)");
+      navigate("/verification");
     }
   };
 

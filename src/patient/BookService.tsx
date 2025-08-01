@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react";
-import {Link} from "react-router-dom";
+import React, { useState } from "react";
 import {
   ArrowLeft,
   Clock,
-  Stethoscope,
-  Heart,
-  Baby,
+//   Stethoscope,
+//   Heart,
+//   Baby,
   CheckCircle,
   XCircle,
   CreditCard,
@@ -16,10 +15,10 @@ import {
   ChevronDown,
   ChevronUp,
   Activity,
-  Shield,
-  Users,
-  Bed,
-  HeartHandshake,
+//   Shield,
+//   Users,
+//   Bed,
+//   HeartHandshake,
   Syringe,
   HelpCircle,
   Info,
@@ -41,12 +40,11 @@ interface Service {
 
 interface SelectedService {
   service: Service;
-  quantity: number;
   days: number;
   totalAmount: number;
 }
 
-// Mock Data
+// Mock Data - Only Nursing Procedures
 const nursingProcedures: Service[] = [
   {
     id: "np-001",
@@ -111,217 +109,18 @@ const nursingProcedures: Service[] = [
   },
 ];
 
-const careGiverServices: Service[] = [
-  {
-    id: "cg-001",
-    name: "Personal Care Assistance",
-    shortDescription:
-      "Daily living activities support and personal hygiene care",
-    description:
-      "Comprehensive personal care including bathing assistance, grooming, dressing, mobility support, and maintaining personal hygiene for elderly or disabled individuals.",
-    price: 8000,
-    duration: "2-4 hours",
-    category: "caregiver",
-    icon: <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Bathing assistance",
-      "Grooming and hygiene",
-      "Dressing support",
-      "Mobility assistance",
-      "Medication reminders",
-      "Companionship",
-      "Light housekeeping",
-    ],
-    requirements: ["Care plan discussion", "Emergency contacts"],
-  },
-  {
-    id: "cg-002",
-    name: "Elderly Companion Care",
-    shortDescription: "Compassionate companionship and monitoring for seniors",
-    description:
-      "Dedicated companionship service for elderly individuals including conversation, light activities, meal preparation assistance, and safety monitoring.",
-    price: 6000,
-    duration: "4-8 hours",
-    category: "caregiver",
-    icon: <Users className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Friendly companionship",
-      "Safety monitoring",
-      "Meal preparation help",
-      "Light exercise encouragement",
-      "Medication reminders",
-      "Emergency response",
-      "Activity engagement",
-    ],
-  },
-  {
-    id: "cg-003",
-    name: "Post-Surgery Care",
-    shortDescription:
-      "Specialized care and monitoring after surgical procedures",
-    description:
-      "Professional post-operative care including incision monitoring, medication management, mobility assistance, and recovery support following surgical procedures.",
-    price: 12000,
-    duration: "6-8 hours",
-    category: "caregiver",
-    icon: <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Incision site monitoring",
-      "Pain management support",
-      "Medication administration",
-      "Mobility assistance",
-      "Physical therapy support",
-      "Infection prevention",
-      "Recovery progress tracking",
-    ],
-    requirements: [
-      "Surgical discharge notes",
-      "Medication list",
-      "Doctor's instructions",
-    ],
-  },
-];
-
-const inPatientServices: Service[] = [
-  {
-    id: "ip-001",
-    name: "24/7 In-Home Patient Care",
-    shortDescription: "Round-the-clock professional medical care in your home",
-    description:
-      "Comprehensive 24-hour in-home patient care with qualified nurses and caregivers. Includes medication management, vital signs monitoring, personal care, and medical equipment management.",
-    price: 35000,
-    duration: "24 hours",
-    category: "inpatient",
-    icon: <Bed className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "24/7 professional supervision",
-      "Medication management",
-      "Vital signs monitoring",
-      "Personal care assistance",
-      "Medical equipment management",
-      "Emergency response",
-      "Family communication",
-      "Progress reporting",
-    ],
-    requirements: [
-      "Medical history",
-      "Current medications",
-      "Emergency contacts",
-      "Doctor's care plan",
-    ],
-  },
-  {
-    id: "ip-002",
-    name: "Pediatric Home Care",
-    shortDescription:
-      "Specialized care for children with medical needs at home",
-    description:
-      "Expert pediatric care for children with special medical needs, chronic conditions, or recovering from illness. Child-friendly approach with family-centered care.",
-    price: 25000,
-    duration: "12 hours",
-    category: "inpatient",
-    icon: <Baby className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Pediatric-trained nurses",
-      "Child-friendly care approach",
-      "Family education and support",
-      "Growth and development monitoring",
-      "Medication administration",
-      "Feeding assistance",
-      "Play therapy integration",
-      "School coordination (if needed)",
-    ],
-    requirements: [
-      "Pediatric medical records",
-      "Vaccination records",
-      "Emergency contacts",
-      "Pediatrician contact",
-    ],
-  },
-  {
-    id: "ip-003",
-    name: "Rehabilitation Support Care",
-    shortDescription: "Intensive rehabilitation and therapy support at home",
-    description:
-      "Comprehensive rehabilitation care including physical therapy support, occupational therapy assistance, and recovery monitoring for patients recovering from stroke, injury, or surgery.",
-    price: 20000,
-    duration: "8 hours",
-    category: "inpatient",
-    icon: <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Physical therapy support",
-      "Occupational therapy assistance",
-      "Mobility training",
-      "Exercise program guidance",
-      "Progress monitoring",
-      "Equipment training",
-      "Family education",
-      "Goal setting and tracking",
-    ],
-    requirements: [
-      "Rehabilitation plan",
-      "Therapy equipment (if any)",
-      "Medical clearance",
-    ],
-  },
-];
-
-const BookService: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<
-    "nursing" | "caregiver" | "inpatient"
-  >("nursing");
-  const [services, setServices] = useState<Service[]>(nursingProcedures);
+const NursingProcedures: React.FC = () => {
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>(
     []
   );
   const [expandedService, setExpandedService] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Simulate API fetch
-  const fetchServices = async (department: string) => {
-    setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    switch (department) {
-      case "nursing":
-        setServices(nursingProcedures);
-        break;
-      case "caregiver":
-        setServices(careGiverServices);
-        break;
-      case "inpatient":
-        setServices(inPatientServices);
-        break;
-      default:
-        setServices(nursingProcedures);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchServices(activeTab);
-  }, [activeTab]);
-
-  const filteredServices = services.filter(
+  const filteredServices = nursingProcedures.filter(
     (service) =>
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.shortDescription.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getDepartmentIcon = (department: string) => {
-    const iconClass = "w-4 h-4 sm:w-5 sm:h-5";
-    switch (department) {
-      case "nursing":
-        return <Stethoscope className={iconClass} />;
-      case "caregiver":
-        return <HeartHandshake className={iconClass} />;
-      case "inpatient":
-        return <Bed className={iconClass} />;
-      default:
-        return <Heart className={iconClass} />;
-    }
-  };
 
   const getDepartmentColor = (department: string) => {
     switch (department) {
@@ -348,7 +147,6 @@ const BookService: React.FC = () => {
     } else {
       const newSelection: SelectedService = {
         service,
-        quantity: 1,
         days: 1,
         totalAmount: service.price,
       };
@@ -356,30 +154,17 @@ const BookService: React.FC = () => {
     }
   };
 
-  const updateServiceQuantity = (
-    serviceId: string,
-    type: "quantity" | "days",
-    increment: boolean
-  ) => {
+  const updateServiceDays = (serviceId: string, increment: boolean) => {
     setSelectedServices((prev) =>
       prev.map((selected) => {
         if (selected.service.id === serviceId) {
           const newSelected = { ...selected };
-
-          if (type === "quantity") {
-            newSelected.quantity = Math.max(
-              1,
-              newSelected.quantity + (increment ? 1 : -1)
-            );
-          } else {
-            newSelected.days = Math.max(
-              1,
-              newSelected.days + (increment ? 1 : -1)
-            );
-          }
-
+          newSelected.days = Math.max(
+            1,
+            newSelected.days + (increment ? 1 : -1)
+          );
           newSelected.totalAmount =
-            newSelected.service.price * newSelected.quantity * newSelected.days;
+            newSelected.service.price * newSelected.days;
           return newSelected;
         }
         return selected;
@@ -395,10 +180,7 @@ const BookService: React.FC = () => {
   };
 
   const getTotalServices = () => {
-    return selectedServices.reduce(
-      (total, selected) => total + selected.quantity,
-      0
-    );
+    return selectedServices.length;
   };
 
   const isServiceSelected = (serviceId: string) => {
@@ -539,46 +321,17 @@ const BookService: React.FC = () => {
             </div>
           )}
 
-          {/* Quantity Controls (only show if selected) */}
+          {/* Days Controls (only show if selected) */}
           {isSelected && selectedService && (
             <div className="mt-4 pt-4 border-t border-green-200 bg-green-25">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between">
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Quantity
+                    Number of Days
                   </label>
                   <div className="flex items-center space-x-2 sm:space-x-3">
                     <button
-                      onClick={() =>
-                        updateServiceQuantity(service.id, "quantity", false)
-                      }
-                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                    >
-                      <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </button>
-                    <span className="font-semibold text-gray-900 min-w-[1.5rem] sm:min-w-[2rem] text-center text-sm sm:text-base">
-                      {selectedService.quantity}
-                    </span>
-                    <button
-                      onClick={() =>
-                        updateServiceQuantity(service.id, "quantity", true)
-                      }
-                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
-                    >
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Days
-                  </label>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <button
-                      onClick={() =>
-                        updateServiceQuantity(service.id, "days", false)
-                      }
+                      onClick={() => updateServiceDays(service.id, false)}
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
                     >
                       <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -587,24 +340,22 @@ const BookService: React.FC = () => {
                       {selectedService.days}
                     </span>
                     <button
-                      onClick={() =>
-                        updateServiceQuantity(service.id, "days", true)
-                      }
+                      onClick={() => updateServiceDays(service.id, true)}
                       className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
                     >
                       <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-3 text-right">
-                <span className="text-xs sm:text-sm text-gray-600">
-                  Total:{" "}
-                </span>
-                <span className="text-sm sm:text-lg font-semibold text-green-600">
-                  ₦{selectedService.totalAmount.toLocaleString()}
-                </span>
+                <div className="text-right">
+                  <span className="text-xs sm:text-sm text-gray-600">
+                    Total:{" "}
+                  </span>
+                  <span className="text-sm sm:text-lg font-semibold text-green-600">
+                    ₦{selectedService.totalAmount.toLocaleString()}
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -627,58 +378,11 @@ const BookService: React.FC = () => {
             </button>
             <div>
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-                Book Service
+                Nursing Procedures
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
-                Choose from our comprehensive healthcare services
+                Choose from our comprehensive nursing services
               </p>
-            </div>
-          </div>
-
-          {/* Department Tabs */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-            <div className="grid grid-cols-3 gap-1">
-              {[
-                {
-                  key: "nursing",
-                  label: "Nursing",
-                  fullLabel: "Nursing Procedures",
-                  count: nursingProcedures.length,
-                },
-                {
-                  key: "caregiver",
-                  label: "CareGiver",
-                  fullLabel: "CareGiver",
-                  count: careGiverServices.length,
-                },
-                {
-                  key: "inpatient",
-                  label: "InPatient",
-                  fullLabel: "InPatient",
-                  count: inPatientServices.length,
-                },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center justify-center space-x-1 sm:space-x-2 py-2 sm:py-3 px-2 sm:px-4 rounded-lg font-medium transition-all text-xs sm:text-sm ${
-                    activeTab === tab.key
-                      ? "bg-green-600 text-white shadow-sm"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  {getDepartmentIcon(tab.key)}
-                  <span className="hidden sm:inline">{tab.fullLabel}</span>
-                  <span className="sm:hidden">{tab.label}</span>
-                  <span
-                    className={`text-xs px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full ${
-                      activeTab === tab.key ? "bg-green-500" : "bg-gray-200"
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              ))}
             </div>
           </div>
         </div>
@@ -692,7 +396,7 @@ const BookService: React.FC = () => {
                 <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search services..."
+                  placeholder="Search nursing procedures..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -701,43 +405,23 @@ const BookService: React.FC = () => {
             </div>
 
             {/* Services Grid */}
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-white rounded-lg p-4 sm:p-6 animate-pulse"
-                  >
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-200 rounded-lg"></div>
-                      <div className="flex-1">
-                        <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                        <div className="h-2 sm:h-3 bg-gray-200 rounded w-full mb-2"></div>
-                        <div className="h-2 sm:h-3 bg-gray-200 rounded w-1/2"></div>
-                      </div>
-                    </div>
+            <div className="space-y-4">
+              {filteredServices.length > 0 ? (
+                filteredServices.map(renderServiceCard)
+              ) : (
+                <div className="bg-white rounded-lg p-6 sm:p-8 text-center">
+                  <div className="text-gray-400 mb-4">
+                    <Search className="w-8 h-8 sm:w-12 sm:h-12 mx-auto" />
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {filteredServices.length > 0 ? (
-                  filteredServices.map(renderServiceCard)
-                ) : (
-                  <div className="bg-white rounded-lg p-6 sm:p-8 text-center">
-                    <div className="text-gray-400 mb-4">
-                      <Search className="w-8 h-8 sm:w-12 sm:h-12 mx-auto" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                      No services found
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      Try adjusting your search terms
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                    No nursing procedures found
+                  </h3>
+                  <p className="text-sm sm:text-base text-gray-600">
+                    Try adjusting your search terms
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Summary Card */}
@@ -771,7 +455,6 @@ const BookService: React.FC = () => {
                             </button>
                           </div>
                           <div className="text-xs text-gray-600 space-y-1">
-                            <div>Quantity: {selected.quantity}</div>
                             <div>Days: {selected.days}</div>
                             <div className="font-semibold text-green-600">
                               ₦{selected.totalAmount.toLocaleString()}
@@ -794,12 +477,10 @@ const BookService: React.FC = () => {
                       </div>
                     </div>
 
-                    <Link to="/patient/matching" className="w-full">
-                      <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
-                        <span>Proceed</span>
-                        <ArrowLeft className="w-4 h-4 rotate-180" />
-                      </button>
-                    </Link>
+                    <button className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2">
+                      <span>Proceed</span>
+                      <ArrowLeft className="w-4 h-4 rotate-180" />
+                    </button>
                   </>
                 ) : (
                   <div className="text-center py-8">
@@ -810,7 +491,7 @@ const BookService: React.FC = () => {
                       No services selected
                     </h4>
                     <p className="text-gray-600 text-sm">
-                      Choose services to see your summary here
+                      Choose nursing procedures to see your summary here
                     </p>
                   </div>
                 )}
@@ -823,4 +504,4 @@ const BookService: React.FC = () => {
   );
 };
 
-export default BookService;
+export default NursingProcedures;
