@@ -4,19 +4,11 @@ import Layout from "./layout/Layout";
 import LandingPage from "./pages/LandingPage";
 import Login from "./user/Login";
 import SignUp from "./user/SignUp";
-import UserLayout from "./layout/UserLayout";
-import Home from "./userdashboard/Home";
-import MedicalProfileForm from "./userdashboard/Profile";
-import HealthAssessmentForm from "./userdashboard/HealthAssessment";
-import TestAssessment from "./userdashboard/Test";
-import NursingProcedures from "./userdashboard/Nursing";
 import CaregiverServicesBooking from "./userdashboard/Caregiver";
-import PaymentHistory from "./userdashboard/Payments";
-import PatientFundingPayments from "./userdashboard/Funding";
-import NurseLayout from "./layout/NurseLayout";
+
 import NurseDashboard from "./nursedashboard/NurseDashboard";
 import ActivePatient from "./nursedashboard/ActivePatient";
-import Appointment from "./nursedashboard/Appointment"
+import Appointment from "./nursedashboard/Appointment";
 import WalletEarnings from "./nursedashboard/Wallet";
 import IDCard from "./nursedashboard/IDCard";
 import AdminLayout from "./admindashboard/AdminLayout";
@@ -24,20 +16,21 @@ import Verification from "./admindashboard/Verification";
 import PaymentManagement from "./admindashboard/PaymentManagement";
 import DelayedSessions from "./admindashboard/DelayedSession";
 import RegisteredPatients from "./admindashboard/RegisterPatients";
+
 import PatientLayout from "./patient/Layout";
 import PatientDashboard from "./patient/PatientDashboard";
-// import FindCare from "./patient/FindCare";
-// import PatientAppointment from "./patient/Appointment";
 import PatientHistory from "./patient/PatientHistory";
 import PatientProfile from "./patient/Profile";
 import PatientMessages from "./patient/Message";
 import BookService from "./patient/BookService";
-// import PractitionerMatching from "./patient/Matching";
 import HealthPractitionersMatching from "./patient/Matching";
 import AppointmentReceipt from "./patient/PatientReceipts";
 import CaregiverBooking from "./patient/CareGiver";
 import InPatientCaregiverService from "./patient/InPatient";
 import VerificationFlow from "./user/Verification";
+
+import NurseLayout from "./layout/NurseLayout";
+import NurseKycVerification from "./nursedashboard/KYCVerification";
 
 const App: React.FC = () => {
   return (
@@ -51,31 +44,12 @@ const App: React.FC = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<SignUp />} />
         <Route path="/verification" element={<VerificationFlow />} />
-
-        {/* user dashboard */}
-        <Route path="/dashboard" element={<UserLayout />}>
-          <Route index element={<Home />} />
-          <Route path="profile" element={<MedicalProfileForm />} />
-          <Route path="health" element={<HealthAssessmentForm />} />
-          <Route path="test" element={<TestAssessment />} />
-          <Route path="nursing" element={<NursingProcedures />} />
-          <Route path="payment" element={<PaymentHistory />} />
-          <Route path="funding" element={<PatientFundingPayments />} />
-        </Route>
+        <Route path="/kyc-nurse" element={<NurseKycVerification />} />
 
         <Route
           path="/dashboard/caregiver"
           element={<CaregiverServicesBooking />}
         />
-
-        {/* nurse dashboard */}
-        <Route path="/nurse/dashboard" element={<NurseLayout />}>
-          <Route index element={<NurseDashboard />} />
-          <Route path="active-patient" element={<ActivePatient />} />
-          <Route path="appointment" element={<Appointment />} />
-          <Route path="wallet" element={<WalletEarnings />} />
-          <Route path="id-card" element={<IDCard />} />
-        </Route>
 
         {/* admin dashboard */}
         <Route path="/admin" element={<AdminLayout />}>
@@ -96,6 +70,14 @@ const App: React.FC = () => {
           <Route path="procedures" element={<BookService />} />
           <Route path="matching" element={<HealthPractitionersMatching />} />
           <Route path="receipt" element={<AppointmentReceipt />} />
+        </Route>
+
+        <Route path="/nurse" element={<NurseLayout />}>
+          <Route index element={<NurseDashboard />} />
+          <Route path="active-patient" element={<ActivePatient />} />
+          <Route path="appointment" element={<Appointment />} />
+          <Route path="wallet" element={<WalletEarnings />} />
+          <Route path="id-card" element={<IDCard />} />
         </Route>
       </Routes>
     </Router>

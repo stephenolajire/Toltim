@@ -11,7 +11,7 @@ import { Link, NavLink } from "react-router-dom";
 const NurseStat: React.FC = () => {
   return (
     <div className="sticky top-0 z-50 bg-white shadow-sm">
-      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="px-4 sm:px-4 md:px-20 lg:px-50 mx-auto">
         {/* Nurse Profile Header */}
         <div className="bg-gradient-to-r from-green-600 to-green-700 my-4 lg:my-6 flex flex-col lg:flex-row lg:items-center justify-between p-6 rounded-xl shadow-lg">
           <div className="flex items-center space-x-4 mb-4 lg:mb-0">
@@ -58,7 +58,7 @@ const NurseStat: React.FC = () => {
                 5
               </div>
               <Link
-                to="/nurse/dashboard/appointment"
+                to="/nurse/appointment"
                 className="inline-flex items-center text-sm text-blue-100 hover:text-white transition-colors duration-200 underline underline-offset-2"
               >
                 Click to view details
@@ -77,7 +77,7 @@ const NurseStat: React.FC = () => {
           <div className="bg-gray-50 p-2 rounded-lg overflow-x-auto hide-scrollbar">
             <nav className="flex space-x-1 min-w-max">
               <NavLink
-                to="/nurse/dashboard"
+                to="/nurse"
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-3 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive
@@ -91,7 +91,7 @@ const NurseStat: React.FC = () => {
               </NavLink>
 
               <NavLink
-                to="/nurse/dashboard/active-patient"
+                to="/nurse/active-patient"
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-3 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive
@@ -105,7 +105,7 @@ const NurseStat: React.FC = () => {
               </NavLink>
 
               <NavLink
-                to="/nurse/dashboard/appointment"
+                to="/nurse/appointment"
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-3 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive
@@ -119,7 +119,7 @@ const NurseStat: React.FC = () => {
               </NavLink>
 
               <NavLink
-                to="/nurse/dashboard/wallet"
+                to="/nurse/wallet"
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-3 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive
@@ -133,7 +133,7 @@ const NurseStat: React.FC = () => {
               </NavLink>
 
               <NavLink
-                to="/nurse/dashboard/id-card"
+                to="/nurse/id-card"
                 className={({ isActive }) =>
                   `flex items-center gap-2 px-4 py-3 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${
                     isActive
