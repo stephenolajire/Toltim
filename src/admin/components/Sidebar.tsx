@@ -52,10 +52,10 @@ const Sidebar: React.FC<SidebarProp> = ({close}) => {
       <div>
         <div className="flex space-x-3 items-center pb-10">
           <div>
-            <Stethoscope />
+            <Stethoscope className="text-green-500"/>
           </div>
           <div>
-            <h3 className="text-black text-2xl font-bold">Toltim</h3>
+            <h3 className="text-green-500 text-2xl font-bold">Toltim</h3>
             <p className="text-sm text-gray-500">Admin Panel</p>
           </div>
         </div>
@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarProp> = ({close}) => {
             {adminLinks.map((nav) => (
               <NavLink
                 className={({ isActive}) =>
-                  isActive ? "text-black font-bold" : "text-gray-500"
+                  isActive ? "text-green-500 font-bold" : "text-gray-500"
                 }
                 key={nav.name}
                 to={nav.href}

@@ -7,7 +7,7 @@ const OverviewStatCard: React.FC = () => {
       <div className="p-5 h-auto w-full border border-gray-100 shadow hover:border-gray-300 rounded-lg">
         <div className="flex items-center justify-between">
           <p className="text-black">Total New Bookings</p>
-          <span className="text-gray-500">
+          <span className="text-green-500">
             <Plus size={16} />
           </span>
         </div>
@@ -28,7 +28,7 @@ const OverviewStatCard: React.FC = () => {
       <div className="p-5 h-auto w-full border border-gray-100 shadow hover:border-gray-300 rounded-lg">
         <div className="flex items-center justify-between">
           <p className="text-black">Today's Bookings</p>
-          <span className="text-gray-500">
+          <span className="text-green-500">
             <Calendar size={16} />
           </span>
         </div>
@@ -49,7 +49,7 @@ const OverviewStatCard: React.FC = () => {
       <div className="p-5 h-auto w-full border border-gray-100 shadow hover:border-gray-300 rounded-lg">
         <div className="flex items-center justify-between">
           <p className="text-black">In Progress</p>
-          <span className="text-gray-500">
+          <span className="text-green-500">
             <Clock size={16} />
           </span>
         </div>
@@ -70,7 +70,7 @@ const OverviewStatCard: React.FC = () => {
       <div className="p-5 h-auto w-full border border-gray-100 shadow hover:border-gray-300 rounded-lg">
         <div className="flex items-center justify-between">
           <p className="text-black">Completed</p>
-          <span className="text-gray-500">
+          <span className="text-green-500">
             <CheckCircle size={16} />
           </span>
         </div>

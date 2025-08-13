@@ -1,8 +1,8 @@
 import React from 'react'
-import OverviewStatCard from '../components/OverviewStatCard';
-import OverviewChart from '../components/OverViewChart';
-import TopPerformingNurses from '../components/OverviewNurses';
-import UnacceptedBookings from '../components/OverviewBooking';
+import OverviewStatCard from '../components/overview/OverviewStatCard';
+import OverviewChart from '../components/overview/OverViewChart';
+import TopPerformingNurses from '../components/overview/OverviewNurses';
+import UnacceptedBookings from '../components/overview/OverviewBooking';
 
 const Overview:React.FC = () => {
   return (

@@ -55,9 +55,9 @@ const OverviewChart: React.FC = () => {
             data={data}
             margin={{
               top: 20,
-              right: 30,
-              left: 20,
-              bottom: 60,
+              right: 10,
+              left: 10,
+              bottom: 20,
             }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -95,7 +95,7 @@ const OverviewChart: React.FC = () => {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex -mt-13 pb-5 items-center px-5 justify-center space-x-10">
+      <div className="flex py-5 items-center px-5 justify-center space-x-10">
         <div className="flex items-center">
           <div className="w-4 h-4 bg-blue-500 mr-2 rounded-sm"></div>
           <span className="text-sm text-gray-600">Bookings</span>

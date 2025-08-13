@@ -32,7 +32,7 @@ const TopPerformingNurses = () => {
     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 w-full">
       {/* Header */}
       <div className="flex items-center gap-2 mb-2">
-        <Star className="w-5 h-5 text-yellow-400 fill-current" />
+        <Star className="w-5 h-5 text-green-500 fill-current" />
         <h2 className="text-2xl font-bold text-gray-800 mb-1">
           Top Performing Nurses
         </h2>
