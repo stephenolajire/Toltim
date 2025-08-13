@@ -11,11 +11,6 @@ import ActivePatient from "./nursedashboard/ActivePatient";
 import Appointment from "./nursedashboard/Appointment";
 import WalletEarnings from "./nursedashboard/Wallet";
 import IDCard from "./nursedashboard/IDCard";
-import AdminLayout from "./admindashboard/AdminLayout";
-import Verification from "./admindashboard/Verification";
-import PaymentManagement from "./admindashboard/PaymentManagement";
-import DelayedSessions from "./admindashboard/DelayedSession";
-import RegisteredPatients from "./admindashboard/RegisterPatients";
 
 import PatientLayout from "./patient/Layout";
 import PatientDashboard from "./patient/PatientDashboard";
@@ -31,6 +26,10 @@ import VerificationFlow from "./user/Verification";
 
 import NurseLayout from "./layout/NurseLayout";
 import NurseKycVerification from "./nursedashboard/KYCVerification";
+
+
+import AdminLayout from "./admin/AdminLayout";
+import Overview from "./admin/pages/Overview";
 
 const App: React.FC = () => {
   return (
@@ -53,11 +52,11 @@ const App: React.FC = () => {
 
         {/* admin dashboard */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Verification />} />
-          <Route path="payments" element={<PaymentManagement />} />
+          <Route index element={<Overview />} />
+          {/* <Route path="payments" element={<PaymentManagement />} />
           <Route path="delayed-sessions" element={<DelayedSessions />} />
           <Route path="patients" element={<RegisteredPatients />} />
-          <Route path="id-card" element={<IDCard />} />
+          <Route path="id-card" element={<IDCard />} /> */}
         </Route>
 
         <Route path="/patient" element={<PatientLayout />}>
