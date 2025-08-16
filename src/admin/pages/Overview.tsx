@@ -8,7 +8,7 @@ const Overview:React.FC = () => {
   return (
     <div>
       <div className="py-5">
-        <h1 className="font-bold text-black text-4xl capitalize">Overview</h1>
+        <h1 className="font-bold text-black md:text-4xl text-3xl capitalize">Overview</h1>
         <p className='text-gray-500 mt-1'>Monitor your healthcare operations at a glance</p>
       </div>
 

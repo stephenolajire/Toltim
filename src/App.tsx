@@ -34,6 +34,16 @@ import AdminUserLayout from "./admin/components/user/AdminUserLayout";
 import AdminPatients from "./admin/pages/AdminPatients";
 import AdminNurse from "./admin/pages/AdminNurse";
 import AdminCHW from "./admin/pages/AdminCHW";
+import AdminBookingLayout from "./admin/components/booking/AdminBookingLayout";
+import NurseBooking from "./admin/pages/NurseBooking";
+import Procedures from "./admin/pages/Procedures";
+import AdminVerificationLayout from "./admin/components/verification/AdminVerificationLayout";
+import PendingNurseVerifications from "./admin/pages/PendingNurseVerification";
+import PendingCHWVerifications from "./admin/pages/CHWVerification";
+import DoctorPendingVerifications from "./admin/pages/DoctorsVerification";
+import VerificationHistory from "./admin/pages/VerificationHistory";
+import CareGiverBooking from "./admin/pages/CareGiverBooking";
+import BedSideBooking from "./admin/pages/BedSideBooking";
 
 const App: React.FC = () => {
   return (
@@ -62,7 +72,19 @@ const App: React.FC = () => {
             <Route path="nurse" element={<AdminNurse />} />
             <Route path="chw" element={<AdminCHW />} />
           </Route>
+          <Route path="bookings" element={<AdminBookingLayout />}>
+            <Route index element={<NurseBooking />} />
+            <Route path="caregiver" element={<CareGiverBooking />} />
+            <Route path="bedside" element={<BedSideBooking />} />
+          </Route>
           <Route path="payments" element={<PaymentManagement />} />
+          <Route path="procedures" element={<Procedures />} />
+          <Route path="verifications" element={<AdminVerificationLayout />}>
+            <Route index element={<PendingNurseVerifications />} />
+            <Route path="chw" element={<PendingCHWVerifications />} />
+            <Route path="doctor" element={<DoctorPendingVerifications />} />
+            <Route path="history" element={<VerificationHistory />} />
+          </Route>
         </Route>
 
         {/* patient dashboard */}
