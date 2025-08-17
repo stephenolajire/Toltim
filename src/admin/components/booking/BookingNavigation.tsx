@@ -19,7 +19,7 @@ const BookingNavigation: React.FC = () => {
     {
       id: 3,
       href: "/admin/bookings/bedside",
-      name: "CHW",
+      name: "Bedside",
       icon: <Bed size={18} />,
     },
   ];
