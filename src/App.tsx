@@ -29,7 +29,6 @@ import NurseKycVerification from "./nursedashboard/KYCVerification";
 
 import AdminLayout from "./admin/AdminLayout";
 import Overview from "./admin/pages/Overview";
-import PaymentManagement from "./admin/pages/Payments";
 import AdminUserLayout from "./admin/components/user/AdminUserLayout";
 import AdminPatients from "./admin/pages/AdminPatients";
 import AdminNurse from "./admin/pages/AdminNurse";
@@ -44,6 +43,11 @@ import DoctorPendingVerifications from "./admin/pages/DoctorsVerification";
 import VerificationHistory from "./admin/pages/VerificationHistory";
 import CareGiverBooking from "./admin/pages/CareGiverBooking";
 import BedSideBooking from "./admin/pages/BedSideBooking";
+import AdminPaymentLayout from "./admin/components/payment/AdminPaymentLayout";
+import PatientFunding from "./admin/pages/PatientFunding";
+import WalletTransactions from "./admin/pages/WalletTransaction";
+import WithdrawalRequests from "./admin/pages/WithdrawalRequest";
+import SystemCommission from "./admin/pages/SystemCommission";
 
 const App: React.FC = () => {
   return (
@@ -77,13 +81,20 @@ const App: React.FC = () => {
             <Route path="caregiver" element={<CareGiverBooking />} />
             <Route path="bedside" element={<BedSideBooking />} />
           </Route>
-          <Route path="payments" element={<PaymentManagement />} />
+
           <Route path="procedures" element={<Procedures />} />
           <Route path="verifications" element={<AdminVerificationLayout />}>
             <Route index element={<PendingNurseVerifications />} />
             <Route path="chw" element={<PendingCHWVerifications />} />
             <Route path="doctor" element={<DoctorPendingVerifications />} />
             <Route path="history" element={<VerificationHistory />} />
+          </Route>
+
+          <Route path="payments" element={<AdminPaymentLayout />}>
+            <Route index element={<PatientFunding />} />
+            <Route path="wallet" element={<WalletTransactions />} />
+            <Route path="withdrawal" element={<WithdrawalRequests />} />
+            <Route path="commission" element={<SystemCommission />} />
           </Route>
         </Route>
 
