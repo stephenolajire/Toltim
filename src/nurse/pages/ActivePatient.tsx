@@ -1,7 +1,6 @@
-import React,{useState} from "react";
-import { Calendar, Download, Play } from "lucide-react";
-import RecordTreatmentModal from "./components/RecordModal";
-
+import React, { useState } from "react";
+import { Calendar, Download, Play, X } from "lucide-react";
+import RecordTreatmentModal from "../components/RecordModal";
 
 interface Patient {
   id: string;
@@ -16,6 +15,80 @@ interface Patient {
 }
 
 const ActivePatients: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+
+  const PatientConfirmation = () => {
+    const handleSubmit = () => {
+      console.log("Session recorded with value:", inputValue);
+      // Add your logic here to handle the session recording
+      setIsConfirmationOpen(false); // Close confirmation after submit
+      setInputValue(""); // Reset input
+      setIsOpen(true); // Open the Record Treatment Modal after confirmation
+    };
+
+    const handleClose = () => {
+      setIsConfirmationOpen(false);
+      setInputValue(""); // Reset input when closing
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="w-[400px] bg-white rounded-lg shadow-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Enter Confirmation Code
+            </h3>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="w-full">
+            <form className="w-full" onSubmit={(e) => e.preventDefault()}>
+              <div className="mb-4">
+                <label
+                  htmlFor="sessionValue"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Session Value
+                </label>
+                <input
+                  id="sessionValue"
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="p-3 w-full border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Enter confirmation code"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSubmit}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Submit
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const patients: Patient[] = [
     {
       id: "1",
@@ -43,14 +116,16 @@ const ActivePatients: React.FC = () => {
     return `₦${amount.toLocaleString()}`;
   };
 
-  const [isOpen, setIsOpen] = useState(false)
-
   const openModal = () => {
-    setIsOpen(!isOpen)
-  }
+    setIsOpen(!isOpen);
+  };
+
+  const openConfirmation = () => {
+    setIsConfirmationOpen(!isConfirmationOpen);
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm px-2 sm:px-4 md:px-20 lg:px-50 overflow-x-auto hide-scrollbar">
+    <div className="bg-white rounded-lg overflow-x-auto hide-scrollbar">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">
         Active Patients
       </h2>
@@ -106,8 +181,11 @@ const ActivePatients: React.FC = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button onClick={openModal} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={openConfirmation}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
                 <Play className="w-4 h-4" />
                 Record Session
               </button>
@@ -123,9 +201,11 @@ const ActivePatients: React.FC = () => {
           </div>
         ))}
 
-        {isOpen && (
-          <RecordTreatmentModal isOpen={isOpen} onClose={openModal}/>
-        )}
+        {/* Render modals */}
+        {isConfirmationOpen && <PatientConfirmation />}
+
+        {/* Uncomment when you have the RecordTreatmentModal component */}
+        {isOpen && <RecordTreatmentModal isOpen={isOpen} onClose={openModal} />}
       </div>
     </div>
   );

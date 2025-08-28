@@ -4,17 +4,9 @@ import Layout from "./layout/Layout";
 import LandingPage from "./pages/LandingPage";
 import Login from "./user/Login";
 import SignUp from "./user/SignUp";
-import CaregiverServicesBooking from "./userdashboard/Caregiver";
-
-import NurseDashboard from "./nursedashboard/NurseDashboard";
-import ActivePatient from "./nursedashboard/ActivePatient";
-import Appointment from "./nursedashboard/Appointment";
-import WalletEarnings from "./nursedashboard/Wallet";
-import IDCard from "./nursedashboard/IDCard";
 
 import PatientLayout from "./patient/Layout";
 import PatientDashboard from "./patient/PatientDashboard";
-import PatientHistory from "./patient/PatientHistory";
 import PatientProfile from "./patient/Profile";
 import PatientMessages from "./patient/Message";
 import BookService from "./patient/BookService";
@@ -23,9 +15,10 @@ import AppointmentReceipt from "./patient/PatientReceipts";
 import CaregiverBooking from "./patient/CareGiver";
 import InPatientCaregiverService from "./patient/InPatient";
 import VerificationFlow from "./user/Verification";
+import PatientAppointmentHistory from "./patient/PatientAppointmentHistory";
+import HistoryLayout from "./patient/HistoryLayout";
+import PatientTransactionHistory from "./patient/PatientTransactionHistory";
 
-import NurseLayout from "./layout/NurseLayout";
-import NurseKycVerification from "./nursedashboard/KYCVerification";
 
 import AdminLayout from "./admin/AdminLayout";
 import Overview from "./admin/pages/Overview";
@@ -48,6 +41,18 @@ import PatientFunding from "./admin/pages/PatientFunding";
 import WalletTransactions from "./admin/pages/WalletTransaction";
 import WithdrawalRequests from "./admin/pages/WithdrawalRequest";
 import SystemCommission from "./admin/pages/SystemCommission";
+
+
+// Nurse Dashboard
+import NurseLayout from "./nurse/NurseLayout";
+import CaregiverServicesBooking from "./userdashboard/Caregiver";
+import NurseKycVerification from "./nurse/KYCVerification";
+import NurseDashboard from "./nurse/pages/NurseDashboard";
+import ActivePatients from "./nurse/pages/ActivePatient";
+import Appointments from "./nurse/pages/Appointment";
+import WalletEarnings from "./nurse/pages/Wallet";
+import IDCard from "./nurse/IDCard";
+
 
 const App: React.FC = () => {
   return (
@@ -103,7 +108,10 @@ const App: React.FC = () => {
           <Route index element={<PatientDashboard />} />
           <Route path="in-patient" element={<InPatientCaregiverService />} />
           <Route path="caregiver" element={<CaregiverBooking />} />
-          <Route path="history" element={<PatientHistory />} />
+          <Route path="history" element={<HistoryLayout />}>
+            <Route index element={<PatientAppointmentHistory />} />
+            <Route path="transaction" element={<PatientTransactionHistory />} />
+          </Route>
           <Route path="profile" element={<PatientProfile />} />
           <Route path="messages" element={<PatientMessages />} />
           <Route path="procedures" element={<BookService />} />
@@ -111,10 +119,11 @@ const App: React.FC = () => {
           <Route path="receipt" element={<AppointmentReceipt />} />
         </Route>
 
+        {/* nurse dashboard */}
         <Route path="/nurse" element={<NurseLayout />}>
           <Route index element={<NurseDashboard />} />
-          <Route path="active-patient" element={<ActivePatient />} />
-          <Route path="appointment" element={<Appointment />} />
+          <Route path="active-patients" element={<ActivePatients />} />
+          <Route path="appointments" element={<Appointments />} />
           <Route path="wallet" element={<WalletEarnings />} />
           <Route path="id-card" element={<IDCard />} />
         </Route>

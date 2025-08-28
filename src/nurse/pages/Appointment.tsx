@@ -65,7 +65,7 @@ const Appointments: React.FC = () => {
       : appointments.filter((apt) => apt.status === "treated");
 
   return (
-    <div className="bg-white rounded-lg shadow-sm px-2 sm:px-4 md:px-20 lg:px-50 mb-4">
+    <div className="bg-white rounded-lg  mb-4">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">Appointments</h2>
 
       {/* Tab Navigation */}

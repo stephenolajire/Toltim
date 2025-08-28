@@ -50,7 +50,7 @@ const WalletEarnings: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm px-2 sm:px-4 md:px-20 lg:px-50">
+    <div className="bg-white rounded-lg pb-10">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">
         Wallet & Earnings
       </h2>

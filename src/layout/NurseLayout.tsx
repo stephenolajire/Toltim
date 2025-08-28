@@ -2,7 +2,7 @@ import React from 'react'
 import Header from '../components/common/nursedashboard/Header'
 import Footer from '../components/common/Footer'
 import { Outlet } from 'react-router-dom'
-import NurseStat from '../components/common/nursedashboard/NurseStat'
+import NurseStat from '../nurse/components/NurseStat'
 
 const NurseLayout:React.FC = () => {
   return (

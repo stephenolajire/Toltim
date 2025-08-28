@@ -1,6 +1,6 @@
 import React from "react";
 import { MapPin, Clock, FileText, Download } from "lucide-react";
-import PatientAssessmentModal from "./components/FullAccessModal";
+import PatientAssessmentModal from "../../nursedashboard/components/FullAccessModal";
 
 interface PatientRequest {
   id: string;
@@ -84,7 +84,7 @@ const NurseDashboard: React.FC = () => {
   };
 
   return (
-    <div className="w-full mx-auto px-2 sm:px-4 md:px-20 lg:px-50">
+    <div className="w-full pb-10">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">
         New Patient Requests
       </h1>

@@ -1,6 +1,6 @@
 import { Calendar } from "lucide-react";
 import React from "react";
-import AppointmentCard from "./AppointmentCard";
+import AppointmentCard from "./components/AppointmentCard";
 
 const AppointmentData = [
   {
