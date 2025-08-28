@@ -76,7 +76,7 @@ const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
         <div className="space-y-1">
           {navigationItems.map((item) => (
             <NavLink
-            onClick={() => handleActive(true)}
+              onClick={() => {handleActive(true), closeSidebar()}}
               key={item.name}
               to={item.href}
               className={({ isActive }) =>
