@@ -1,6 +1,6 @@
 import React from "react";
 import { MapPin, Clock, FileText, Download } from "lucide-react";
-import PatientAssessmentModal from "../../nursedashboard/components/FullAccessModal";
+import PatientAssessmentModal from "../components/FullAccessModal";
 
 interface PatientRequest {
   id: string;

@@ -45,13 +45,13 @@ import SystemCommission from "./admin/pages/SystemCommission";
 
 // Nurse Dashboard
 import NurseLayout from "./nurse/NurseLayout";
-import CaregiverServicesBooking from "./userdashboard/Caregiver";
-import NurseKycVerification from "./nurse/KYCVerification";
+// import CaregiverServicesBooking from "./userdashboard/Caregiver";
+import NurseKycVerification from "./nurse/pages/KYCVerification";
 import NurseDashboard from "./nurse/pages/NurseDashboard";
 import ActivePatients from "./nurse/pages/ActivePatient";
 import Appointments from "./nurse/pages/Appointment";
 import WalletEarnings from "./nurse/pages/Wallet";
-import IDCard from "./nurse/IDCard";
+import IDCard from "./nurse/pages/IDCard";
 
 
 const App: React.FC = () => {
@@ -68,10 +68,10 @@ const App: React.FC = () => {
         <Route path="/verification" element={<VerificationFlow />} />
         <Route path="/kyc-nurse" element={<NurseKycVerification />} />
 
-        <Route
+        {/* <Route
           path="/dashboard/caregiver"
           element={<CaregiverServicesBooking />}
-        />
+        /> */}
 
         {/* admin dashboard */}
         <Route path="/admin" element={<AdminLayout />}>
