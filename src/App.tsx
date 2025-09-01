@@ -13,7 +13,6 @@ import HealthPractitionersMatching from "./patient/Matching";
 import AppointmentReceipt from "./patient/PatientReceipts";
 import CaregiverBooking from "./patient/CareGiver";
 import InPatientCaregiverService from "./patient/InPatient";
-import VerificationFlow from "./auth/Verification";
 import PatientAppointmentHistory from "./patient/PatientAppointmentHistory";
 import HistoryLayout from "./patient/HistoryLayout";
 import PatientTransactionHistory from "./patient/PatientTransactionHistory";
@@ -67,6 +66,7 @@ import ProtectedRoute from "./constant/ProtectedRoute";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NotFound from "./pages/NotFound";
 import EditUserProfile from "./patient/EditUserProfile";
+import KYCVerification from "./auth/KYCVerification";
 
 
 
@@ -99,7 +99,7 @@ const App: React.FC = () => {
           {/* user auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<SignUp />} />
-          <Route path="/verification" element={<VerificationFlow />} />
+          <Route path="/kyc-verification" element={<KYCVerification />} />
           <Route path="/kyc-nurse" element={<NurseKycVerification />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
