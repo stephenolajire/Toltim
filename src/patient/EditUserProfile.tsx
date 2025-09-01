@@ -14,6 +14,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import api from "../constant/api";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 interface MedicalInformation {
   known_allergies: string;
@@ -194,6 +195,7 @@ const updateProfile = async (
   profileData: ProfileFormData
 ): Promise<ProfileFormData> => {
   const response = await api.put<ProfileFormData>("user/profile", profileData);
+  console.log(response.data);
   return response.data;
 };
 
@@ -269,6 +271,7 @@ const EditUserProfile: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
       navigate("/patient/profile");
+      toast.success("Profile updated successfully");
     },
     onError: (error: any) => {
       console.error("Profile update failed:", error);
@@ -310,13 +313,46 @@ const EditUserProfile: React.FC = () => {
     enableReinitialize: true,
     validationSchema,
     onSubmit: (values) => {
-      updateProfileMutation.mutate(values);
+      const formattedData = {
+        ...values,
+        phone_number: formatPhoneNumber(values.phone_number),
+        emergency_contacts: values.emergency_contacts.map((contact) => ({
+          ...contact,
+          phone_number: formatPhoneNumber(contact.phone_number),
+        })),
+      };
+      updateProfileMutation.mutate(formattedData);
     },
   });
 
   const handleGoBack = () => {
     navigate("/patient/profile");
   };
+
+  // Add this helper function at the top of your file, after the imports
+  const formatPhoneNumber = (phone: string): string => {
+    // Remove any non-digit characters except '+'
+    let cleaned = phone.replace(/[^\d+]/g, "");
+
+    // Check if number already has +234
+    if (cleaned.startsWith("+234")) {
+      return cleaned;
+    }
+
+    // If starts with 234, add +
+    if (cleaned.startsWith("234")) {
+      return "+" + cleaned;
+    }
+
+    // If starts with 0, replace with +234
+    if (cleaned.startsWith("0")) {
+      return "+234" + cleaned.substring(1);
+    }
+
+    // Otherwise, add +234 prefix
+    return "+234" + cleaned;
+  };
+
 
   if (isFetchingProfile) {
     return (
@@ -800,9 +836,17 @@ const EditUserProfile: React.FC = () => {
                       value={
                         formik.values.emergency_contacts[0]?.phone_number || ""
                       }
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow user to type normally, format will be applied on submit
+                        formik.setFieldValue(
+                          "emergency_contacts[0].phone_number",
+                          value
+                        );
+                      }}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 `}
+                      placeholder="+2341234567890"
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500`}
                     />
                     {formik.touched.emergency_contacts?.[0]?.phone_number &&
                       typeof formik.errors.emergency_contacts?.[0] ===
