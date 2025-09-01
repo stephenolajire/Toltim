@@ -65,6 +65,8 @@ import ChangePassword from "./auth/ChangePassword";
 import ProtectedRoute from "./constant/ProtectedRoute";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import NotFound from "./pages/NotFound";
+import EditUserProfile from "./patient/EditUserProfile";
 
 
 
@@ -91,6 +93,8 @@ const App: React.FC = () => {
           <Route path="/" element={<Layout />}>
             <Route index element={<LandingPage />} />
           </Route>
+
+          <Route path="*" element={<NotFound />} />
 
           {/* user auth */}
           <Route path="/login" element={<Login />} />
@@ -196,6 +200,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <PatientProfile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="profile/edit"
+              element={
+                <ProtectedRoute>
+                  <EditUserProfile />
                 </ProtectedRoute>
               }
             />

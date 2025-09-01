@@ -4,20 +4,17 @@ import {
   Calendar,
   Heart,
   Edit,
-  Save,
-  X,
-  Camera,
   AlertCircle,
   Clock,
   FileText,
   Activity,
   Settings,
   Loader,
-  CheckCircle,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom"; // Add this import
 import api from "../constant/api";
+import { useState } from "react";
 
 interface MedicalInformation {
   known_allergies: string;
@@ -72,21 +69,10 @@ interface Tab {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-interface InputFieldProps {
-  label: string;
-  field: string;
-  type?: "text" | "email" | "tel" | "date" | "select" | "textarea" | "checkbox";
-  required?: boolean;
-  value: any;
-  onChange: (value: any) => void;
-  options?: { value: string; label: string }[];
-}
-
 // Query key constant
 const PROFILE_QUERY_KEY = ["user", "profile"];
 
-// API functions
-// Update the fetchProfile function
+// API function for fetching profile
 const fetchProfile = async (): Promise<ProfileData> => {
   try {
     const response = await api.get<ProfileData>("user/profile");
@@ -110,165 +96,48 @@ const fetchProfile = async (): Promise<ProfileData> => {
           known_allergies: "None",
           current_medications: "None",
           medical_history: "No significant history",
-          primary_physician: "Dr. Smith"
+          primary_physician: "Dr. Smith",
         },
         preferences: {
           preferred_language: "en",
           communication_preference: "email",
-          appointment_reminders: true
+          appointment_reminders: true,
         },
-        emergency_contacts: [{
-          name: "Jane Doe",
-          relationship: "spouse",
-          phone_number: "+234..."
-        }]
+        emergency_contacts: [
+          {
+            name: "Jane Doe",
+            relationship: "spouse",
+            phone_number: "+234...",
+          },
+        ],
       };
     }
     throw error;
   }
 };
 
-const updateProfile = async (
-  profileData: Partial<ProfileData>
-): Promise<ProfileData> => {
-  const updateData = {
-    medical_information: profileData.medical_information,
-    preferences: profileData.preferences,
-    emergency_contacts: profileData.emergency_contacts,
-    date_of_birth: profileData.date_of_birth,
-    gender: profileData.gender,
-    blood_type: profileData.blood_type,
-    address: profileData.address,
-    city: profileData.city,
-    state: profileData.state,
-    zipcode: profileData.zipcode,
-  };
-
-  const response = await api.patch("user/profile", updateData);
-  return response.data;
-};
-
 const PatientProfile: React.FC = () => {
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>("personal");
-  const [profileData, setProfileData] = useState<ProfileData>({
-    // Personal Information
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone_number: "",
-    date_of_birth: "",
-    gender: "",
-    blood_type: "",
-
-    // Contact Information
-    address: "",
-    city: "",
-    state: "",
-    zipcode: "",
-
-    // Medical Information
-    medical_information: {
-      known_allergies: "",
-      current_medications: "",
-      medical_history: "",
-      primary_physician: "",
-    },
-
-    // Preferences
-    preferences: {
-      preferred_language: "en",
-      communication_preference: "email",
-      appointment_reminders: true,
-    },
-
-    // Emergency Contacts
-    emergency_contacts: [
-      {
-        name: "",
-        relationship: "spouse",
-        phone_number: "",
-      },
-    ],
-  });
-
-  const queryClient = useQueryClient();
 
   // Query to fetch profile data
-const {
-  data: fetchedProfileData,
-  isLoading,
-  isError,
-} = useQuery({
-  queryKey: PROFILE_QUERY_KEY,
-  queryFn: fetchProfile,
-  staleTime: 7 * 24 * 60 * 60 * 1000,
-  gcTime: 7 * 24 * 60 * 60 * 1000,
-  retry: 2,
-  refetchOnWindowFocus: false,
-});
-
-  // Mutation to update profile data
-  const updateProfileMutation = useMutation({
-    mutationFn: updateProfile,
-    onSuccess: (updatedData) => {
-      queryClient.setQueryData(PROFILE_QUERY_KEY, updatedData);
-      setIsEditing(false);
-    },
-    onError: (error: Error) => {
-      console.error("Profile update failed:", error);
-    },
+  const {
+    data: profileData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: PROFILE_QUERY_KEY,
+    queryFn: fetchProfile,
+    staleTime: 7 * 24 * 60 * 60 * 1000,
+    gcTime: 7 * 24 * 60 * 60 * 1000,
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
 
-  // Initialize profileData when fetchedProfileData is available
-  useEffect(() => {
-    if (fetchedProfileData && Object.keys(fetchedProfileData).length > 0) {
-      setProfileData((prev) => ({
-        ...prev,
-        ...fetchedProfileData,
-      }));
-    }
-  }, [fetchedProfileData]);
-
-  const handleNestedChange = (path: string, value: any) => {
-    setProfileData((prev) => {
-      const newData = { ...prev };
-      const keys = path.split(".");
-      let current: any = newData;
-
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (keys[i].includes("[") && keys[i].includes("]")) {
-          const [key, indexStr] = keys[i].split("[");
-          const index = parseInt(indexStr.replace("]", ""));
-          current = current[key][index];
-        } else {
-          current = current[keys[i]];
-        }
-      }
-
-      const lastKey = keys[keys.length - 1];
-      if (lastKey.includes("[") && lastKey.includes("]")) {
-        const [key, indexStr] = lastKey.split("[");
-        const index = parseInt(indexStr.replace("]", ""));
-        current[key][index] = value;
-      } else {
-        current[lastKey] = value;
-      }
-
-      return newData;
-    });
-  };
-
-  const handleSave = () => {
-    updateProfileMutation.mutate(profileData);
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    // Reset to the original data from cache
-    if (fetchedProfileData) {
-      setProfileData(fetchedProfileData);
-    }
+  const handleEditProfile = () => {
+    // Navigate to edit profile component
+    navigate("/patient/profile/edit");
   };
 
   const tabs: Tab[] = [
@@ -277,69 +146,49 @@ const {
     { id: "preferences", name: "Preferences", icon: Settings },
   ];
 
-  const InputField: React.FC<InputFieldProps> = ({
-    label,
-    type = "text",
-    required = false,
-    value,
-    onChange,
-    options = [],
-  }) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      {isEditing ? (
-        type === "select" ? (
-          <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-          >
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        ) : type === "textarea" ? (
-          <textarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-          />
-        ) : type === "checkbox" ? (
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={value}
-              onChange={(e) => onChange(e.target.checked)}
-              className="mr-2 text-green-600 focus:ring-green-500"
-            />
-            <span className="text-sm text-gray-600">
-              Enable appointment reminders
-            </span>
-          </label>
-        ) : (
-          <input
-            type={type}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-          />
-        )
-      ) : (
-        <p className="text-gray-900 py-2">
-          {type === "checkbox"
-            ? value
-              ? "Enabled"
-              : "Disabled"
-            : value || "Not specified"}
-        </p>
-      )}
-    </div>
-  );
+  // Helper function to calculate age from date of birth
+  const calculateAge = (dateOfBirth: string): number => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
+
+  // Helper function to format relationship
+  const formatRelationship = (relationship: string): string => {
+    return relationship.charAt(0).toUpperCase() + relationship.slice(1);
+  };
+
+  // Helper function to format language
+  const formatLanguage = (lang: string): string => {
+    const languages = {
+      en: "English",
+      es: "Spanish",
+      fr: "French",
+      other: "Other",
+    };
+    return languages[lang as keyof typeof languages] || lang;
+  };
+
+  // Helper function to format communication preference
+  const formatCommunicationPreference = (pref: string): string => {
+    const preferences = {
+      email: "Email",
+      phone: "Phone",
+      sms: "SMS",
+      mail: "Mail",
+    };
+    return preferences[pref as keyof typeof preferences] || pref;
+  };
 
   if (isLoading) {
     return (
@@ -359,9 +208,7 @@ const {
           <AlertCircle className="h-8 w-8 text-red-600 mx-auto" />
           <p className="mt-2 text-red-600">Failed to load profile data</p>
           <button
-            onClick={() =>
-              queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY })
-            }
+            onClick={() => refetch()}
             className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
           >
             Retry
@@ -369,6 +216,10 @@ const {
         </div>
       </div>
     );
+  }
+
+  if (!profileData) {
+    return null;
   }
 
   return (
@@ -384,72 +235,20 @@ const {
                   Patient Profile
                 </h1>
                 <p className="text-gray-600">
-                  Manage your personal and medical information
+                  View your personal and medical information
                 </p>
               </div>
             </div>
             <div className="flex space-x-2 md:justify-end justify-center md:my-0 my-4">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={handleSave}
-                    disabled={updateProfileMutation.isPending}
-                    className={`flex items-center px-4 py-2 text-white rounded-md transition-colors ${
-                      updateProfileMutation.isPending
-                        ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-green-600 hover:bg-green-700"
-                    }`}
-                  >
-                    {updateProfileMutation.isPending ? (
-                      <>
-                        <Loader className="animate-spin w-4 h-4 mr-2" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Changes
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={handleCancel}
-                    disabled={updateProfileMutation.isPending}
-                    className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:bg-gray-400"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Cancel
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </button>
-              )}
+              <button
+                onClick={handleEditProfile}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Profile
+              </button>
             </div>
           </div>
-
-          {/* Status Messages */}
-          {updateProfileMutation.isSuccess && (
-            <div className="mb-4 p-3 rounded-lg flex items-center bg-green-50 border border-green-200 text-green-700">
-              <CheckCircle className="text-green-600 text-lg mr-2 flex-shrink-0" />
-              <p className="text-sm">Profile updated successfully!</p>
-            </div>
-          )}
-
-          {updateProfileMutation.isError && (
-            <div className="mb-4 p-3 rounded-lg flex items-center bg-red-50 border border-red-200 text-red-700">
-              <AlertCircle className="text-red-600 text-lg mr-2 flex-shrink-0" />
-              <p className="text-sm">
-                {(updateProfileMutation.error as any)?.response?.data
-                  ?.message || "Failed to update profile. Please try again."}
-              </p>
-            </div>
-          )}
 
           {/* Profile Picture Section */}
           <div className="flex items-center mb-6">
@@ -457,11 +256,6 @@ const {
               <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
                 <User className="w-12 h-12 text-green-600" />
               </div>
-              {isEditing && (
-                <button className="absolute bottom-0 right-0 bg-green-600 text-white rounded-full p-2 hover:bg-green-700 transition-colors">
-                  <Camera className="w-4 h-4" />
-                </button>
-              )}
             </div>
             <div className="ml-6">
               <h2 className="text-xl font-semibold text-gray-900">
@@ -482,7 +276,9 @@ const {
                 <Calendar className="w-5 h-5 text-green-600 mr-2" />
                 <div>
                   <p className="text-sm text-gray-600">Age</p>
-                  <p className="font-semibold text-gray-900">39 years</p>
+                  <p className="font-semibold text-gray-900">
+                    {calculateAge(profileData.date_of_birth)} years
+                  </p>
                 </div>
               </div>
             </div>
@@ -492,7 +288,7 @@ const {
                 <div>
                   <p className="text-sm text-gray-600">Blood Type</p>
                   <p className="font-semibold text-gray-900">
-                    {profileData.blood_type}
+                    {profileData.blood_type || "Not specified"}
                   </p>
                 </div>
               </div>
@@ -549,78 +345,62 @@ const {
                 Personal Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField
-                  label="First Name"
-                  field="first_name"
-                  required
-                  value={profileData.first_name}
-                  onChange={(value) => handleNestedChange("first_name", value)}
-                />
-                <InputField
-                  label="Last Name"
-                  field="last_name"
-                  required
-                  value={profileData.last_name}
-                  onChange={(value) => handleNestedChange("last_name", value)}
-                />
-                <InputField
-                  label="Email Address"
-                  field="email"
-                  type="email"
-                  required
-                  value={profileData.email}
-                  onChange={(value) => handleNestedChange("email", value)}
-                />
-                <InputField
-                  label="Phone Number"
-                  field="phone_number"
-                  type="tel"
-                  required
-                  value={profileData.phone_number}
-                  onChange={(value) =>
-                    handleNestedChange("phone_number", value)
-                  }
-                />
-                <InputField
-                  label="Date of Birth"
-                  field="date_of_birth"
-                  type="date"
-                  required
-                  value={profileData.date_of_birth}
-                  onChange={(value) =>
-                    handleNestedChange("date_of_birth", value)
-                  }
-                />
-                <InputField
-                  label="Gender"
-                  field="gender"
-                  type="select"
-                  value={profileData.gender}
-                  onChange={(value) => handleNestedChange("gender", value)}
-                  options={[
-                    { value: "Male", label: "Male" },
-                    { value: "Female", label: "Female" },
-                    { value: "Other", label: "Other" },
-                    { value: "Prefer not to say", label: "Prefer not to say" },
-                  ]}
-                />
-                <InputField
-                  label="Blood Type"
-                  field="blood_type"
-                  type="select"
-                  value={profileData.blood_type}
-                  onChange={(value) => handleNestedChange("blood_type", value)}
-                  options={[
-                    { value: "A+", label: "A+" },
-                    { value: "A-", label: "A-" },
-                    { value: "B+", label: "B+" },
-                    { value: "B-", label: "B-" },
-                    { value: "AB+", label: "AB+" },
-                    { value: "AB-", label: "AB-" },
-                    { value: "O+", label: "O+" },
-                    { value: "O-", label: "O-" },
-                  ]}
-                />
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.first_name || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.last_name || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.email || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.phone_number || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Date of Birth
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.date_of_birth || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Gender
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.gender || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Blood Type
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.blood_type || "Not specified"}
+                  </p>
+                </div>
               </div>
 
               <h4 className="text-md font-semibold text-gray-900 mt-8 mb-4 flex items-center">
@@ -628,36 +408,38 @@ const {
                 Address Information
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Street Address"
-                    field="address"
-                    required
-                    value={profileData.address}
-                    onChange={(value) => handleNestedChange("address", value)}
-                  />
+                <div className="md:col-span-2 mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Street Address
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.address || "Not specified"}
+                  </p>
                 </div>
-                <InputField
-                  label="City"
-                  field="city"
-                  required
-                  value={profileData.city}
-                  onChange={(value) => handleNestedChange("city", value)}
-                />
-                <InputField
-                  label="State"
-                  field="state"
-                  required
-                  value={profileData.state}
-                  onChange={(value) => handleNestedChange("state", value)}
-                />
-                <InputField
-                  label="ZIP Code"
-                  field="zipcode"
-                  required
-                  value={profileData.zipcode}
-                  onChange={(value) => handleNestedChange("zipcode", value)}
-                />
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    City
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.city || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    State
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.state || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    ZIP Code
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.zipcode || "Not specified"}
+                  </p>
+                </div>
               </div>
 
               <h4 className="text-md font-semibold text-gray-900 mt-8 mb-4 flex items-center">
@@ -665,51 +447,34 @@ const {
                 Emergency Contact
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField
-                  label="Emergency Contact Name"
-                  field="emergency_contacts[0].name"
-                  required
-                  value={profileData.emergency_contacts[0]?.name || ""}
-                  onChange={(value) =>
-                    handleNestedChange("emergency_contacts[0].name", value)
-                  }
-                />
-                <InputField
-                  label="Emergency Phone"
-                  field="emergency_contacts[0].phone_number"
-                  type="tel"
-                  required
-                  value={profileData.emergency_contacts[0]?.phone_number || ""}
-                  onChange={(value) =>
-                    handleNestedChange(
-                      "emergency_contacts[0].phone_number",
-                      value
-                    )
-                  }
-                />
-                <InputField
-                  label="Relationship"
-                  field="emergency_contacts[0].relationship"
-                  type="select"
-                  required
-                  value={
-                    profileData.emergency_contacts[0]?.relationship || "spouse"
-                  }
-                  onChange={(value) =>
-                    handleNestedChange(
-                      "emergency_contacts[0].relationship",
-                      value
-                    )
-                  }
-                  options={[
-                    { value: "spouse", label: "Spouse" },
-                    { value: "parent", label: "Parent" },
-                    { value: "child", label: "Child" },
-                    { value: "sibling", label: "Sibling" },
-                    { value: "friend", label: "Friend" },
-                    { value: "other", label: "Other" },
-                  ]}
-                />
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Emergency Contact Name
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.emergency_contacts[0]?.name || "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Emergency Phone
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.emergency_contacts[0]?.phone_number ||
+                      "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Relationship
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {formatRelationship(
+                      profileData.emergency_contacts[0]?.relationship ||
+                        "Not specified"
+                    )}
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -721,54 +486,43 @@ const {
                 Medical Information
               </h3>
               <div className="space-y-6">
-                <InputField
-                  label="Known Allergies"
-                  field="medical_information.known_allergies"
-                  type="textarea"
-                  value={profileData.medical_information.known_allergies}
-                  onChange={(value) =>
-                    handleNestedChange(
-                      "medical_information.known_allergies",
-                      value
-                    )
-                  }
-                />
-                <InputField
-                  label="Current Medications"
-                  field="medical_information.current_medications"
-                  type="textarea"
-                  value={profileData.medical_information.current_medications}
-                  onChange={(value) =>
-                    handleNestedChange(
-                      "medical_information.current_medications",
-                      value
-                    )
-                  }
-                />
-                <InputField
-                  label="Medical History"
-                  field="medical_information.medical_history"
-                  type="textarea"
-                  value={profileData.medical_information.medical_history}
-                  onChange={(value) =>
-                    handleNestedChange(
-                      "medical_information.medical_history",
-                      value
-                    )
-                  }
-                />
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Known Allergies
+                  </label>
+                  <p className="text-gray-900 py-2 whitespace-pre-wrap">
+                    {profileData.medical_information.known_allergies ||
+                      "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Medications
+                  </label>
+                  <p className="text-gray-900 py-2 whitespace-pre-wrap">
+                    {profileData.medical_information.current_medications ||
+                      "Not specified"}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Medical History
+                  </label>
+                  <p className="text-gray-900 py-2 whitespace-pre-wrap">
+                    {profileData.medical_information.medical_history ||
+                      "Not specified"}
+                  </p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <InputField
-                    label="Primary Physician"
-                    field="medical_information.primary_physician"
-                    value={profileData.medical_information.primary_physician}
-                    onChange={(value) =>
-                      handleNestedChange(
-                        "medical_information.primary_physician",
-                        value
-                      )
-                    }
-                  />
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Primary Physician
+                    </label>
+                    <p className="text-gray-900 py-2">
+                      {profileData.medical_information.primary_physician ||
+                        "Not specified"}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -781,52 +535,33 @@ const {
                 Preferences & Settings
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField
-                  label="Preferred Language"
-                  field="preferences.preferred_language"
-                  type="select"
-                  value={profileData.preferences.preferred_language}
-                  onChange={(value) =>
-                    handleNestedChange("preferences.preferred_language", value)
-                  }
-                  options={[
-                    { value: "en", label: "English" },
-                    { value: "es", label: "Spanish" },
-                    { value: "fr", label: "French" },
-                    { value: "other", label: "Other" },
-                  ]}
-                />
-                <InputField
-                  label="Communication Preference"
-                  field="preferences.communication_preference"
-                  type="select"
-                  value={profileData.preferences.communication_preference}
-                  onChange={(value) =>
-                    handleNestedChange(
-                      "preferences.communication_preference",
-                      value
-                    )
-                  }
-                  options={[
-                    { value: "email", label: "Email" },
-                    { value: "phone", label: "Phone" },
-                    { value: "sms", label: "SMS" },
-                    { value: "mail", label: "Mail" },
-                  ]}
-                />
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Appointment Reminders"
-                    field="preferences.appointment_reminders"
-                    type="checkbox"
-                    value={profileData.preferences.appointment_reminders}
-                    onChange={(value) =>
-                      handleNestedChange(
-                        "preferences.appointment_reminders",
-                        value
-                      )
-                    }
-                  />
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Preferred Language
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {formatLanguage(profileData.preferences.preferred_language)}
+                  </p>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Communication Preference
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {formatCommunicationPreference(
+                      profileData.preferences.communication_preference
+                    )}
+                  </p>
+                </div>
+                <div className="md:col-span-2 mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Appointment Reminders
+                  </label>
+                  <p className="text-gray-900 py-2">
+                    {profileData.preferences.appointment_reminders
+                      ? "Enabled"
+                      : "Disabled"}
+                  </p>
                 </div>
               </div>
             </div>
