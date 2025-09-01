@@ -339,7 +339,7 @@ const AvailableCareProviders = () => {
 // Main Dashboard Component
 const PatientDashboard = () => {
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="w-full mx-auto">
       {/* Wallet Card */}
       <div className="mb-6">
         <WalletCard />

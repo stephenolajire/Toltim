@@ -4,6 +4,7 @@ import { Heart, Clock, Shield, Users } from "lucide-react";
 import { useFormik } from "formik";
 import signUpSchema from "./SignupSchema";
 import api from "../constant/api";
+import { useNavigate } from "react-router-dom";
 
 interface FormValue {
   first_name: string;
@@ -18,6 +19,8 @@ interface FormValue {
 const SignUp: React.FC = () => {
   const [role, setRole] = useState<"patient" | "nurse" | "chw">("patient");
 
+  const navigate = useNavigate()
+
   const formik = useFormik<FormValue>({
     initialValues: {
       first_name: "",
@@ -29,49 +32,57 @@ const SignUp: React.FC = () => {
       role: "patient",
     },
     validationSchema: signUpSchema,
-    onSubmit: async (values, { setSubmitting, setStatus }) => {
+    // Update the onSubmit function in your formik configuration:
+    onSubmit: async (values, { setSubmitting, setStatus, setErrors }) => {
       try {
-        setStatus(null); // Clear any previous status
+        setStatus(null);
 
         const response = await api.post("user/signup/", {
           first_name: values.first_name,
           last_name: values.last_name,
-          email: values.email,
-          phonenumber: values.phonenumber,
+          email_address: values.email,
+          phone_number: values.phonenumber,
           password: values.password,
-          confirmpassword: values.confirmpassword,
+          confirm_password: values.confirmpassword,
           role: values.role,
         });
 
         console.log("Registration successful:", response.data);
-
-        // Handle successful registration
-        // You might want to redirect to login page or show success message
-        // navigate("/login"); // Uncomment if using navigation
-        setStatus({
-          type: "success",
-          message:
-            "Registration successful! Please check your email to verify your account.",
-        });
+        localStorage.setItem("email", values.email);
+        navigate("/verify-email");
       } catch (error: any) {
         console.error("Registration failed:", error);
 
-        // Handle different types of errors
         if (error.response?.data) {
-          // Server returned an error response
-          const errorMessage =
-            error.response.data.message ||
-            "Registration failed. Please try again.";
-          setStatus({ type: "error", message: errorMessage });
+          // Handle validation errors
+          const apiErrors = error.response.data.errors;
+
+          // Map API error fields to form fields
+          const formErrors: { [key: string]: string } = {};
+
+          if (apiErrors.phone_number) {
+            formErrors.phonenumber = apiErrors.phone_number[0];
+          }
+          if (apiErrors.email_address) {
+            formErrors.email = apiErrors.email_address[0];
+          }
+          // Add other field mappings as needed
+
+          // Set form-level errors
+          setErrors(formErrors);
+
+          // Set general error message
+          setStatus({
+            type: "error",
+            message: error.response.data.message || "Validation error occurred",
+          });
         } else if (error.request) {
-          // Network error
           setStatus({
             type: "error",
             message:
               "Network error. Please check your connection and try again.",
           });
         } else {
-          // Other error
           setStatus({
             type: "error",
             message: "An unexpected error occurred. Please try again.",

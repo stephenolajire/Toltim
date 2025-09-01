@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { FaServicestack } from "react-icons/fa";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 // Define the props interface
 interface SidebarProps {
@@ -37,6 +37,14 @@ const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
   const handleActive = (active: boolean) => {   
     setIsActive(active);
   };
+
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem("refreshToken")
+    localStorage.removeItem("accessToken")
+    navigate("/")
+  }
 
   return (
     <div
@@ -102,7 +110,7 @@ const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
 
       {/* Bottom section */}
       <div className="absolute bottom-0 w-full p-4 border-t border-gray-200">
-        <button className="group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+        <button onClick={handleLogout} className="group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
           <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
           Sign out
         </button>

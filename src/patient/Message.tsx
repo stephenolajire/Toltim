@@ -200,7 +200,7 @@ const MessagingInterface: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden h-screen max-h-[800px] flex relative">
+    <div className="w-full mx-auto bg-white shadow-lg rounded-lg overflow-hidden h-screen max-h-[800px] flex relative">
       {/* Contacts Sidebar */}
       <div
         className={`w-full md:w-1/3 bg-gray-50 border-r border-gray-200 flex flex-col absolute md:relative inset-0 z-10 ${
