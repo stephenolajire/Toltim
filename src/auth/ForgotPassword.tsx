@@ -145,7 +145,7 @@ const ForgotPassword: React.FC = () => {
             </span>
           </div>
           <p className="text-blue-600 text-sm">
-            We'll send a secure password reset link to your registered email
+            We'll send a six digit OTP to your registered email
             address
           </p>
         </div>

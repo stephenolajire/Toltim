@@ -97,8 +97,8 @@ const PasswordResetVerifyOtp: React.FC = () => {
     try {
       setResendLoading(true);
 
-      const response = await api.post("resend-verification", {
-        email: email,
+      const response = await api.post("user/password-reset/resend-otp", {
+        email_address: email,
       });
 
       console.log("Verification code resent:", response.data);

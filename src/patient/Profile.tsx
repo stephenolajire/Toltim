@@ -39,7 +39,7 @@ interface ProfileData {
   // Personal Information
   first_name: string;
   last_name: string;
-  email: string;
+  email_address: string;
   phone_number: string;
   date_of_birth: string;
   gender: string;
@@ -83,7 +83,7 @@ const fetchProfile = async (): Promise<ProfileData> => {
       return {
         first_name: "John",
         last_name: "Doe",
-        email: "john.doe@example.com",
+        email_address: "john.doe@example.com",
         phone_number: "+234...",
         date_of_birth: "1990-01-01",
         gender: "Male",
@@ -366,7 +366,7 @@ const PatientProfile: React.FC = () => {
                     Email Address
                   </label>
                   <p className="text-gray-900 py-2">
-                    {profileData.email || "Not specified"}
+                    {profileData.email_address || "Not specified"}
                   </p>
                 </div>
                 <div className="mb-4">

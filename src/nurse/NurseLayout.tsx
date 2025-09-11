@@ -1,14 +1,53 @@
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
-import { Outlet } from "react-router-dom";
-import { Bell, Home, Menu, X } from "lucide-react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { Bell, Home, Menu, X, AlertCircle, Clock } from "lucide-react";
 import NurseStat from "./components/NurseStat";
 
 const NurseLayout: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const kyc = localStorage.getItem("kyc");
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleKycClick = () => {
+    if (kyc === "pending") {
+      navigate("/kyc-nurse");
+    } else if (kyc === "submitted") {
+      navigate("/kyc-status");
+    }
+  };
+
+  const renderKycNotification = () => {
+    if (kyc === "pending") {
+      return (
+        <div
+          onClick={handleKycClick}
+          className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg cursor-pointer hover:bg-yellow-200 transition-colors duration-200 animate-pulse flex items-center space-x-2"
+        >
+          <AlertCircle size={20} className="text-yellow-600" />
+          <span className="font-medium">
+            Complete your KYC verification to access all features
+          </span>
+        </div>
+      );
+    } else if (kyc === "submitted") {
+      return (
+        <div
+          onClick={handleKycClick}
+          className="bg-blue-100 border border-blue-400 text-blue-800 px-4 py-3 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors duration-200 animate-pulse flex items-center space-x-2"
+        >
+          <Clock size={20} className="text-blue-600" />
+          <span className="font-medium">
+            KYC verification in progress - Click to check status
+          </span>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -54,6 +93,11 @@ const NurseLayout: React.FC = () => {
             </div>
           </div>
           <hr className="w-full text-gray-300" />
+
+          {/* KYC Notification */}
+          {renderKycNotification() && (
+            <div className="mt-4 mb-4">{renderKycNotification()}</div>
+          )}
 
           <NurseStat />
           <Outlet />

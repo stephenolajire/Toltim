@@ -69,6 +69,7 @@ const Login: React.FC = () => {
               response.data.role === "chw"
             ) {
               navigate("/nurse", { replace: true });
+              localStorage.setItem("kyc", "pending")
             } else {
               navigate("/admin", { replace: true });
             }

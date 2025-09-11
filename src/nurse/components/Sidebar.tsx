@@ -7,7 +7,7 @@ import {
   Calendar
 } from "lucide-react";
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 interface SidebarProp {
   close: () => void;
@@ -42,6 +42,14 @@ const adminLinks = [
 ];
 
 const Sidebar: React.FC<SidebarProp> = ({ close }) => {
+
+  const Navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("refreshToken")
+    Navigate("/")
+  }
   return (
     <div className="md:w-[250px] w-[300px] h-screen bg-white border border-l-0 border-t-0 border-b-0 border-r-white shadow-sm fixed p-4 rounded-tl-2xl rounded-bl-2xl flex flex-col justify-between">
       <div>
@@ -78,7 +86,7 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
       </div>
 
       <div>
-        <button className="text-red-500">Logout</button>
+        <button onClick={handleLogout} className="text-red-500">Logout</button>
       </div>
     </div>
   );

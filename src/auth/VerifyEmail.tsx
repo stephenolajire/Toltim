@@ -97,7 +97,7 @@ const VerifyEmail: React.FC = () => {
     try {
       setResendLoading(true);
 
-      const response = await api.post("resend-verification", {
+      const response = await api.post("user/password-reset/resend-otp/", {
         email: email,
       });
 
