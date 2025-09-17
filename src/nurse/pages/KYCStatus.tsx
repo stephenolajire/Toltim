@@ -5,7 +5,6 @@ import {
   XCircle, 
   AlertCircle, 
   FileText, 
-  User, 
   Calendar,
   ArrowLeft,
   RefreshCw
