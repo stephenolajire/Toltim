@@ -17,6 +17,8 @@ import {
   Verified,
   BookOpen,
   ThumbsUp,
+  CalendarDays,
+  Repeat,
 } from "lucide-react";
 
 // Types
@@ -61,6 +63,14 @@ interface BookingDetails {
   phone: string;
   address: string;
   relationship: string;
+}
+
+interface ScheduleConfig {
+  frequency: "daily" | "specific-days" | "every-other-day" | "weekly";
+  selectedDays: string[]; // For specific days of week
+  startDate: string;
+  timeSlot: string;
+  totalDays: number;
 }
 
 // Mock Data
@@ -206,14 +216,19 @@ const mockPractitioners: Practitioner[] = [
 const HealthPractitionersMatching: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<
-    "practitioners" | "scheduling" | "booking"
+    "practitioners" | "schedule-config" | "scheduling" | "booking"
   >("practitioners");
   const [selectedService] = useState<Service>(mockServices[0]);
   const [practitioners, setPractitioners] = useState<Practitioner[]>([]);
   const [selectedPractitioner, setSelectedPractitioner] =
     useState<Practitioner | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [scheduleConfig, setScheduleConfig] = useState<ScheduleConfig>({
+    frequency: "daily",
+    selectedDays: [],
+    startDate: "",
+    timeSlot: "",
+    totalDays: 1,
+  });
   const [bookingForSelf, setBookingForSelf] = useState<boolean | null>(null);
   const [bookingDetails, setBookingDetails] = useState<BookingDetails>({
     firstName: "",
@@ -228,6 +243,13 @@ const HealthPractitionersMatching: React.FC = () => {
   >(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Get number of days from localStorage on component mount
+  useEffect(() => {
+    const storedDays = localStorage.getItem("procedureDays");
+    const totalDays = storedDays ? parseInt(storedDays) : 1;
+    setScheduleConfig((prev) => ({ ...prev, totalDays }));
+  }, []);
 
   // Simulate API fetch for practitioners
   useEffect(() => {
@@ -250,12 +272,15 @@ const HealthPractitionersMatching: React.FC = () => {
 
   const handlePractitionerSelect = (practitioner: Practitioner) => {
     setSelectedPractitioner(practitioner);
+    setCurrentStep("schedule-config");
+  };
+
+  const handleScheduleConfigComplete = () => {
     setCurrentStep("scheduling");
   };
 
-  const handleTimeSlotSelect = (date: string, time: string) => {
-    setSelectedDate(date);
-    setSelectedTime(time);
+  const handleTimeSlotSelect = (time: string) => {
+    setScheduleConfig((prev) => ({ ...prev, timeSlot: time }));
   };
 
   const handleProceedToBooking = () => {
@@ -269,14 +294,12 @@ const HealthPractitionersMatching: React.FC = () => {
     console.log("Booking Details:", {
       selectedService,
       selectedPractitioner,
-      selectedDate,
-      selectedTime,
+      scheduleConfig,
       bookingForSelf,
       bookingDetails,
     });
 
-    // Here you would typically make the actual API call
-    alert("Appointment booked successfully!");
+    alert("Appointment(s) booked successfully!");
     navigate("/patient/receipt");
     setLoading(false);
   };
@@ -289,6 +312,51 @@ const HealthPractitionersMatching: React.FC = () => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const getDaysOfWeek = () => [
+    { value: "monday", label: "Monday" },
+    { value: "tuesday", label: "Tuesday" },
+    { value: "wednesday", label: "Wednesday" },
+    { value: "thursday", label: "Thursday" },
+    { value: "friday", label: "Friday" },
+    { value: "saturday", label: "Saturday" },
+    { value: "sunday", label: "Sunday" },
+  ];
+
+  const calculateTotalCost = () => {
+    let multiplier = 1;
+
+    if (scheduleConfig.frequency === "daily") {
+      multiplier = scheduleConfig.totalDays;
+    } else if (scheduleConfig.frequency === "specific-days") {
+      // Calculate based on how many appointments would be scheduled over the total days
+      const weeksInPeriod = Math.ceil(scheduleConfig.totalDays / 7);
+      multiplier = weeksInPeriod * scheduleConfig.selectedDays.length;
+    } else if (scheduleConfig.frequency === "every-other-day") {
+      multiplier = Math.ceil(scheduleConfig.totalDays / 2);
+    } else if (scheduleConfig.frequency === "weekly") {
+      multiplier = Math.ceil(scheduleConfig.totalDays / 7);
+    }
+
+    return selectedService.price * multiplier;
+  };
+
+  const getScheduleDescription = () => {
+    const { frequency, selectedDays, totalDays } = scheduleConfig;
+
+    switch (frequency) {
+      case "daily":
+        return `Daily appointments for ${totalDays} days`;
+      case "specific-days":
+        return `${selectedDays.join(", ")} each week for ${totalDays} days`;
+      case "every-other-day":
+        return `Every other day for ${totalDays} days`;
+      case "weekly":
+        return `Weekly appointments for ${totalDays} days`;
+      default:
+        return "";
+    }
   };
 
   const renderPractitionerCard = (practitioner: Practitioner) => {
@@ -484,7 +552,7 @@ const HealthPractitionersMatching: React.FC = () => {
     );
   };
 
-  const renderScheduling = () => {
+  const renderScheduleConfig = () => {
     if (!selectedPractitioner) return null;
 
     return (
@@ -508,61 +576,177 @@ const HealthPractitionersMatching: React.FC = () => {
             </div>
             <div className="text-center sm:text-right flex-shrink-0">
               <p className="font-semibold text-green-600">
-                ₦{selectedService.price.toLocaleString()}
+                ₦{selectedService.price.toLocaleString()}/session
               </p>
-              <div className="flex items-center justify-center sm:justify-end space-x-1 text-sm">
-                <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                <span>{selectedPractitioner.rating}</span>
-              </div>
+              <p className="text-sm text-gray-600">
+                Total: {scheduleConfig.totalDays} days
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Time Slots */}
+        {/* Schedule Configuration */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Select Date & Time
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+            <CalendarDays className="w-5 h-5" />
+            <span>Configure Schedule</span>
           </h3>
 
+          {/* Frequency Options */}
           <div className="space-y-4">
-            {selectedPractitioner.availability.map((availability) => (
-              <div
-                key={availability.date}
-                className="border border-gray-200 rounded-lg p-4"
-              >
-                <h4 className="font-medium text-gray-900 mb-3 text-sm sm:text-base">
-                  {formatDate(availability.date)}
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {availability.slots.map((slot) => (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Appointment Frequency
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <button
+                  onClick={() =>
+                    setScheduleConfig((prev) => ({
+                      ...prev,
+                      frequency: "daily",
+                      selectedDays: [],
+                    }))
+                  }
+                  className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                    scheduleConfig.frequency === "daily"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-green-300"
+                  }`}
+                >
+                  <CalendarDays className="w-6 h-6 text-green-600 mb-2" />
+                  <h4 className="font-semibold text-gray-900">Daily</h4>
+                  <p className="text-sm text-gray-600">Every day</p>
+                </button>
+
+                <button
+                  onClick={() =>
+                    setScheduleConfig((prev) => ({
+                      ...prev,
+                      frequency: "specific-days",
+                    }))
+                  }
+                  className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                    scheduleConfig.frequency === "specific-days"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-green-300"
+                  }`}
+                >
+                  <Calendar className="w-6 h-6 text-green-600 mb-2" />
+                  <h4 className="font-semibold text-gray-900">Specific Days</h4>
+                  <p className="text-sm text-gray-600">Select days of week</p>
+                </button>
+
+                <button
+                  onClick={() =>
+                    setScheduleConfig((prev) => ({
+                      ...prev,
+                      frequency: "every-other-day",
+                      selectedDays: [],
+                    }))
+                  }
+                  className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                    scheduleConfig.frequency === "every-other-day"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-green-300"
+                  }`}
+                >
+                  <Repeat className="w-6 h-6 text-green-600 mb-2" />
+                  <h4 className="font-semibold text-gray-900">
+                    Every Other Day
+                  </h4>
+                  <p className="text-sm text-gray-600">Skip one day between</p>
+                </button>
+
+                <button
+                  onClick={() =>
+                    setScheduleConfig((prev) => ({
+                      ...prev,
+                      frequency: "weekly",
+                      selectedDays: [],
+                    }))
+                  }
+                  className={`p-4 border-2 rounded-lg text-left transition-colors ${
+                    scheduleConfig.frequency === "weekly"
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-green-300"
+                  }`}
+                >
+                  <Calendar className="w-6 h-6 text-green-600 mb-2" />
+                  <h4 className="font-semibold text-gray-900">Weekly</h4>
+                  <p className="text-sm text-gray-600">Once per week</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Days of Week Selection */}
+            {scheduleConfig.frequency === "specific-days" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Select Days of the Week
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                  {getDaysOfWeek().map((day) => (
                     <button
-                      key={slot}
-                      onClick={() =>
-                        handleTimeSlotSelect(availability.date, slot)
-                      }
-                      className={`p-2 sm:p-3 text-sm rounded-lg border transition-colors ${
-                        selectedDate === availability.date &&
-                        selectedTime === slot
+                      key={day.value}
+                      onClick={() => {
+                        const isSelected = scheduleConfig.selectedDays.includes(
+                          day.value
+                        );
+                        const newSelectedDays = isSelected
+                          ? scheduleConfig.selectedDays.filter(
+                              (d) => d !== day.value
+                            )
+                          : [...scheduleConfig.selectedDays, day.value];
+                        setScheduleConfig((prev) => ({
+                          ...prev,
+                          selectedDays: newSelectedDays,
+                        }));
+                      }}
+                      className={`p-3 text-sm rounded-lg border transition-colors ${
+                        scheduleConfig.selectedDays.includes(day.value)
                           ? "bg-green-600 text-white border-green-600"
-                          : "border-gray-300 hover:border-green-500 hover:bg-green-50"
+                          : "border-gray-300 hover:border-green-500"
                       }`}
                     >
-                      {slot}
+                      {day.label}
                     </button>
                   ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Start Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Start Date
+              </label>
+              <input
+                type="date"
+                value={scheduleConfig.startDate}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={(e) =>
+                  setScheduleConfig((prev) => ({
+                    ...prev,
+                    startDate: e.target.value,
+                  }))
+                }
+                className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
           </div>
 
-          {selectedDate && selectedTime && (
-            <div className="mt-6 p-4 bg-green-50 rounded-lg">
-              <div className="flex items-start space-x-2 text-green-700">
-                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span className="font-medium text-sm sm:text-base break-words">
-                  Selected: {formatDate(selectedDate)} at {selectedTime}
-                </span>
-              </div>
+          {/* Schedule Summary */}
+          {scheduleConfig.frequency && scheduleConfig.startDate && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-semibold text-blue-900 mb-2">
+                Schedule Summary
+              </h4>
+              <p className="text-blue-800 text-sm">
+                {getScheduleDescription()}
+              </p>
+              <p className="text-blue-800 text-sm mt-1">
+                Estimated total cost: ₦{calculateTotalCost().toLocaleString()}
+              </p>
             </div>
           )}
 
@@ -576,8 +760,136 @@ const HealthPractitionersMatching: React.FC = () => {
             </button>
 
             <button
+              onClick={handleScheduleConfigComplete}
+              disabled={
+                !scheduleConfig.frequency ||
+                !scheduleConfig.startDate ||
+                (scheduleConfig.frequency === "specific-days" &&
+                  scheduleConfig.selectedDays.length === 0)
+              }
+              className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            >
+              Continue to Time Selection
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderScheduling = () => {
+    if (!selectedPractitioner) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* Selected Practitioner Summary with Schedule Config */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <img
+              src={selectedPractitioner.profileImage}
+              alt={selectedPractitioner.name}
+              className="w-12 h-12 rounded-full object-cover self-center sm:self-start flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <h3 className="font-semibold text-gray-900 truncate">
+                {selectedPractitioner.name}
+              </h3>
+              <p className="text-green-600">{selectedPractitioner.title}</p>
+              <p className="text-sm text-gray-600">
+                {selectedService.name} - {selectedService.duration}
+              </p>
+              <p className="text-sm text-blue-600 mt-1">
+                {getScheduleDescription()}
+              </p>
+            </div>
+            <div className="text-center sm:text-right flex-shrink-0">
+              <p className="font-semibold text-green-600">
+                ₦{selectedService.price.toLocaleString()}/session
+              </p>
+              <p className="text-lg font-bold text-green-600">
+                Total: ₦{calculateTotalCost().toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Time Selection */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Select Preferred Time
+          </h3>
+
+          <div className="space-y-4">
+            {/* Available Time Slots from Practitioner */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">
+                Available Time Slots
+              </h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                {selectedPractitioner.availability[0]?.slots.map((slot) => (
+                  <button
+                    key={slot}
+                    onClick={() => handleTimeSlotSelect(slot)}
+                    className={`p-2 sm:p-3 text-sm rounded-lg border transition-colors ${
+                      scheduleConfig.timeSlot === slot
+                        ? "bg-green-600 text-white border-green-600"
+                        : "border-gray-300 hover:border-green-500 hover:bg-green-50"
+                    }`}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Time Input */}
+            <div className="border-t border-gray-200 pt-4">
+              <h4 className="font-medium text-gray-900 mb-3">
+                Or Enter Custom Time
+              </h4>
+              <div className="flex items-center space-x-4">
+                <input
+                  type="time"
+                  value={scheduleConfig.timeSlot}
+                  onChange={(e) => handleTimeSlotSelect(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                />
+                <p className="text-sm text-gray-600">
+                  Subject to practitioner availability
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {scheduleConfig.timeSlot && (
+            <div className="mt-6 p-4 bg-green-50 rounded-lg">
+              <div className="flex items-start space-x-2 text-green-700">
+                <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-medium text-sm sm:text-base break-words">
+                    Selected Time: {scheduleConfig.timeSlot}
+                  </span>
+                  <p className="text-sm mt-1">{getScheduleDescription()}</p>
+                  <p className="text-sm font-medium mt-1">
+                    Total Cost: ₦{calculateTotalCost().toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row justify-between mt-6 space-y-3 sm:space-y-0">
+            <button
+              onClick={() => setCurrentStep("schedule-config")}
+              className="flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Schedule Config</span>
+            </button>
+
+            <button
               onClick={handleProceedToBooking}
-              disabled={!selectedDate || !selectedTime}
+              disabled={!scheduleConfig.timeSlot}
               className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
             >
               Continue to Booking
@@ -611,19 +923,35 @@ const HealthPractitionersMatching: React.FC = () => {
               </span>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
-              <span className="text-gray-600">Date & Time:</span>
+              <span className="text-gray-600">Schedule:</span>
               <span className="font-medium break-words">
-                {formatDate(selectedDate)} at {selectedTime}
+                {getScheduleDescription()}
               </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+              <span className="text-gray-600">Start Date:</span>
+              <span className="font-medium break-words">
+                {formatDate(scheduleConfig.startDate)}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+              <span className="text-gray-600">Time:</span>
+              <span className="font-medium">{scheduleConfig.timeSlot}</span>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
               <span className="text-gray-600">Duration:</span>
               <span className="font-medium">{selectedService.duration}</span>
             </div>
-            <div className="flex flex-col sm:flex-row sm:justify-between text-lg space-y-1 sm:space-y-0 pt-2 border-t border-gray-200">
-              <span className="font-semibold">Total:</span>
-              <span className="font-semibold text-green-600">
+            <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+              <span className="text-gray-600">Price per session:</span>
+              <span className="font-medium">
                 ₦{selectedService.price.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between text-lg space-y-1 sm:space-y-0 pt-2 border-t border-gray-200">
+              <span className="font-semibold">Total Amount:</span>
+              <span className="font-semibold text-green-600">
+                ₦{calculateTotalCost().toLocaleString()}
               </span>
             </div>
           </div>
@@ -816,7 +1144,7 @@ const HealthPractitionersMatching: React.FC = () => {
               ) : (
                 <>
                   <Calendar className="w-4 h-4" />
-                  <span>Book Appointment</span>
+                  <span>Book Appointment(s)</span>
                 </>
               )}
             </button>
@@ -834,8 +1162,10 @@ const HealthPractitionersMatching: React.FC = () => {
           <div className="flex items-center mb-4">
             <button
               onClick={() => {
-                if (currentStep === "scheduling") {
+                if (currentStep === "schedule-config") {
                   setCurrentStep("practitioners");
+                } else if (currentStep === "scheduling") {
+                  setCurrentStep("schedule-config");
                 } else if (currentStep === "booking") {
                   setCurrentStep("scheduling");
                 } else {
@@ -850,17 +1180,25 @@ const HealthPractitionersMatching: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">
                 {currentStep === "practitioners" &&
                   "Available Healthcare Providers"}
-                {currentStep === "scheduling" && "Schedule Appointment"}
+                {currentStep === "schedule-config" && "Configure Schedule"}
+                {currentStep === "scheduling" && "Select Time"}
                 {currentStep === "booking" && "Complete Booking"}
               </h1>
               <p className="text-gray-600">
                 {currentStep === "practitioners" &&
                   "Select from our verified healthcare providers"}
+                {currentStep === "schedule-config" &&
+                  "Configure your appointment frequency and timing"}
                 {currentStep === "scheduling" &&
-                  "Choose your preferred date and time"}
+                  "Choose your preferred time slot"}
                 {currentStep === "booking" &&
-                  "Provide booking details to confirm your appointment"}
+                  "Provide booking details to confirm your appointment(s)"}
               </p>
+              {scheduleConfig.totalDays > 1 && (
+                <p className="text-blue-600 text-sm mt-1">
+                  Treatment plan: {scheduleConfig.totalDays} days
+                </p>
+              )}
             </div>
           </div>
 
@@ -904,6 +1242,7 @@ const HealthPractitionersMatching: React.FC = () => {
             </div>
           )}
 
+          {currentStep === "schedule-config" && renderScheduleConfig()}
           {currentStep === "scheduling" && renderScheduling()}
           {currentStep === "booking" && renderBooking()}
         </div>

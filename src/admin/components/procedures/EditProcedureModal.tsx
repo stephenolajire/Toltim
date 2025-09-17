@@ -2,7 +2,35 @@ import React from "react";
 import { X, Plus, Trash2, Loader2 } from "lucide-react";
 import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../constant/api";
+
+// API Response Types
+interface APIInclusionItem {
+  id: number;
+  item: string;
+}
+
+interface APIRequirementItem {
+  id: number;
+  item: string;
+}
+
+interface APIProcedure {
+  id: number;
+  procedure_id: string;
+  title: string;
+  description: string;
+  duration: string;
+  repeated_visits: boolean;
+  price: string;
+  icon_url: string | null;
+  status: "active" | "inactive";
+  inclusions: APIInclusionItem[];
+  requirements: APIRequirementItem[];
+  created_at: string;
+  updated_at: string;
+}
 
 interface InclusionItem {
   item: string;
@@ -18,8 +46,15 @@ interface FormValues {
   duration: string;
   price: string;
   repeated_visits: boolean;
+  status: "active" | "inactive";
   inclusions: InclusionItem[];
   requirements: RequirementItem[];
+}
+
+interface EditProcedureModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  procedure: APIProcedure | null;
 }
 
 const validationSchema = Yup.object({
@@ -36,6 +71,9 @@ const validationSchema = Yup.object({
     .matches(/^\d+(\.\d{1,2})?$/, "Price must be a valid number")
     .required("Price is required"),
   repeated_visits: Yup.boolean().required(),
+  status: Yup.string()
+    .oneOf(["active", "inactive"])
+    .required("Status is required"),
   inclusions: Yup.array()
     .of(
       Yup.object({
@@ -60,14 +98,14 @@ const validationSchema = Yup.object({
 const CustomErrorMessage: React.FC<{ name: string }> = ({ name }) => {
   return (
     <ErrorMessage name={name}>
-      {(errorMessage: string | string[] | Record<string, any>) => {
+      {(errorMessage: any) => {
         let displayMessage = "";
 
         if (typeof errorMessage === "string") {
           displayMessage = errorMessage;
         } else if (Array.isArray(errorMessage)) {
-          const firstError = errorMessage.find(
-            (error: string) => error && typeof error === "string"
+          const firstError = (errorMessage as any[]).find(
+            (error: any) => error && typeof error === "string"
           );
           displayMessage = firstError || "";
         } else if (typeof errorMessage === "object" && errorMessage !== null) {
@@ -82,63 +120,76 @@ const CustomErrorMessage: React.FC<{ name: string }> = ({ name }) => {
   );
 };
 
-
-const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
+const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
   isOpen,
   onClose,
+  procedure,
 }) => {
-  const initialValues: FormValues = {
-    title: "",
-    description: "",
-    duration: "",
-    price: "",
-    repeated_visits: false,
-    inclusions: [{ item: "" }],
-    requirements: [{ item: "" }],
-  };
+  const queryClient = useQueryClient();
 
-  const handleSubmit = async (
-    values: FormValues,
-    { setSubmitting, resetForm }: any
-  ) => {
-    try {
-      setSubmitting(true);
+  // Update procedure mutation
+  const updateProcedureMutation = useMutation({
+    mutationFn: async (updatedData: FormValues) => {
+      if (!procedure) throw new Error("No procedure to update");
 
-      // Transform data to match backend format
       const payload = {
-        title: values.title,
-        description: values.description,
-        duration: values.duration,
-        repeated_visits: values.repeated_visits,
-        price: values.price,
-        inclusions: values.inclusions,
-        requirements: values.requirements,
-        status: "active",
+        title: updatedData.title,
+        description: updatedData.description,
+        duration: updatedData.duration,
+        repeated_visits: updatedData.repeated_visits,
+        price: updatedData.price,
+        status: updatedData.status,
+        inclusions: updatedData.inclusions,
+        requirements: updatedData.requirements,
       };
 
-      const response = await api.post("services/nursing-procedures/", payload);
-      console.log("Procedure created successfully:", response.data);
+      const response = await api.patch(
+        `services/nursing-procedures/${procedure.id}/`,
+        payload
+      );
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // Invalidate and refetch the nursing procedures query
+      queryClient.invalidateQueries({ queryKey: ["nurseProcedures"] });
 
-      // Reset form and close modal
-      resetForm();
+      console.log("Procedure updated successfully:", data);
+      alert("Procedure updated successfully!");
       onClose();
+    },
+    onError: (error: any) => {
+      console.error("Error updating procedure:", error);
 
-      // You might want to show a success toast here
-      alert("Procedure added successfully!");
-    } catch (error: any) {
-      console.error("Error creating procedure:", error);
-
-      // Handle different error scenarios
       if (error.response?.data) {
         console.error("Server error:", error.response.data);
         alert(
           `Error: ${
-            error.response.data.message || "Failed to create procedure"
+            error.response.data.message || "Failed to update procedure"
           }`
         );
       } else {
         alert("Network error: Please check your connection and try again");
       }
+    },
+  });
+
+  if (!isOpen || !procedure) return null;
+
+  const initialValues: FormValues = {
+    title: procedure.title,
+    description: procedure.description,
+    duration: procedure.duration,
+    price: procedure.price,
+    repeated_visits: procedure.repeated_visits,
+    status: procedure.status,
+    inclusions: procedure.inclusions.map((inc) => ({ item: inc.item })),
+    requirements: procedure.requirements.map((req) => ({ item: req.item })),
+  };
+
+  const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
+    try {
+      setSubmitting(true);
+      await updateProcedureMutation.mutateAsync(values);
     } finally {
       setSubmitting(false);
     }
@@ -149,8 +200,6 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -158,6 +207,7 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
           initialValues={initialValues}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
+          enableReinitialize
         >
           {({ values, resetForm, isSubmitting }) => (
             <Form>
@@ -165,10 +215,10 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
               <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Add New Procedure
+                    Edit Procedure
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    Fill in the details for the new nursing procedure.
+                    Update the details for "{procedure.title}"
                   </p>
                 </div>
                 <button
@@ -240,8 +290,8 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                   />
                 </div>
 
-                {/* Price and Repeat Visits */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Price, Repeat Visits, and Status */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Price */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -287,6 +337,26 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                     </div>
                     <ErrorMessage
                       name="repeated_visits"
+                      component="div"
+                      className="text-red-500 text-sm mt-1"
+                    />
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status *
+                    </label>
+                    <Field
+                      name="status"
+                      as="select"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </Field>
+                    <ErrorMessage
+                      name="status"
                       component="div"
                       className="text-red-500 text-sm mt-1"
                     />
@@ -405,12 +475,12 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-6 py-2 text-sm font-medium text-white bg-gray-900 border border-transparent rounded-lg hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting && (
                     <Loader2 size={16} className="animate-spin" />
                   )}
-                  {isSubmitting ? "Creating..." : "Add Procedure"}
+                  {isSubmitting ? "Updating..." : "Update Procedure"}
                 </button>
               </div>
             </Form>
@@ -421,4 +491,4 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
   );
 };
 
-export default AddProcedureModal;
+export default EditProcedureModal;

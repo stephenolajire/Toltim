@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Search, Download, FileText, Eye, Calendar, User } from "lucide-react";
 
+
 // Type definitions
 interface VerificationRecord {
   id: string;

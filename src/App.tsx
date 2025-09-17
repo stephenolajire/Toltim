@@ -42,220 +42,180 @@ import SystemCommission from "./admin/pages/SystemCommission";
 
 // Nurse Dashboard
 import NurseLayout from "./nurse/NurseLayout";
-// import CaregiverServicesBooking from "./userdashboard/Caregiver";
 import NurseKycVerification from "./nurse/pages/KYCVerification";
 import NurseDashboard from "./nurse/pages/NurseDashboard";
 import ActivePatients from "./nurse/pages/ActivePatient";
 import Appointments from "./nurse/pages/Appointment";
 import WalletEarnings from "./nurse/pages/Wallet";
 import IDCard from "./nurse/pages/IDCard";
-import VerifyEmail from "./auth/VerifyEmail";
+import KycStatus from "./nurse/pages/KYCStatus";
 
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import ScrollToTop from "./components/ScrollToTop";
-
-// auth
+// Auth Components
 import Login from "./auth/Login";
 import SignUp from "./auth/SignUp";
 import ForgotPassword from "./auth/ForgotPassword";
 import PasswordResetVerifyOtp from "./auth/PasswordResetVerifyOtp";
 import ChangePassword from "./auth/ChangePassword";
-import ProtectedRoute from "./constant/ProtectedRoute";
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import NotFound from "./pages/NotFound";
-import EditUserProfile from "./patient/EditUserProfile";
+import VerifyEmail from "./auth/VerifyEmail";
 import KYCVerification from "./auth/KYCVerification";
 
+// Utilities
+import ProtectedRoute from "./constant/ProtectedRoute";
+import NotFound from "./pages/NotFound";
+import EditUserProfile from "./patient/EditUserProfile";
 
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ScrollToTop from "./components/ScrollToTop";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { GlobalProvider } from "./constant/GlobalContext";
 
 const queryClient = new QueryClient();
 
-
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <ScrollToTop />
-        <ToastContainer
-          position="top-right"
-          autoClose={2000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<LandingPage />} />
-          </Route>
-
-          <Route path="*" element={<NotFound />} />
-
-          {/* user auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<SignUp />} />
-          <Route path="/kyc-verification" element={<KYCVerification />} />
-          <Route path="/kyc-nurse" element={<NurseKycVerification />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route
-            path="/password-reset/verify-otp"
-            element={<PasswordResetVerifyOtp />}
+    <GlobalProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <ScrollToTop />
+          <ToastContainer
+            position="top-right"
+            autoClose={2000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
           />
-          <Route path="/change-password" element={<ChangePassword />} />
-
-          {/* <Route
-          path="/dashboard/caregiver"
-          element={<CaregiverServicesBooking />}
-        /> */}
-
-          {/* admin dashboard */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<Overview />} />
-            <Route path="users" element={<AdminUserLayout />}>
-              <Route index element={<AdminPatients />} />
-              <Route path="nurse" element={<AdminNurse />} />
-              <Route path="chw" element={<AdminCHW />} />
-            </Route>
-            <Route path="bookings" element={<AdminBookingLayout />}>
-              <Route index element={<NurseBooking />} />
-              <Route path="caregiver" element={<CareGiverBooking />} />
-              <Route path="bedside" element={<BedSideBooking />} />
+          <Routes>
+            {/* PUBLIC ROUTES */}
+            <Route path="/" element={<Layout />}>
+              <Route index element={<LandingPage />} />
             </Route>
 
-            <Route path="procedures" element={<Procedures />} />
-            <Route path="verifications" element={<AdminVerificationLayout />}>
-              <Route index element={<PendingNurseVerifications />} />
-              <Route path="chw" element={<PendingCHWVerifications />} />
-              <Route path="doctor" element={<DoctorPendingVerifications />} />
-              <Route path="history" element={<VerificationHistory />} />
-            </Route>
-
-            <Route path="payments" element={<AdminPaymentLayout />}>
-              <Route index element={<PatientFunding />} />
-              <Route path="wallet" element={<WalletTransactions />} />
-              <Route path="withdrawal" element={<WithdrawalRequests />} />
-              <Route path="commission" element={<SystemCommission />} />
-            </Route>
-          </Route>
-
-          {/* patient dashboard */}
-          <Route
-            path="/patient"
-            element={
-              <ProtectedRoute>
-                <PatientLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<PatientDashboard />} />
+            {/* AUTHENTICATION ROUTES */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<SignUp />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route
-              path="in-patient"
-              element={
-                <ProtectedRoute>
-                  <InPatientCaregiverService />
-                </ProtectedRoute>
-              }
+              path="/password-reset/verify-otp"
+              element={<PasswordResetVerifyOtp />}
             />
+            <Route path="/change-password" element={<ChangePassword />} />
+
+            {/* KYC ROUTES */}
+            <Route path="/kyc-verification" element={<KYCVerification />} />
+            <Route path="/kyc-nurse" element={<NurseKycVerification />} />
+
+            {/* ADMIN DASHBOARD - Protected Routes */}
             <Route
-              path="caregiver"
+              path="/admin"
               element={
-                <ProtectedRoute>
-                  <CaregiverBooking />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="history"
-              element={
-                <ProtectedRoute>
-                  <HistoryLayout />
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminLayout />
                 </ProtectedRoute>
               }
             >
-              <Route
-                index
-                element={
-                  <ProtectedRoute>
-                    <PatientAppointmentHistory />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="transaction"
-                element={
-                  <ProtectedRoute>
-                    <PatientTransactionHistory />{" "}
-                  </ProtectedRoute>
-                }
-              />
-            </Route>
-            <Route
-              path="profile"
-              element={
-                <ProtectedRoute>
-                  <PatientProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="profile/edit"
-              element={
-                <ProtectedRoute>
-                  <EditUserProfile />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="messages"
-              element={
-                <ProtectedRoute>
-                  <PatientMessages />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="procedures"
-              element={
-                <ProtectedRoute>
-                  <BookService />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="matching"
-              element={
-                <ProtectedRoute>
-                  <HealthPractitionersMatching />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="receipt"
-              element={
-                <ProtectedRoute>
-                  <AppointmentReceipt />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
+              <Route index element={<Overview />} />
 
-          {/* nurse dashboard */}
-          <Route path="/nurse" element={<NurseLayout />}>
-            <Route index element={<NurseDashboard />} />
-            <Route path="active-patients" element={<ActivePatients />} />
-            <Route path="appointments" element={<Appointments />} />
-            <Route path="wallet" element={<WalletEarnings />} />
-            <Route path="id-card" element={<IDCard />} />
-          </Route>
-        </Routes>
-      </Router>
-    </QueryClientProvider>
+              {/* Users Management */}
+              <Route path="users" element={<AdminUserLayout />}>
+                <Route index element={<AdminPatients />} />
+                <Route path="nurse" element={<AdminNurse />} />
+                <Route path="chw" element={<AdminCHW />} />
+              </Route>
+
+              {/* Bookings Management */}
+              <Route path="bookings" element={<AdminBookingLayout />}>
+                <Route index element={<NurseBooking />} />
+                <Route path="caregiver" element={<CareGiverBooking />} />
+                <Route path="bedside" element={<BedSideBooking />} />
+              </Route>
+
+              <Route path="procedures" element={<Procedures />} />
+
+              {/* Verifications Management */}
+              <Route path="verifications" element={<AdminVerificationLayout />}>
+                <Route index element={<PendingNurseVerifications />} />
+                <Route path="chw" element={<PendingCHWVerifications />} />
+                <Route path="doctor" element={<DoctorPendingVerifications />} />
+                <Route path="history" element={<VerificationHistory />} />
+              </Route>
+
+              {/* Payments Management */}
+              <Route path="payments" element={<AdminPaymentLayout />}>
+                <Route index element={<PatientFunding />} />
+                <Route path="wallet" element={<WalletTransactions />} />
+                <Route path="withdrawal" element={<WithdrawalRequests />} />
+                <Route path="commission" element={<SystemCommission />} />
+              </Route>
+            </Route>
+
+            {/* PATIENT DASHBOARD - Protected Routes */}
+            <Route
+              path="/patient"
+              element={
+                <ProtectedRoute allowedRoles={["patient"]}>
+                  <PatientLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<PatientDashboard />} />
+              <Route
+                path="in-patient"
+                element={<InPatientCaregiverService />}
+              />
+              <Route path="caregiver" element={<CaregiverBooking />} />
+
+              {/* Patient History */}
+              <Route path="history" element={<HistoryLayout />}>
+                <Route index element={<PatientAppointmentHistory />} />
+                <Route
+                  path="transaction"
+                  element={<PatientTransactionHistory />}
+                />
+              </Route>
+
+              {/* Patient Profile */}
+              <Route path="profile" element={<PatientProfile />} />
+              <Route path="profile/edit" element={<EditUserProfile />} />
+
+              {/* Patient Services */}
+              <Route path="messages" element={<PatientMessages />} />
+              <Route path="procedures" element={<BookService />} />
+              <Route
+                path="matching"
+                element={<HealthPractitionersMatching />}
+              />
+              <Route path="receipt" element={<AppointmentReceipt />} />
+            </Route>
+
+            {/* NURSE DASHBOARD - Protected Routes */}
+            <Route
+              path="/nurse"
+              element={
+                <ProtectedRoute allowedRoles={["nurse"]}>
+                  <NurseLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<NurseDashboard />} />
+              <Route path="active-patients" element={<ActivePatients />} />
+              <Route path="appointments" element={<Appointments />} />
+              <Route path="wallet" element={<WalletEarnings />} />
+              <Route path="id-card" element={<IDCard />} />
+              <Route path="kyc-status" element={<KycStatus />} />
+            </Route>
+
+            {/* 404 Route - Must be last */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+      </QueryClientProvider>
+    </GlobalProvider>
   );
 };
 

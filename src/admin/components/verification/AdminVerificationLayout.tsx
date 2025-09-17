@@ -1,39 +1,53 @@
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import React from "react";
 import StatCard from "./StatCard";
 import VerificationNavigation from "./VerificationNav";
 import { Outlet } from "react-router-dom";
+import { useNurseVerificationStat } from "../../../constant/GlobalContext";
 
 const AdminVerificationLayout: React.FC = () => {
+  const {data:statData, isLoading} = useNurseVerificationStat()
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+          <div className="text-lg text-gray-600">Loading nurses data...</div>
+        </div>
+      </div>
+    );
+  }
+
   const statsData = [
     {
       title: "Pending Verifications",
-      value: "24",
-      change: "+3 from yesterday",
+      value: statData.pending,
+      change: "",
       changeType: "increase" as const,
       icon: "pending" as const,
       iconColor: "text-orange-500",
     },
     {
-      title: "Verified Today",
-      value: "12",
-      change: "+5 from yesterday",
+      title: "Total Verified",
+      value: statData.approved,
+      change: "",
       changeType: "increase" as const,
       icon: "verified" as const,
       iconColor: "text-green-500",
     },
     {
-      title: "Rejected Today",
-      value: "2",
-      change: "-1 from yesterday",
+      title: "Total Rejected",
+      value: statData.rejected,
+      change: "",
       changeType: "decrease" as const,
       icon: "rejected" as const,
       iconColor: "text-red-500",
     },
     {
-      title: "Verification Rate",
-      value: "85.7%",
-      change: "+2.1% from yesterday",
+      title: "Total Verification",
+      value: statData.total,
+      change: "",
       changeType: "increase" as const,
       icon: "rate" as const,
       iconColor: "text-blue-500",

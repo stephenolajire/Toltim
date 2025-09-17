@@ -9,7 +9,7 @@ const loginSchema = Yup.object().shape({
     .matches(emailRegex, "Invalid email format")
     .required("Email is required"),
   password: Yup.string()
-    .matches(passwordRegex, "Password must contain at least 6 characters, including letters and numbers")
+    .matches(passwordRegex, "Password must contain at least 6 characters, including letters, numbers and special characters")
     .required("Password is required"),
 });
 

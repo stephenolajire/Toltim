@@ -2,9 +2,6 @@ import React, { useState } from "react";
 import {
   ArrowLeft,
   Clock,
-  //   Stethoscope,
-  //   Heart,
-  //   Baby,
   CheckCircle,
   XCircle,
   CreditCard,
@@ -15,17 +12,41 @@ import {
   ChevronDown,
   ChevronUp,
   Activity,
-  //   Shield,
-  //   Users,
-  //   Bed,
-  //   HeartHandshake,
   Syringe,
   HelpCircle,
   Info,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useNurseProcedures } from "../constant/GlobalContext";
 
-// Types
+// API Response Types
+interface APIInclusionItem {
+  id: number;
+  item: string;
+}
+
+interface APIRequirementItem {
+  id: number;
+  item: string;
+}
+
+interface APIProcedure {
+  id: number;
+  procedure_id: string;
+  title: string;
+  description: string;
+  duration: string;
+  repeated_visits: boolean;
+  price: string;
+  icon_url: string | null;
+  status: "active" | "inactive";
+  inclusions: APIInclusionItem[];
+  requirements: APIRequirementItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+// Component Types
 interface Service {
   id: string;
   name: string;
@@ -45,71 +66,6 @@ interface SelectedService {
   totalAmount: number;
 }
 
-// Mock Data - Only Nursing Procedures
-const nursingProcedures: Service[] = [
-  {
-    id: "np-001",
-    name: "Wound Care & Dressing",
-    shortDescription: "Professional wound cleaning, dressing, and monitoring",
-    description:
-      "Complete wound care service including cleaning, antiseptic application, proper dressing, and healing progress monitoring. Our trained nurses ensure sterile conditions and proper healing techniques.",
-    price: 3500,
-    duration: "30-45 minutes",
-    category: "nursing",
-    icon: <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Sterile wound cleaning",
-      "Antiseptic application",
-      "Professional dressing",
-      "Healing progress monitoring",
-      "Pain management guidance",
-      "Follow-up care instructions",
-    ],
-    requirements: ["Medical history", "Previous dressing materials (if any)"],
-  },
-  {
-    id: "np-002",
-    name: "Injection Administration",
-    shortDescription:
-      "Safe administration of prescribed medications via injection",
-    description:
-      "Professional administration of intramuscular, subcutaneous, and intravenous injections as prescribed by your doctor. Includes proper disposal of medical waste.",
-    price: 2000,
-    duration: "15-20 minutes",
-    category: "nursing",
-    icon: <Syringe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "IM/SC/IV injections",
-      "Medication verification",
-      "Sterile technique",
-      "Safe needle disposal",
-      "Adverse reaction monitoring",
-      "Documentation",
-    ],
-    requirements: ["Doctor's prescription", "Medication to be administered"],
-  },
-  {
-    id: "np-003",
-    name: "Vital Signs Monitoring",
-    shortDescription:
-      "Regular monitoring of blood pressure, temperature, pulse",
-    description:
-      "Comprehensive vital signs assessment including blood pressure, temperature, pulse rate, respiratory rate, and oxygen saturation monitoring with detailed reporting.",
-    price: 1500,
-    duration: "20-30 minutes",
-    category: "nursing",
-    icon: <Activity className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Blood pressure check",
-      "Temperature monitoring",
-      "Pulse rate assessment",
-      "Respiratory rate check",
-      "Oxygen saturation (if available)",
-      "Detailed health report",
-    ],
-  },
-];
-
 const NursingProcedures: React.FC = () => {
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>(
     []
@@ -117,6 +73,130 @@ const NursingProcedures: React.FC = () => {
   const [expandedService, setExpandedService] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+
+  // API Data Hook
+  const { data, isLoading } = useNurseProcedures();
+
+  // Transform API data to Service format
+  const transformApiDataToServices = (
+    apiProcedures: APIProcedure[]
+  ): Service[] => {
+    return apiProcedures.map((procedure) => ({
+      id: procedure.procedure_id,
+      name: procedure.title,
+      description: procedure.description,
+      shortDescription:
+        procedure.description.length > 80
+          ? `${procedure.description.substring(0, 80)}...`
+          : procedure.description,
+      price: parseFloat(procedure.price),
+      duration: procedure.duration,
+      category: "nursing",
+      icon: getServiceIcon(procedure.title),
+      features: procedure.inclusions.map((inclusion) => inclusion.item),
+      requirements: procedure.requirements.map(
+        (requirement) => requirement.item
+      ),
+    }));
+  };
+
+  // Get appropriate icon based on service title
+  const getServiceIcon = (title: string): React.ReactNode => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes("wound") || lowerTitle.includes("dressing")) {
+      return <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />;
+    }
+    if (lowerTitle.includes("injection") || lowerTitle.includes("shot")) {
+      return <Syringe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />;
+    }
+    if (
+      lowerTitle.includes("vital") ||
+      lowerTitle.includes("monitoring") ||
+      lowerTitle.includes("pressure")
+    ) {
+      return <Activity className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />;
+    }
+    return <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />;
+  };
+
+  // Default fallback data
+  const defaultNursingProcedures: Service[] = [
+    {
+      id: "np-001",
+      name: "Wound Care & Dressing",
+      shortDescription: "Professional wound cleaning, dressing, and monitoring",
+      description:
+        "Complete wound care service including cleaning, antiseptic application, proper dressing, and healing progress monitoring. Our trained nurses ensure sterile conditions and proper healing techniques.",
+      price: 3500,
+      duration: "30-45 minutes",
+      category: "nursing",
+      icon: <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
+      features: [
+        "Sterile wound cleaning",
+        "Antiseptic application",
+        "Professional dressing",
+        "Healing progress monitoring",
+        "Pain management guidance",
+        "Follow-up care instructions",
+      ],
+      requirements: ["Medical history", "Previous dressing materials (if any)"],
+    },
+    {
+      id: "np-002",
+      name: "Injection Administration",
+      shortDescription:
+        "Safe administration of prescribed medications via injection",
+      description:
+        "Professional administration of intramuscular, subcutaneous, and intravenous injections as prescribed by your doctor. Includes proper disposal of medical waste.",
+      price: 2000,
+      duration: "15-20 minutes",
+      category: "nursing",
+      icon: <Syringe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
+      features: [
+        "IM/SC/IV injections",
+        "Medication verification",
+        "Sterile technique",
+        "Safe needle disposal",
+        "Adverse reaction monitoring",
+        "Documentation",
+      ],
+      requirements: ["Doctor's prescription", "Medication to be administered"],
+    },
+    {
+      id: "np-003",
+      name: "Vital Signs Monitoring",
+      shortDescription:
+        "Regular monitoring of blood pressure, temperature, pulse",
+      description:
+        "Comprehensive vital signs assessment including blood pressure, temperature, pulse rate, respiratory rate, and oxygen saturation monitoring with detailed reporting.",
+      price: 1500,
+      duration: "20-30 minutes",
+      category: "nursing",
+      icon: <Activity className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
+      features: [
+        "Blood pressure check",
+        "Temperature monitoring",
+        "Pulse rate assessment",
+        "Respiratory rate check",
+        "Oxygen saturation (if available)",
+        "Detailed health report",
+      ],
+    },
+  ];
+
+  // Get services data (API data takes priority)
+  const getServicesData = (): Service[] => {
+    if (data?.results && data.results.length > 0) {
+      // Filter only active procedures
+      const activeProcedures = data.results.filter(
+        (procedure:any) => procedure.status === "active"
+      );
+      return transformApiDataToServices(activeProcedures);
+    }
+    return defaultNursingProcedures;
+  };
+
+  const nursingProcedures = getServicesData();
 
   const filteredServices = nursingProcedures.filter(
     (service) =>
@@ -195,7 +275,6 @@ const NursingProcedures: React.FC = () => {
 
   const handleProceed = () => {
     alert("Proceeding to booking/payment page");
-    // Navigate to booking/payment page
     navigate("/patient/matching");
   };
 
@@ -213,7 +292,6 @@ const NursingProcedures: React.FC = () => {
             : "border-gray-200 hover:border-gray-300"
         }`}
       >
-        {/* Service Header */}
         <div className="p-3 sm:p-4">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
@@ -307,7 +385,7 @@ const NursingProcedures: React.FC = () => {
                   </ul>
                 </div>
 
-                {service.requirements && (
+                {service.requirements && service.requirements.length > 0 && (
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2 text-xs sm:text-sm">
                       Requirements:
@@ -372,6 +450,18 @@ const NursingProcedures: React.FC = () => {
     );
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading nursing procedures...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto px-2 py-4 sm:py-6">
@@ -389,7 +479,8 @@ const NursingProcedures: React.FC = () => {
                 Nursing Procedures
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
-                Choose from our comprehensive nursing services
+                Choose from our comprehensive nursing services (
+                {nursingProcedures.length} available)
               </p>
             </div>
           </div>

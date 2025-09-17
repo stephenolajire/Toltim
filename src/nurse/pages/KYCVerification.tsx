@@ -1,6 +1,3 @@
-// components/ReviewStatus.tsx
-
-
 // Main KYC Component - NurseKycVerification.tsx
 import React, { useState } from "react";
 import { CheckCircle, Clock, AlertCircle, Upload } from "lucide-react";
@@ -17,6 +14,8 @@ import { ProfessionalInfoForm } from "./components/ProfessionalInfoForm";
 import { EmploymentInfoForm } from "./components/EmploymentInfoForm";
 import { DocumentUpload } from "./components/DocumentUpload";
 import { ReviewStatus } from "./components/ReviewStatus";
+
+import { useNavigate } from "react-router-dom";
 
 const NurseKycVerification: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -99,6 +98,7 @@ const NurseKycVerification: React.FC = () => {
   };
 
   // Updated handleDocumentSubmit function for your NurseKycVerification component
+  const navigate = useNavigate()
 
   const handleDocumentSubmit = async (documentData: RequiredDocuments) => {
     setIsSubmitting(true);
@@ -155,6 +155,12 @@ const NurseKycVerification: React.FC = () => {
       if (response.data.success !== false) {
         setDocuments(documentData);
         setCurrentStep(4);
+        localStorage.removeItem("kyc")
+        localStorage.setItem("kyc", "submitted")
+
+        setTimeout(()=> {
+          navigate('/nurse')
+        }, 3000)
       } else {
         throw new Error(response.data.message || "Submission failed");
       }

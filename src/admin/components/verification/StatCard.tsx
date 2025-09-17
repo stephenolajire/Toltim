@@ -55,7 +55,7 @@ const StatCard: React.FC<StatCardProps> = ({
 
       {/* Main value */}
       <div className="mb-2">
-        <p className="text-3xl font-bold text-gray-900">{value}</p>
+        <p className="text-3xl text-center font-bold text-gray-900">{value}</p>
       </div>
 
       {/* Change indicator */}

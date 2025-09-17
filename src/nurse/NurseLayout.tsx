@@ -17,7 +17,7 @@ const NurseLayout: React.FC = () => {
     if (kyc === "pending") {
       navigate("/kyc-nurse");
     } else if (kyc === "submitted") {
-      navigate("/kyc-status");
+      navigate("/nurse/kyc-status");
     }
   };
 
