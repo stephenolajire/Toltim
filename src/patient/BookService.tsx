@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -15,9 +15,12 @@ import {
   Syringe,
   HelpCircle,
   Info,
+  MapPin,
+  Loader,
+  AlertCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useNurseProcedures } from "../constant/GlobalContext";
+import { useNavigate } from "react-router-dom";
 
 // API Response Types
 interface APIInclusionItem {
@@ -48,7 +51,7 @@ interface APIProcedure {
 
 // Component Types
 interface Service {
-  id: string;
+  id: number;
   name: string;
   description: string;
   shortDescription: string;
@@ -58,6 +61,7 @@ interface Service {
   icon?: React.ReactNode;
   features: string[];
   requirements?: string[];
+  procedure_id?: string; // Add this for API integration
 }
 
 interface SelectedService {
@@ -66,23 +70,118 @@ interface SelectedService {
   totalAmount: number;
 }
 
+interface LocationData {
+  latitude: number;
+  longitude: number;
+  address?: string;
+}
+
 const NursingProcedures: React.FC = () => {
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>(
     []
   );
   const [expandedService, setExpandedService] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [location, setLocation] = useState<LocationData | null>(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   const navigate = useNavigate();
+  
 
   // API Data Hook
   const { data, isLoading } = useNurseProcedures();
+  console.log(data);
+
+  // Get user location on component mount
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = () => {
+    setLocationLoading(true);
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by this browser");
+      setLocationLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const locationData: LocationData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        setLocation(locationData);
+
+        // Store in localStorage for use in other components
+        localStorage.setItem("userLocation", JSON.stringify(locationData));
+
+        // Get address from coordinates
+        getAddressFromCoords(locationData.latitude, locationData.longitude);
+      },
+      (error) => {
+        let errorMessage = "Unable to get your location";
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "Location access denied by user";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "Location information unavailable";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "Location request timed out";
+            break;
+        }
+        setLocationError(errorMessage);
+        setLocationLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000, // 5 minutes
+      }
+    );
+  };
+
+  const getAddressFromCoords = async (latitude: number, longitude: number) => {
+    try {
+      // Using a reverse geocoding service (in real app, use your preferred service)
+      const response = await fetch(
+        `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=YOUR_API_KEY&limit=1`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const address = data.results[0].formatted;
+          setLocation((prev) => (prev ? { ...prev, address } : null));
+
+          // Update localStorage with address
+          const locationWithAddress = { latitude, longitude, address };
+          localStorage.setItem(
+            "userLocation",
+            JSON.stringify(locationWithAddress)
+          );
+        }
+      }
+    } catch (error) {
+      // Fallback to showing coordinates only
+      console.log("Could not get address, showing coordinates only");
+    } finally {
+      setLocationLoading(false);
+    }
+  };
 
   // Transform API data to Service format
   const transformApiDataToServices = (
     apiProcedures: APIProcedure[]
   ): Service[] => {
     return apiProcedures.map((procedure) => ({
-      id: procedure.procedure_id,
+      id: procedure.id,
       name: procedure.title,
       description: procedure.description,
       shortDescription:
@@ -97,6 +196,7 @@ const NursingProcedures: React.FC = () => {
       requirements: procedure.requirements.map(
         (requirement) => requirement.item
       ),
+      procedure_id: procedure.procedure_id, // Store the numeric ID for API calls
     }));
   };
 
@@ -119,81 +219,16 @@ const NursingProcedures: React.FC = () => {
     return <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />;
   };
 
-  // Default fallback data
-  const defaultNursingProcedures: Service[] = [
-    {
-      id: "np-001",
-      name: "Wound Care & Dressing",
-      shortDescription: "Professional wound cleaning, dressing, and monitoring",
-      description:
-        "Complete wound care service including cleaning, antiseptic application, proper dressing, and healing progress monitoring. Our trained nurses ensure sterile conditions and proper healing techniques.",
-      price: 3500,
-      duration: "30-45 minutes",
-      category: "nursing",
-      icon: <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-      features: [
-        "Sterile wound cleaning",
-        "Antiseptic application",
-        "Professional dressing",
-        "Healing progress monitoring",
-        "Pain management guidance",
-        "Follow-up care instructions",
-      ],
-      requirements: ["Medical history", "Previous dressing materials (if any)"],
-    },
-    {
-      id: "np-002",
-      name: "Injection Administration",
-      shortDescription:
-        "Safe administration of prescribed medications via injection",
-      description:
-        "Professional administration of intramuscular, subcutaneous, and intravenous injections as prescribed by your doctor. Includes proper disposal of medical waste.",
-      price: 2000,
-      duration: "15-20 minutes",
-      category: "nursing",
-      icon: <Syringe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-      features: [
-        "IM/SC/IV injections",
-        "Medication verification",
-        "Sterile technique",
-        "Safe needle disposal",
-        "Adverse reaction monitoring",
-        "Documentation",
-      ],
-      requirements: ["Doctor's prescription", "Medication to be administered"],
-    },
-    {
-      id: "np-003",
-      name: "Vital Signs Monitoring",
-      shortDescription:
-        "Regular monitoring of blood pressure, temperature, pulse",
-      description:
-        "Comprehensive vital signs assessment including blood pressure, temperature, pulse rate, respiratory rate, and oxygen saturation monitoring with detailed reporting.",
-      price: 1500,
-      duration: "20-30 minutes",
-      category: "nursing",
-      icon: <Activity className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-      features: [
-        "Blood pressure check",
-        "Temperature monitoring",
-        "Pulse rate assessment",
-        "Respiratory rate check",
-        "Oxygen saturation (if available)",
-        "Detailed health report",
-      ],
-    },
-  ];
-
   // Get services data (API data takes priority)
   const getServicesData = (): Service[] => {
     if (data?.results && data.results.length > 0) {
       // Filter only active procedures
-      const activeProcedures = data.results.filter(
-        (procedure:any) => procedure.status === "active"
+      const activeProcedures: any[] = data.results.filter(
+        (procedure: any) => procedure.status === "active"
       );
       return transformApiDataToServices(activeProcedures);
     }
-    return defaultNursingProcedures;
+    return [];
   };
 
   const nursingProcedures = getServicesData();
@@ -236,7 +271,7 @@ const NursingProcedures: React.FC = () => {
     }
   };
 
-  const updateServiceDays = (serviceId: string, increment: boolean) => {
+  const updateServiceDays = (serviceId: number, increment: boolean) => {
     setSelectedServices((prev) =>
       prev.map((selected) => {
         if (selected.service.id === serviceId) {
@@ -265,23 +300,123 @@ const NursingProcedures: React.FC = () => {
     return selectedServices.length;
   };
 
-  const isServiceSelected = (serviceId: string) => {
+  const isServiceSelected = (serviceId: number) => {
     return selectedServices.some((s) => s.service.id === serviceId);
   };
 
-  const getSelectedService = (serviceId: string) => {
+  const getSelectedService = (serviceId: number) => {
     return selectedServices.find((s) => s.service.id === serviceId);
   };
 
+  // Updated handleProceed function to store data for next component
+  // Updated handleProceed function to store data for next component
   const handleProceed = () => {
-    alert("Proceeding to booking/payment page");
-    navigate("/patient/matching");
+    // Validation
+    if (selectedServices.length === 0) {
+      alert("Please select at least one nursing procedure before proceeding.");
+      return;
+    }
+
+    if (!location) {
+      alert(
+        "Location is required for booking. Please allow location access or retry getting your location."
+      );
+      return;
+    }
+
+    // Store selected services data for the matching component
+    // Remove circular references by excluding non-serializable properties
+    const servicesDataForAPI = selectedServices.map((selected) => ({
+      service: {
+        id: selected.service.id,
+        name: selected.service.name,
+        description: selected.service.description,
+        shortDescription: selected.service.shortDescription,
+        price: selected.service.price,
+        duration: selected.service.duration,
+        category: selected.service.category,
+        features: selected.service.features,
+        requirements: selected.service.requirements,
+        // Ensure we have the procedure_id for API calls
+        procedure_id: selected.service.procedure_id,
+      },
+      days: selected.days,
+      totalAmount: selected.totalAmount,
+    }));
+
+    try {
+      localStorage.setItem(
+        "selectedServices",
+        JSON.stringify(servicesDataForAPI)
+      );
+
+      // Store the maximum days for schedule configuration
+      const maxDays = selectedServices.reduce(
+        (max, service) => Math.max(max, service.days),
+        1
+      );
+      localStorage.setItem("procedureDays", maxDays.toString());
+
+      // Store total amount
+      localStorage.setItem("totalAmount", getTotalAmount().toString());
+
+      console.log("Proceeding with services:", servicesDataForAPI);
+      navigate("/patient/matching");
+    } catch (error) {
+      console.error("Error storing services data:", error);
+      alert("There was an error saving your selection. Please try again.");
+    }
+  };
+
+  const renderLocationCard = () => {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+            <MapPin className="w-5 h-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-medium text-gray-900 text-sm">Your Location</h3>
+            {locationLoading ? (
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <Loader className="w-4 h-4 animate-spin" />
+                <span>Getting your location...</span>
+              </div>
+            ) : locationError ? (
+              <div className="flex items-center space-x-2 text-sm text-red-600">
+                <AlertCircle className="w-4 h-4" />
+                <span>{locationError}</span>
+              </div>
+            ) : location ? (
+              <div className="text-sm text-gray-600">
+                {location.address ? (
+                  <p className="truncate">{location.address}</p>
+                ) : (
+                  <p>
+                    Lat: {location.latitude.toFixed(6)}, Lng:{" "}
+                    {location.longitude.toFixed(6)}
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
+          {!locationLoading && locationError && (
+            <button
+              onClick={getCurrentLocation}
+              className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Retry
+            </button>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const renderServiceCard = (service: Service) => {
     const isSelected = isServiceSelected(service.id);
     const selectedService = getSelectedService(service.id);
-    const isExpanded = expandedService === service.id;
+    const isExpanded = expandedService === service.procedure_id;
 
     return (
       <div
@@ -327,7 +462,7 @@ const NursingProcedures: React.FC = () => {
             <div className="flex items-center space-x-1 sm:space-x-2 ml-2 flex-shrink-0">
               <button
                 onClick={() =>
-                  setExpandedService(isExpanded ? null : service.id)
+                  setExpandedService(isExpanded ? null : service.procedure_id || null)
                 }
                 className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
               >
@@ -489,6 +624,9 @@ const NursingProcedures: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Services List */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Location Card */}
+            {renderLocationCard()}
+
             {/* Search Bar */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
               <div className="relative">

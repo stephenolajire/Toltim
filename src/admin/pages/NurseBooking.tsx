@@ -1,99 +1,102 @@
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import BookingNavigation from "../components/booking/BookingNavigation";
 import Filter from "../components/booking/Filter";
 import AppointmentCard from "../components/booking/AppointmentCard";
+import BookingDetailsModal from "../components/booking/BookingDetailsModal";
+import api from "../../constant/api";
 
-
-interface Appointment {
-  id: string;
-  patientId: string;
-  patientName: string;
-  appointmentType: string;
-  time: string;
-  location: string;
-  status: "pending" | "assigned" | "active" | "completed";
-  assignedNurse?: string;
+interface Procedure {
+  id: number;
+  procedure_id: string;
+  title: string;
+  description: string;
+  duration: string;
+  repeated_visits: boolean;
+  price: string;
+  icon_url: string;
+  status: string;
+  inclusions?: Array<{ id: number; item: string }>;
+  requirements?: Array<{ id: number; item: string }>;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Sample data
-const appointmentsData: Appointment[] = [
-  {
-    id: "1",
-    patientId: "NP001",
-    patientName: "John Doe",
-    appointmentType: "Blood Pressure Check",
-    time: "09:00 AM",
-    location: "Lagos",
-    status: "pending",
-  },
-  {
-    id: "2",
-    patientId: "NP002",
-    patientName: "Jane Smith",
-    appointmentType: "Wound Dressing",
-    time: "10:30 AM",
-    location: "Abuja",
-    status: "assigned",
-    assignedNurse: "nurse.jane@hospital.com",
-  },
-  {
-    id: "3",
-    patientId: "NP003",
-    patientName: "Michael Johnson",
-    appointmentType: "Injection Administration",
-    time: "11:15 AM",
-    location: "Port Harcourt",
-    status: "active",
-    assignedNurse: "nurse.mary@hospital.com",
-  },
-  {
-    id: "4",
-    patientId: "NP004",
-    patientName: "Sarah Wilson",
-    appointmentType: "Vital Signs Check",
-    time: "02:00 PM",
-    location: "Lagos",
-    status: "completed",
-    assignedNurse: "nurse.john@hospital.com",
-  },
-  {
-    id: "5",
-    patientId: "NP005",
-    patientName: "David Brown",
-    appointmentType: "Blood Pressure Check",
-    time: "03:30 PM",
-    location: "Kano",
-    status: "pending",
-  },
-  {
-    id: "6",
-    patientId: "NP006",
-    patientName: "Lisa Anderson",
-    appointmentType: "Medication Review",
-    time: "04:15 PM",
-    location: "Abuja",
-    status: "assigned",
-    assignedNurse: "nurse.sarah@hospital.com",
-  },
-];
+interface ProcedureItem {
+  procedure: Procedure;
+  procedure_id: number;
+  num_days: number;
+  subtotal: string;
+}
 
+interface PatientDetail {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  address: string;
+  relationship_to_patient: string;
+}
+
+interface Booking {
+  id: number;
+  booking_id: string;
+  user: string;
+  nurse: string;
+  nurse_full_name?: string;
+  scheduling_option: string;
+  start_date: string;
+  time_of_day: string;
+  selected_days: string[];
+  service_dates: string;
+  is_for_self: boolean;
+  status: "pending" | "assigned" | "active" | "completed";
+  total_amount: string;
+  procedure_item: ProcedureItem;
+  patient_detail: PatientDetail;
+  service_address: string;
+  service_location: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Booking[];
+}
 
 const NurseBooking: React.FC = () => {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
+  const [selectedBookingId, setSelectedBookingId] = React.useState<
+    number | null
+  >(null);
 
-  
+  // Fetch data with react-query (cache: 10 mins)
+  const { data, isLoading, isError } = useQuery<ApiResponse>({
+    queryKey: ["nurse-procedure-bookings"],
+    queryFn: async () => {
+      const res = await api.get("services/nurse-procedure-bookings/");
+      return res.data;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  const bookings = data?.results || [];
+
   const filteredAppointments = React.useMemo(() => {
-    return appointmentsData.filter((appointment) => {
+    return bookings.filter((appointment) => {
+      const patientName = `${appointment.patient_detail?.first_name} ${appointment.patient_detail?.last_name}`;
+
       const matchesSearch =
-        appointment.patientName
+        patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        appointment.booking_id
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        appointment.patientId
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (appointment.assignedNurse &&
-          appointment.assignedNurse
+        (appointment.nurse_full_name &&
+          appointment.nurse_full_name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()));
 
@@ -102,20 +105,22 @@ const NurseBooking: React.FC = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [bookings, searchTerm, statusFilter]);
 
-  const handleAssignNurse = (appointmentId: string) => {
+  const handleAssignNurse = (appointmentId: number) => {
     console.log(`Assign nurse to appointment ${appointmentId}`);
-    // Here you would typically open a modal or navigate to assignment page
   };
 
-  const handleViewDetails = (appointmentId: string) => {
-    console.log(`View details for appointment ${appointmentId}`);
-    // Here you would typically open a modal or navigate to details page
+  const handleViewDetails = (appointmentId: number) => {
+    setSelectedBookingId(appointmentId);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedBookingId(null);
   };
 
   return (
-    <div className="w-full mx-auto ">
+    <div className="w-full mx-auto">
       <div className="py-5">
         <h1 className="font-bold text-black md:text-4xl text-3xl capitalize">
           Booking Management
@@ -148,7 +153,15 @@ const NurseBooking: React.FC = () => {
         />
 
         <div className="py-3 space-y-3">
-          {filteredAppointments.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-8 text-gray-500">
+              Loading appointments...
+            </div>
+          ) : isError ? (
+            <div className="text-center py-8 text-red-500">
+              Failed to load appointments.
+            </div>
+          ) : filteredAppointments.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No appointments found matching your criteria.
             </div>
@@ -156,14 +169,35 @@ const NurseBooking: React.FC = () => {
             filteredAppointments.map((appointment) => (
               <AppointmentCard
                 key={appointment.id}
-                appointment={appointment}
-                onAssignNurse={handleAssignNurse}
-                onViewDetails={handleViewDetails}
+                appointment={{
+                  id: appointment.booking_id,
+                  patientId: appointment.booking_id,
+                  patientName: `${appointment.patient_detail?.first_name} ${appointment.patient_detail?.last_name}`,
+                  appointmentType: appointment.procedure_item.procedure.title,
+                  time: new Date(appointment.time_of_day).toLocaleTimeString(
+                    [],
+                    { hour: "2-digit", minute: "2-digit" }
+                  ),
+                  location: appointment.service_location,
+                  status: appointment.status,
+                  assignedNurse: appointment.nurse_full_name,
+                }}
+                onAssignNurse={() => handleAssignNurse(appointment.id)}
+                onViewDetails={() => handleViewDetails(appointment.id)}
               />
             ))
           )}
         </div>
       </div>
+
+      {/* Booking Details Modal */}
+      {selectedBookingId && (
+        <BookingDetailsModal
+          bookingId={selectedBookingId}
+          isOpen={true}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 };
