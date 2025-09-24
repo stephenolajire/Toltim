@@ -17,7 +17,9 @@ interface Context {
 const queryKeys = {
   useNurseVerification: "useNurseVerification",
   useNurseVerificationStat: "useNurseVerificationStat",
-  useNurseProcedures: "useNurseProcedures"
+  useNurseProcedures: "useNurseProcedures",
+  useNurseProfile: "useNurseProfile",
+  useNurseActiveBooking:"useNurseActiveBooking",
 };
 
 export const GlobalContext = createContext<Context | undefined>(undefined);
@@ -174,3 +176,32 @@ export const useNurseProcedures = () => {
   });
 };
 
+export const useNurseProfile = () => {
+  return useQuery({
+    queryKey: ['nurseProfile'],
+    queryFn: async () => {
+      const response = await api.get("/user/nurse/profile/");
+      return response.data;
+    },
+    enabled: true,
+    retry: 1,
+    staleTime: 20 * 60 * 1000,
+    gcTime: 20 * 60 * 1000, 
+  });
+};
+
+export const useNurseActiveBooking = () => {
+  return useQuery({
+    queryKey: ["useNurseActiveBooking"],
+    queryFn: async () => {
+      const response = await api.get(
+        "services/nurse-procedures-bookings/approved/"
+      );
+      return response.data;
+    },
+    enabled: true,
+    retry: 1,
+    staleTime: 20 * 60 * 1000,
+    gcTime: 20 * 60 * 1000,
+  });
+};

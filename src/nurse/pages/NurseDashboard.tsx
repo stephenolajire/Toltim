@@ -1,211 +1,463 @@
 import React from "react";
-import { MapPin, Clock, FileText, Download } from "lucide-react";
-import PatientAssessmentModal from "../components/FullAccessModal";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  MapPin,
+  Clock,
+  FileText,
+  User,
+  Calendar,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
+import api from "../../constant/api";
+import BookingDetailsModal from "../components/BookingDetailsModal";
 
-interface PatientRequest {
-  id: string;
-  name: string;
-  age: number;
-  condition: string;
-  location: string;
-  distance: string;
-  timeAgo: string;
-  urgency: "Routine" | "Same Day" | "Urgent";
-  price: number;
-  assessmentSummary: string;
-  hasTestResults: boolean;
-  status: "pending" | "accepted";
+interface Booking {
+  id: number;
+  booking_id: string;
+  user: string;
+  nurse: string;
+  nurse_full_name?: string;
+  scheduling_option: string;
+  start_date: string;
+  time_of_day: string;
+  selected_days: string[];
+  service_dates: string;
+  is_for_self: boolean;
+  status: "pending" | "accepted" | "active" | "completed";
+  total_amount: string;
+  procedure_item: {
+    procedure: {
+      id: number;
+      procedure_id: string;
+      title: string;
+      description: string;
+      duration: string;
+      repeated_visits: boolean;
+      price: string;
+      icon_url: string;
+      status: string;
+      inclusions?: Array<{ id: number; item: string }>;
+      requirements?: Array<{ id: number; item: string }>;
+      created_at: string;
+      updated_at: string;
+    };
+    procedure_id: number;
+    num_days: number;
+    subtotal: string;
+  };
+  patient_detail?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    address: string;
+    relationship_to_patient: string;
+  };
+  service_address: string;
+  service_location: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ApiResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Booking[];
 }
 
 const NurseDashboard: React.FC = () => {
-  const requests: PatientRequest[] = [
-    {
-      id: "1",
-      name: "Sarah Johnson",
-      age: 34,
-      condition: "Post-surgical wound care",
-      location: "Victoria Island, Lagos",
-      distance: "2.3 km",
-      timeAgo: "2 hours ago",
-      urgency: "Routine",
-      price: 8000,
-      assessmentSummary: "Minor post-operative care needed for surgical wound",
-      hasTestResults: true,
-      status: "accepted",
-    },
-    {
-      id: "2",
-      name: "Michael Adebayo",
-      age: 45,
-      condition: "Diabetes management",
-      location: "Ikoyi, Lagos",
-      distance: "3.1 km",
-      timeAgo: "30 minutes ago",
-      urgency: "Same Day",
-      price: 10000,
-      assessmentSummary:
-        "Blood sugar monitoring and insulin administration needed",
-      hasTestResults: true,
-      status: "pending",
-    },
-    {
-      id: "3",
-      name: "Grace Okafor",
-      age: 28,
-      condition: "Prenatal care",
-      location: "Lekki Phase 1, Lagos",
-      distance: "5.2 km",
-      timeAgo: "1 hour ago",
-      urgency: "Routine",
-      price: 7500,
-      assessmentSummary: "Routine prenatal checkup and health monitoring",
-      hasTestResults: false,
-      status: "pending",
-    },
-  ];
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(
+    null
+  );
+  const [acceptingRequests, setAcceptingRequests] = React.useState<Set<number>>(
+    new Set()
+  );
 
-  const getUrgencyBadgeColor = (urgency: string) => {
-    switch (urgency) {
-      case "Routine":
-        return "bg-green-100 text-green-800";
-      case "Same Day":
-        return "bg-yellow-100 text-yellow-800";
-      case "Urgent":
-        return "bg-red-100 text-red-800";
+  const queryClient = useQueryClient();
+
+  // Fetch bookings using TanStack Query
+  const { data, isLoading, isError, error } = useQuery<ApiResponse>({
+    queryKey: ["nurse-procedure-bookings"],
+    queryFn: async () => {
+      const response = await api.get("services/nurse-procedure-bookings/");
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 30 * 1000, // Refetch every 30 seconds for new requests
+  });
+
+  const bookings = data?.results || [];
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "assigned":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "active":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "completed":
+        return "bg-gray-100 text-gray-800 border-gray-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
-
-  const formatPrice = (price: number) => {
-    return `₦${price.toLocaleString()}`;
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+      case "active":
+        return <CheckCircle className="w-4 h-4" />;
+      case "assigned":
+        return <Clock className="w-4 h-4" />;
+      case "pending":
+      default:
+        return <AlertCircle className="w-4 h-4" />;
+    }
   };
+
+  const formatPrice = (price: string | number) => {
+    const numPrice = typeof price === "string" ? parseFloat(price) : price;
+    return `₦${numPrice.toLocaleString()}`;
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return "Invalid date";
+    }
+  };
+
+  const formatTime = (timeString: string) => {
+    try {
+      return new Date(timeString).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return "Invalid time";
+    }
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    try {
+      const now = new Date();
+      const date = new Date(dateString);
+      const diffMs = now.getTime() - date.getTime();
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+      if (diffHours > 0)
+        return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+      return "Just now";
+    } catch {
+      return "Recently";
+    }
+  };
+
+  const getPatientName = (booking: Booking) => {
+    if (booking.is_for_self) {
+      return "Self-booking patient";
+    }
+    if (
+      booking.patient_detail?.first_name &&
+      booking.patient_detail?.last_name
+    ) {
+      return `${booking.patient_detail.first_name} ${booking.patient_detail.last_name}`;
+    }
+    return "Patient name not provided";
+  };
+
+  const handleViewFullAssessment = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsModalOpen(true);
+  };
+
+  const handleAcceptRequest = async (bookingId: number) => {
+    setAcceptingRequests((prev) => new Set(prev).add(bookingId));
+
+    try {
+      await api.patch(
+        `services/nurse-procedure-bookings/${bookingId}/approve/`
+      );
+
+      // Refetch the data to update the UI
+      queryClient.invalidateQueries({ queryKey: ["nurse-procedure-bookings"] });
+
+      alert("Request accepted successfully!");
+    } catch (error: any) {
+      console.error("Failed to accept request:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to accept request";
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setAcceptingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(bookingId);
+        return newSet;
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full pb-10">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          New Patient Requests
+        </h1>
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse"
+              >
+                <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded mb-4"></div>
+                <div className="h-16 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="w-full pb-10">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          New Patient Requests
+        </h1>
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-red-900 mb-2">
+              Failed to load patient requests
+            </h3>
+            <p className="text-red-700">
+              {error?.message || "Please check your connection and try again."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full pb-10">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
-        New Patient Requests
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Patient Requests</h1>
+        <div className="text-sm text-gray-500">
+          {bookings.length} request{bookings.length !== 1 ? "s" : ""} found
+        </div>
+      </div>
 
-      <div className="space-y-6">
-        {requests.map((request) => (
-          <div
-            key={request.id}
-            className="bg-white border-l-4 border-green-400 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-          >
-            <div className="p-6">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
-                <div className="flex-1 mb-4 sm:mb-0">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {request.name}, {request.age} years
-                  </h3>
-                  <p className="text-gray-700 font-medium mb-3">
-                    {request.condition}
-                  </p>
+      <div className="w-fullmx-auto">
+        {bookings.length === 0 ? (
+          <div className="text-center py-16">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileText className="h-10 w-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-medium text-gray-900 mb-3">
+              No patient requests yet
+            </h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              New requests will appear here when patients book your services.
+              Check back later or refresh the page.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {bookings.map((booking) => (
+              <div
+                key={booking.id}
+                className="bg-white rounded-xl shadow-sm hover:shadow-lg border border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden"
+              >
+                {/* Header with status */}
+                <div className="p-6 pb-4">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          {booking.procedure_item.procedure.icon_url ? (
+                            <img
+                              src={booking.procedure_item.procedure.icon_url}
+                              alt="Service icon"
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-5 h-5 text-blue-600" />
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-sm">
+                            {getPatientName(booking)}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            Booking #{booking.booking_id}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>
-                        {request.location} ({request.distance})
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      <span>{request.timeAgo}</span>
-                    </div>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getUrgencyBadgeColor(
-                        request.urgency
+                    <div
+                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getStatusBadgeColor(
+                        booking.status
                       )}`}
                     >
-                      {request.urgency}
-                    </span>
+                      {getStatusIcon(booking.status)}
+                      <span className="capitalize">{booking.status}</span>
+                    </div>
                   </div>
+
+                  {/* Service Details */}
+                  <div className="mb-4">
+                    <h4 className="font-medium text-gray-900 mb-1 text-sm">
+                      {booking.procedure_item.procedure.title}
+                    </h4>
+                    <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
+                      {booking.procedure_item.procedure.description}
+                    </p>
+                  </div>
+
+                  {/* Location and Time */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <MapPin className="h-3 w-3 flex-shrink-0" />
+                      <span className="truncate">
+                        {booking.service_location}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <Calendar className="h-3 w-3 flex-shrink-0" />
+                      <span>
+                        {formatDate(booking.start_date)} at{" "}
+                        {formatTime(booking.time_of_day)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <Clock className="h-3 w-3 flex-shrink-0" />
+                      <span>Created {getTimeAgo(booking.created_at)}</span>
+                    </div>
+                  </div>
+
+                  {/* Schedule Info */}
+                  {booking.selected_days?.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex flex-wrap gap-1">
+                        {booking.selected_days.slice(0, 3).map((day) => (
+                          <span
+                            key={day}
+                            className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md"
+                          >
+                            {day.slice(0, 3)}
+                          </span>
+                        ))}
+                        {booking.selected_days.length > 3 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
+                            +{booking.selected_days.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Inclusions */}
+                  {booking.procedure_item.procedure.inclusions &&
+                    booking.procedure_item.procedure.inclusions.length > 0 && (
+                      <div className="mb-4">
+                        <div className="flex items-center gap-2 text-xs text-green-600">
+                          <FileText className="h-3 w-3" />
+                          <span>
+                            {booking.procedure_item.procedure.inclusions.length}{" "}
+                            service inclusion
+                            {booking.procedure_item.procedure.inclusions
+                              .length !== 1
+                              ? "s"
+                              : ""}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                 </div>
 
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-green-600 mb-1">
-                    {formatPrice(request.price)}
+                {/* Footer */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-green-600">
+                        {formatPrice(booking.total_amount)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {booking.procedure_item.num_days > 1
+                          ? `${booking.procedure_item.num_days} sessions`
+                          : "per session"}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">per session</div>
-                </div>
-              </div>
 
-              {/* Assessment Summary */}
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-900 mb-2">
-                  Assessment Summary
-                </h4>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  {request.assessmentSummary}
-                </p>
-              </div>
+                  {/* Action Buttons */}
+                  <div className="space-y-2">
+                    {booking.status !== "pending" ? (
+                      <button
+                        disabled
+                        className="w-full bg-green-100 text-green-800 px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Request Accepted
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleAcceptRequest(booking.id)}
+                        disabled={acceptingRequests.has(booking.id)}
+                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                      >
+                        {acceptingRequests.has(booking.id) ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Accepting...
+                          </>
+                        ) : (
+                          "Accept Request"
+                        )}
+                      </button>
+                    )}
 
-              {/* Test Results */}
-              {request.hasTestResults && (
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <FileText className="h-4 w-4" />
-                    <span>Test results available</span>
-                    <button className="flex items-center gap-1 ml-2 text-green-600 hover:text-green-700 transition-colors">
-                      <Download className="h-4 w-4" />
-                      <span>View Results</span>
+                    <button
+                      onClick={() => handleViewFullAssessment(booking)}
+                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
+                    >
+                      View Details
                     </button>
                   </div>
                 </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                {request.status === "accepted" ? (
-                  <button
-                    disabled
-                    className="bg-green-100 text-green-800 px-4 py-2 rounded-md font-medium cursor-not-allowed"
-                  >
-                    Request Accepted
-                  </button>
-                ) : (
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition-colors duration-200">
-                    Accept Request
-                  </button>
-                )}
-
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-medium transition-colors duration-200"
-                >
-                  View Full Assessment
-                </button>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
-      {isModalOpen && (
-        <PatientAssessmentModal
+      {isModalOpen && selectedBooking && (
+        <BookingDetailsModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
+          booking={selectedBooking}
         />
-      )}
-
-      {/* Empty State (if no requests) */}
-      {requests.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FileText className="h-8 w-8 text-gray-400" />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No new patient requests
-          </h3>
-          <p className="text-gray-500">
-            New requests will appear here when patients book your services.
-          </p>
-        </div>
       )}
     </div>
   );

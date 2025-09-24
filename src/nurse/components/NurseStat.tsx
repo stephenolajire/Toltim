@@ -3,8 +3,27 @@ import {
 } from "lucide-react";
 import React from "react";
 import { Link } from "react-router-dom";
+import { useNurseProfile } from "../../constant/GlobalContext";
+import Loading from "../../components/common/Loading";
+import Error from "../../components/Error";
 
 const NurseStat: React.FC = () => {
+
+  const {data:nurseProfile, isLoading, error} = useNurseProfile();
+  // console.log(nurseProfile);
+
+  if (isLoading) {
+    return(
+      <Loading/>
+    )
+  }
+
+  if (error) {
+    return (
+      <Error/>
+    )
+  }
+
   return (
     <div className="w-full bg-white">
       <div className="w-full">
@@ -13,17 +32,17 @@ const NurseStat: React.FC = () => {
           <div className="flex items-center space-x-4 mb-4 lg:mb-0">
             <div className="flex-shrink-0">
               <img
-                src="/logo.jpeg"
+                src={nurseProfile?.profilePicture || "/logo.jpeg"}
                 alt="Nurse Profile"
                 className="h-16 w-16 lg:h-20 lg:w-20 rounded-full border-4 border-white/20 object-cover"
               />
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="text-xl lg:text-2xl font-bold text-white truncate">
-                Nurse Rachel Williams, RN
+                {nurseProfile?.full_name|| "Nurse Rachel Williams"}, RN
               </h2>
               <p className="text-green-100 text-sm lg:text-base mt-1">
-                License: RN-12345 • Specialty: General Nursing, Wound Care
+                License: RN-12345 • Specialty: {nurseProfile?.specialization || "Pediatric Nursing"}
               </p>
               <div className="flex items-center mt-2 text-green-100 text-sm">
                 <span className="flex items-center">⭐ 4.9 Rating</span>
