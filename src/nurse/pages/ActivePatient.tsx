@@ -127,7 +127,7 @@ const ActivePatients: React.FC = () => {
       // More specific error handling
       if (error.response?.status === 400) {
         setDateError(
-          "Invalid OTP or service date. Please check and try again."
+          "Invalid OTP. Please check and try again."
         );
       } else if (error.response?.data?.errors) {
         setDateError(`Verification failed: ${error.response.data.errors}`);
@@ -376,16 +376,16 @@ const ActivePatients: React.FC = () => {
     );
   };
 
-  const getProgressPercentage = (serviceDates: string[]): number => {
-    const today = new Date().toISOString().split("T")[0];
-    const completedDates = serviceDates.filter((date) => date < today);
-    return (completedDates.length / serviceDates.length) * 100;
-  };
+  // const getProgressPercentage = (serviceDates: string[]): number => {
+  //   const today = new Date().toISOString().split("T")[0];
+  //   const completedDates = serviceDates.filter((date) => date < today);
+  //   return (completedDates.length / serviceDates.length) * 100;
+  // };
 
-  const getCompletedSessions = (serviceDates: string[]): number => {
-    const today = new Date().toISOString().split("T")[0];
-    return serviceDates.filter((date) => date < today).length;
-  };
+  // const getCompletedSessions = (serviceDates: string[]): number => {
+  //   const today = new Date().toISOString().split("T")[0];
+  //   return serviceDates.filter((date) => date < today).length;
+  // };
 
   const getNextSession = (
     serviceDates: string[],
@@ -482,32 +482,20 @@ const ActivePatients: React.FC = () => {
               </div>
             </div>
 
-            {/* Progress */}
-            <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  Progress
-                </span>
-                <span className="text-sm text-gray-600">
-                  {getCompletedSessions(booking.service_dates)}/
-                  {booking.service_dates.length} sessions
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${getProgressPercentage(booking.service_dates)}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
+            <progress
+              className="w-full h-2 [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:bg-green-500 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:bg-green-500 [&::-moz-progress-bar]:rounded-full"
+              value={booking.draft_sessions}
+              max={booking.total_sessions}
+            ></progress>
 
             {/* Action Buttons */}
             <div className="flex gap-3 flex-wrap">
               <button
+                disabled={booking.draft_sessions === booking.total_sessions}
                 onClick={() => openConfirmation(booking)}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                className={`flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  booking.draft_sessions === booking.total_sessions && "opacity-50"
+                }`}
               >
                 <Play className="w-4 h-4" />
                 Record Session
@@ -545,8 +533,8 @@ const ActivePatients: React.FC = () => {
           <RecordTreatmentModal
             isOpen={isOpen}
             onClose={openModal}
-            // bookingId={selectedBooking.id}
-            // bookingData={selectedBooking}
+            bookingId={selectedBooking.id}
+            bookingData={selectedBooking}
           />
         )}
       </div>

@@ -1,6 +1,8 @@
 export interface BookingData {
   booking_id: string;
   created_at: string;
+  draft_sessions:number;
+  total_sessions:number;
   id: number;
   is_for_self: boolean;
   nurse: string;

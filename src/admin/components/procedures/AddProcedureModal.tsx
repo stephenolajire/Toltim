@@ -3,6 +3,7 @@ import { X, Plus, Trash2, Loader2 } from "lucide-react";
 import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import api from "../../../constant/api";
+import { toast } from "react-toastify";
 
 interface InclusionItem {
   item: string;
@@ -124,20 +125,20 @@ const AddProcedureModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       onClose();
 
       // You might want to show a success toast here
-      alert("Procedure added successfully!");
+      toast.success("Procedure added successfully!");
     } catch (error: any) {
       console.error("Error creating procedure:", error);
 
       // Handle different error scenarios
       if (error.response?.data) {
         console.error("Server error:", error.response.data);
-        alert(
+        toast.error(
           `Error: ${
             error.response.data.message || "Failed to create procedure"
           }`
         );
       } else {
-        alert("Network error: Please check your connection and try again");
+        toast.error("Network error: Please check your connection and try again");
       }
     } finally {
       setSubmitting(false);

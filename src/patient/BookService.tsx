@@ -87,7 +87,6 @@ const NursingProcedures: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const navigate = useNavigate();
-  
 
   // API Data Hook
   const { data, isLoading } = useNurseProcedures();
@@ -98,7 +97,7 @@ const NursingProcedures: React.FC = () => {
     getCurrentLocation();
   }, []);
 
-  const getCurrentLocation = () => {
+  const getCurrentLocation = async () => {
     setLocationLoading(true);
     setLocationError(null);
 
@@ -108,71 +107,94 @@ const NursingProcedures: React.FC = () => {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const locationData: LocationData = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-
-        setLocation(locationData);
-
-        // Store in localStorage for use in other components
-        localStorage.setItem("userLocation", JSON.stringify(locationData));
-
-        // Get address from coordinates
-        getAddressFromCoords(locationData.latitude, locationData.longitude);
-      },
-      (error) => {
-        let errorMessage = "Unable to get your location";
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Location access denied by user";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information unavailable";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out";
-            break;
-        }
-        setLocationError(errorMessage);
-        setLocationLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 300000, // 5 minutes
-      }
-    );
-  };
-
-  const getAddressFromCoords = async (latitude: number, longitude: number) => {
     try {
-      // Using a reverse geocoding service (in real app, use your preferred service)
-      const response = await fetch(
-        `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=YOUR_API_KEY&limit=1`
-      );
+      // Check current permission status
+      if ("permissions" in navigator) {
+        const permission = await navigator.permissions.query({
+          name: "geolocation",
+        });
+        console.log("Current geolocation permission:", permission.state);
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.results && data.results.length > 0) {
-          const address = data.results[0].formatted;
-          setLocation((prev) => (prev ? { ...prev, address } : null));
-
-          // Update localStorage with address
-          const locationWithAddress = { latitude, longitude, address };
-          localStorage.setItem(
-            "userLocation",
-            JSON.stringify(locationWithAddress)
+        // If permission is denied, we still try to request it
+        // The browser will show the permission prompt again
+        if (permission.state === "denied") {
+          console.log(
+            "Permission was denied, but attempting to request again..."
           );
         }
       }
+
+      // Always attempt to get location - this will trigger permission prompt if needed
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          console.log("Location obtained:", locationData);
+          setLocation(locationData);
+          setLocationLoading(false);
+
+          // Store in localStorage for use in other components
+          localStorage.setItem("userLocation", JSON.stringify(locationData));
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          let errorMessage = "Unable to get your location";
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage =
+                "Location access denied. Please enable location access and try again.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information unavailable";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out";
+              break;
+            default:
+              errorMessage = `Unknown error occurred (${error.code})`;
+          }
+
+          setLocationError(errorMessage);
+          setLocationLoading(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 0, // Changed to 0 to always get fresh location and trigger permission prompt
+        }
+      );
     } catch (error) {
-      // Fallback to showing coordinates only
-      console.log("Could not get address, showing coordinates only");
-    } finally {
-      setLocationLoading(false);
+      console.error("Permission query error:", error);
+      // Fallback: still try to get location even if permission query fails
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          console.log("Location obtained:", locationData);
+          setLocation(locationData);
+          setLocationLoading(false);
+          localStorage.setItem("userLocation", JSON.stringify(locationData));
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLocationError(
+            "Unable to get your location. Please enable location access."
+          );
+          setLocationLoading(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 0,
+        }
+      );
     }
   };
 
@@ -309,7 +331,6 @@ const NursingProcedures: React.FC = () => {
   };
 
   // Updated handleProceed function to store data for next component
-  // Updated handleProceed function to store data for next component
   const handleProceed = () => {
     // Validation
     if (selectedServices.length === 0) {
@@ -383,20 +404,23 @@ const NursingProcedures: React.FC = () => {
                 <span>Getting your location...</span>
               </div>
             ) : locationError ? (
-              <div className="flex items-center space-x-2 text-sm text-red-600">
-                <AlertCircle className="w-4 h-4" />
-                <span>{locationError}</span>
+              <div className="text-sm text-red-600">
+                <div className="flex items-center space-x-2 mb-1">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="font-medium">Location Required</span>
+                </div>
+                <p className="text-xs text-red-500">{locationError}</p>
               </div>
             ) : location ? (
               <div className="text-sm text-gray-600">
-                {location.address ? (
-                  <p className="truncate">{location.address}</p>
-                ) : (
-                  <p>
-                    Lat: {location.latitude.toFixed(6)}, Lng:{" "}
-                    {location.longitude.toFixed(6)}
-                  </p>
-                )}
+                <div className="flex items-center space-x-1 text-green-600 mb-1">
+                  <CheckCircle className="w-3 h-3" />
+                  <span className="text-xs font-medium">Location obtained</span>
+                </div>
+                <p className="text-xs">
+                  Lat: {location.latitude.toFixed(6)}, Lng:{" "}
+                  {location.longitude.toFixed(6)}
+                </p>
               </div>
             ) : null}
           </div>
@@ -405,10 +429,21 @@ const NursingProcedures: React.FC = () => {
               onClick={getCurrentLocation}
               className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Retry
+              Allow Location
             </button>
           )}
         </div>
+
+        {/* Additional help text when permission is denied */}
+        {locationError && locationError.includes("denied") && (
+          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-xs text-yellow-800">
+              <strong>Need help?</strong> Click the location icon in your
+              browser's address bar to enable location access, then click "Allow
+              Location" again.
+            </p>
+          </div>
+        )}
       </div>
     );
   };
@@ -462,7 +497,9 @@ const NursingProcedures: React.FC = () => {
             <div className="flex items-center space-x-1 sm:space-x-2 ml-2 flex-shrink-0">
               <button
                 onClick={() =>
-                  setExpandedService(isExpanded ? null : service.procedure_id || null)
+                  setExpandedService(
+                    isExpanded ? null : service.procedure_id || null
+                  )
                 }
                 className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
               >

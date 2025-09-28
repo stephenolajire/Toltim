@@ -6,21 +6,34 @@ import {
   User,
   Calendar,
   FileText,
-//   Bed,
-//   CheckCircle,
   Shield,
-//   Activity,
-//   HeartHandshake,
-//   Phone,
+  Loader2,
 } from "lucide-react";
+import { useInBedProcedures } from "../constant/GlobalContext";
+import Loading from "../components/common/Loading";
+import api from "../constant/api";
 
 // Types
-interface ServiceOption {
+interface DefaultService {
   id: string;
   name: string;
   included: boolean;
-  price?: number;
+  isDefault: true;
 }
+
+interface FetchedService {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  price_per_day: string;
+  is_active: boolean;
+  included: boolean;
+  notes: string;
+  isDefault: false;
+}
+
+type ServiceOption = DefaultService | FetchedService;
 
 interface BookingData {
   patientName: string;
@@ -35,6 +48,7 @@ interface BookingData {
 }
 
 const InPatientCaregiverService: React.FC = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingData, setBookingData] = useState<BookingData>({
     patientName: "",
     hospitalName: "",
@@ -48,39 +62,64 @@ const InPatientCaregiverService: React.FC = () => {
         id: "running-errands",
         name: "Running errands (pharmacy, food, etc.)",
         included: true,
+        isDefault: true,
       },
-      { id: "personal-care", name: "Personal care assistance", included: true },
       {
-        id: "meal-assistance",
-        name: "Meal assistance and feeding",
-        included: false,
-        price: 1000,
+        id: "personal-care",
+        name: "Personal care assistance",
+        included: true,
+        isDefault: true,
       },
       {
         id: "companionship",
         name: "Companionship and emotional support",
         included: true,
+        isDefault: true,
       },
       {
         id: "family-updates",
         name: "Family communication updates",
         included: true,
-      },
-      {
-        id: "mobility-assistance",
-        name: "Mobility assistance",
-        included: false,
-        price: 1500,
-      },
-      {
-        id: "hygiene-assistance",
-        name: "Personal hygiene assistance",
-        included: false,
-        price: 1000,
+        isDefault: true,
       },
     ],
     specialRequirements: "",
   });
+
+  const { data: inBedProceduresData, isLoading } = useInBedProcedures();
+
+  // Merge default services with fetched services
+  React.useEffect(() => {
+    if (inBedProceduresData?.results) {
+      const fetchedServices: FetchedService[] = inBedProceduresData.results
+        .filter((procedure: any) => procedure.is_active)
+        .map((procedure: any) => ({
+          id: procedure.id,
+          code: procedure.code,
+          name: procedure.name,
+          description: procedure.description,
+          price_per_day: procedure.price_per_day,
+          is_active: procedure.is_active,
+          included: false,
+          notes: "",
+          isDefault: false,
+        }));
+
+      setBookingData((prev) => ({
+        ...prev,
+        services: [
+          ...prev.services.filter(
+            (service) => "isDefault" in service && service.isDefault
+          ),
+          ...fetchedServices,
+        ],
+      }));
+    }
+  }, [inBedProceduresData]);
+
+  if (isLoading) {
+    return <Loading />;
+  }
 
   const baseDailyRate = 5000;
 
@@ -95,8 +134,19 @@ const InPatientCaregiverService: React.FC = () => {
     setBookingData((prev) => ({
       ...prev,
       services: prev.services.map((service) =>
-        service.id === serviceId
+        service.id === serviceId && !service.isDefault
           ? { ...service, included: !service.included }
+          : service
+      ),
+    }));
+  };
+
+  const handleServiceNotesChange = (serviceId: string, notes: string) => {
+    setBookingData((prev) => ({
+      ...prev,
+      services: prev.services.map((service) =>
+        service.id === serviceId && !service.isDefault
+          ? { ...service, notes }
           : service
       ),
     }));
@@ -104,8 +154,13 @@ const InPatientCaregiverService: React.FC = () => {
 
   const calculateDailyRate = () => {
     const additionalServices = bookingData.services
-      .filter((service) => service.included && service.price)
-      .reduce((total, service) => total + (service.price || 0), 0);
+      .filter((service) => service.included && !service.isDefault)
+      .reduce((total, service) => {
+        if (!service.isDefault) {
+          return total + parseFloat((service as FetchedService).price_per_day);
+        }
+        return total;
+      }, 0);
 
     return baseDailyRate + additionalServices;
   };
@@ -120,6 +175,55 @@ const InPatientCaregiverService: React.FC = () => {
       bookingData.expectedDischarge &&
       bookingData.numberOfDays
     );
+  };
+
+  const handleSubmit = async () => {
+    if (!isFormValid()) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // Prepare items array with selected services
+      const items = bookingData.services
+        .filter((service) => service.included)
+        .map((service) => ({
+          service: service.name,
+          notes: !service.isDefault ? service.notes : "",
+        }));
+
+      const payload = {
+        patient_name: bookingData.patientName,
+        hospital_name: bookingData.hospitalName,
+        hospital_address: bookingData.hospitalAddress,
+        room_ward: bookingData.roomWardNumber,
+        admission_date: bookingData.admissionDate,
+        expected_discharge: bookingData.expectedDischarge,
+        number_of_days: parseInt(bookingData.numberOfDays),
+        special_requirements: bookingData.specialRequirements,
+        items: items,
+      };
+
+      const response = await api.post("inpatient-caregiver/bookings/", payload);
+
+      console.log("Booking created successfully:", response.data);
+      alert("Booking request submitted successfully!");
+
+      // Reset form or redirect as needed
+      // You might want to redirect to a success page or reset the form
+    } catch (error: any) {
+      console.error("Error creating booking:", error);
+
+      if (error.response?.data) {
+        console.error("Server error:", error.response.data);
+        alert(
+          `Error: ${error.response.data.message || "Failed to submit booking"}`
+        );
+      } else {
+        alert("Network error: Please check your connection and try again");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -310,42 +414,102 @@ const InPatientCaregiverService: React.FC = () => {
                   </h3>
                 </div>
 
-                <div className="space-y-3">
-                  {bookingData.services.map((service) => (
-                    <div
-                      key={service.id}
-                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          id={service.id}
-                          checked={service.included}
-                          onChange={() => handleServiceToggle(service.id)}
-                          className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                        />
-                        <label
-                          htmlFor={service.id}
-                          className="text-sm sm:text-base text-gray-700 cursor-pointer"
+                {/* Default Services */}
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Included Services (Cannot be changed)
+                  </h4>
+                  <div className="space-y-2">
+                    {bookingData.services
+                      .filter((service) => service.isDefault)
+                      .map((service) => (
+                        <div
+                          key={service.id}
+                          className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg"
                         >
-                          {service.name}
-                        </label>
-                      </div>
-
-                      <div className="text-sm text-gray-600">
-                        {service.included && !service.price && (
-                          <span className="text-green-600 font-medium">
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="checkbox"
+                              checked={true}
+                              disabled={true}
+                              className="w-4 h-4 text-green-600 border-gray-300 rounded"
+                            />
+                            <span className="text-sm sm:text-base text-gray-700">
+                              {service.name}
+                            </span>
+                          </div>
+                          <span className="text-sm text-green-600 font-medium">
                             Included
                           </span>
-                        )}
-                        {service.price && (
-                          <span className="font-medium">
-                            (+₦{service.price.toLocaleString()}/day)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Additional Services */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    Additional Services (Optional)
+                  </h4>
+                  <div className="space-y-3">
+                    {bookingData.services
+                      .filter((service) => !service.isDefault)
+                      .map((service) => (
+                        <div
+                          key={service.id}
+                          className="border border-gray-200 rounded-lg p-3"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="checkbox"
+                                id={service.id}
+                                checked={service.included}
+                                onChange={() => handleServiceToggle(service.id)}
+                                className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                              />
+                              <label
+                                htmlFor={service.id}
+                                className="text-sm sm:text-base text-gray-700 cursor-pointer font-medium"
+                              >
+                                {service.name}
+                              </label>
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">
+                              +₦
+                              {parseFloat(
+                                (service as FetchedService).price_per_day
+                              ).toLocaleString()}
+                              /day
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-gray-600 ml-7 mb-2">
+                            {(service as FetchedService).description}
+                          </p>
+
+                          {service.included && (
+                            <div className="ml-7">
+                              <label className="block text-xs font-medium text-gray-700 mb-1">
+                                Special notes for this service:
+                              </label>
+                              <input
+                                type="text"
+                                value={(service as FetchedService).notes}
+                                onChange={(e) =>
+                                  handleServiceNotesChange(
+                                    service.id,
+                                    e.target.value
+                                  )
+                                }
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                placeholder="Any specific instructions..."
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
 
@@ -367,14 +531,16 @@ const InPatientCaregiverService: React.FC = () => {
 
               {/* Submit Button */}
               <button
-                disabled={!isFormValid()}
-                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm sm:text-base ${
-                  isFormValid()
+                onClick={handleSubmit}
+                disabled={!isFormValid() || isSubmitting}
+                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${
+                  isFormValid() && !isSubmitting
                     ? "bg-green-600 hover:bg-green-700 text-white"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
-                Submit Booking Request
+                {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+                {isSubmitting ? "Submitting..." : "Submit Booking Request"}
               </button>
             </div>
           </div>
@@ -397,6 +563,24 @@ const InPatientCaregiverService: React.FC = () => {
                     ₦{baseDailyRate.toLocaleString()}
                   </span>
                 </div>
+
+                {/* Additional services breakdown */}
+                {bookingData.services
+                  .filter((service) => !service.isDefault && service.included)
+                  .map((service) => (
+                    <div
+                      key={service.id}
+                      className="flex justify-between text-sm"
+                    >
+                      <span className="text-gray-600">{service.name}:</span>
+                      <span className="text-gray-900">
+                        +₦
+                        {parseFloat(
+                          (service as FetchedService).price_per_day
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
 
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-base sm:text-lg font-semibold">

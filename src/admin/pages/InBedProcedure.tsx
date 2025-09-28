@@ -1,73 +1,55 @@
 import React, { useState } from "react";
 import { Plus, Search, Filter, Edit, Trash2, Eye } from "lucide-react";
-import AddProcedureModal from "../components/procedures/AddProcedureModal";
-import EditProcedureModal from "../components/procedures/EditProcedureModal";
-import ProcedureDetailModal from "../components/procedures/EditProcedureModal";
-import { useNurseProcedures } from "../../constant/GlobalContext";
+import AddInbedProcedureModal from "../components/procedures/AddInbedProcedures";
+import { useInBedProcedures } from "../../constant/GlobalContext";
+import EditInBedProcedureModal from "../components/procedures/EditInBedModal";
+import ViewInBedProcedureModal from "../components/procedures/ViewInBedProcedureModal";
 
-// Define types for the API response
-interface APIInclusionItem {
-  id: number;
-  item: string;
-}
-
-interface APIRequirementItem {
-  id: number;
-  item: string;
-}
-
+// Define types for the new API response structure
 interface APIProcedure {
-  id: number;
-  procedure_id: string;
-  title: string;
+  id: string;
+  code: string;
+  name: string;
   description: string;
-  duration: string;
-  repeated_visits: boolean;
-  price: string;
-  icon_url: string | null;
-  status: "active" | "inactive";
-  inclusions: APIInclusionItem[];
-  requirements: APIRequirementItem[];
-  created_at: string;
-  updated_at: string;
+  price_per_day: string;
+  is_active: boolean;
 }
 
 // Define types for the component's internal procedure data
 interface Procedure {
   id: string;
+  code: string;
   name: string;
   description: string;
-  amount: string;
-  repeatRequired: boolean;
+  pricePerDay: string;
   status: "active" | "inactive";
-  created: string;
 }
 
 interface ProceduresProps {
   procedures?: Procedure[];
 }
 
-const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
+const InBedProcedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedProcedureId, setSelectedProcedureId] = useState<number | null>(
+  const [selectedProcedureId, setSelectedProcedureId] = useState<string | null>(
     null
   );
-  const { data, isLoading } = useNurseProcedures();
+  const { data, isLoading } = useInBedProcedures();
+  console.log(data);
 
   // Function to transform API data to component format
   const transformProcedureData = (
     apiProcedures: APIProcedure[]
   ): Procedure[] => {
     return apiProcedures.map((procedure) => ({
-      id: procedure.procedure_id,
-      name: procedure.title,
+      id: procedure.id,
+      code: procedure.code,
+      name: procedure.name,
       description: procedure.description,
-      amount: `₦${parseFloat(procedure.price).toLocaleString()}`,
-      repeatRequired: procedure.repeated_visits,
-      status: procedure.status,
-      created: new Date(procedure.created_at).toLocaleDateString("en-GB"), // Format: DD/MM/YYYY
+      pricePerDay: `₦${parseFloat(procedure.price_per_day).toLocaleString()}`,
+      status: procedure.is_active ? "active" : "inactive",
     }));
   };
 
@@ -83,41 +65,30 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
       return transformProcedureData(data.results);
     }
 
-    return []
+    return [];
   };
 
   const procedureData = getProcedureData();
 
   // Function to handle viewing procedure details
   const handleViewProcedureDetails = (procedureId: string) => {
-    // Find the corresponding API procedure by procedure_id
-    const apiProcedure = data?.results?.find(
-      (p:any) => p.procedure_id === procedureId
-    );
-    if (apiProcedure) {
-      setSelectedProcedureId(apiProcedure.id);
-      setIsDetailModalOpen(true);
-    }
+    setSelectedProcedureId(procedureId);
+    setIsDetailModalOpen(true);
   };
 
   // Function to handle editing procedure
   const handleEditProcedure = (procedureId: string) => {
-    // Find the corresponding API procedure by procedure_id
-    const apiProcedure = data?.results?.find(
-      (p:any) => p.procedure_id === procedureId
-    );
-    if (apiProcedure) {
-      setSelectedProcedureId(apiProcedure.id);
-      setIsEditModalOpen(true);
-    }
+    setSelectedProcedureId(procedureId);
+    setIsEditModalOpen(true);
   };
 
   // Function to get the selected procedure from API data
   const getSelectedProcedure = (): APIProcedure | null => {
     if (!data?.results || !selectedProcedureId) return null;
     return (
-      data.results.find((procedure:any) => procedure.id === selectedProcedureId) ||
-      null
+      data.results.find(
+        (procedure: APIProcedure) => procedure.id === selectedProcedureId
+      ) || null
     );
   };
 
@@ -140,10 +111,10 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
         <div className="flex flex-col md:flex-row md:space-y-0 items-center justify-between w-full mb-8">
           <div className="py-5">
             <h1 className="font-bold text-black md:text-4xl text-3xl capitalize">
-              Nursing Procedures
+              InBed Procedures
             </h1>
             <p className="text-gray-500 mt-1">
-              Manage nursing procedures, pricing and schedules
+              Manage InBed procedures, pricing and schedules
             </p>
           </div>
         </div>
@@ -154,7 +125,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
               All Procedures
             </h2>
             <p className="text-gray-500 mt-1">
-              Manage and configure nursing procedures
+              Manage and configure in-bed procedures
             </p>
           </div>
 
@@ -173,10 +144,10 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
       <div className="flex flex-col md:flex-row md:space-y-0 items-center justify-between w-full mb-8">
         <div className="py-5">
           <h1 className="font-bold text-black md:text-4xl text-3xl capitalize">
-             Nursing Procedures
+            In-Bed Procedures
           </h1>
           <p className="text-gray-500 mt-1">
-            Manage nursing procedures, pricing and schedules
+            Manage in-bed procedures, pricing and schedules
           </p>
         </div>
         <div className="px-4">
@@ -200,7 +171,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
             All Procedures ({procedureData.length})
           </h2>
           <p className="text-gray-500 mt-1">
-            Manage and configure nursing procedures
+            Manage and configure in-bed procedures
           </p>
         </div>
 
@@ -232,7 +203,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ID
+                    Code
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Name
@@ -241,16 +212,10 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
                     Description
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Repeat Required
+                    Price Per Day
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -264,7 +229,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
                     className="hover:bg-gray-50 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {procedure.id}
+                      {procedure.code}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {procedure.name}
@@ -275,18 +240,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      {procedure.amount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                          procedure.repeatRequired
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {procedure.repeatRequired ? "Yes" : "No"}
-                      </span>
+                      {procedure.pricePerDay}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -298,9 +252,6 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
                       >
                         {procedure.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {procedure.created}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex items-center space-x-3">
@@ -353,26 +304,27 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
       </div>
 
       {/* Add Procedure Modal */}
-      <AddProcedureModal
+      <AddInbedProcedureModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
 
       {/* Edit Procedure Modal */}
-      <EditProcedureModal
+      <EditInBedProcedureModal
         isOpen={isEditModalOpen}
         onClose={handleCloseEditModal}
         procedure={getSelectedProcedure()}
       />
 
       {/* Procedure Detail Modal */}
-      <ProcedureDetailModal
+      <ViewInBedProcedureModal
         isOpen={isDetailModalOpen}
         onClose={handleCloseDetailModal}
         procedure={getSelectedProcedure()}
+        // Don't include onSelect prop since this is admin view, not selection view
       />
     </div>
   );
 };
 
-export default Procedures;
+export default InBedProcedures;

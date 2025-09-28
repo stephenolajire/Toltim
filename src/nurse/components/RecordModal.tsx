@@ -1,18 +1,21 @@
 import React, { useState } from "react";
 import { X, Camera, Send, Star } from "lucide-react";
+import api from "../../constant/api";
+import type { BookingData } from "../../types/bookingdata";
+import { toast } from "react-toastify";
 
 interface RecordTreatmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  patientName?: string;
-  treatmentType?: string;
+  bookingId: number;
+  bookingData: BookingData;
 }
 
 const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
   isOpen,
   onClose,
-  patientName = "Sarah Johnson",
-  treatmentType = "Daily wound dressing for 7 days",
+  bookingData,
+  bookingId,
 }) => {
   const [formData, setFormData] = useState({
     bloodPressure: "",
@@ -28,6 +31,8 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
   });
 
   const [hoveredStar, setHoveredStar] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -41,16 +46,104 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
     setHoveredStar(rating);
   };
 
-  const handleSubmit = () => {
-    console.log("Submitting treatment report:", formData);
-    // Handle form submission
-    onClose();
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      setPhotos((prev) => [...prev, ...Array.from(files)]);
+    }
   };
 
-  const handleSaveDraft = () => {
-    console.log("Saving as draft:", formData);
-    // Handle save as draft
-    onClose();
+  const prepareSubmissionData = (status: "draft" | "completed") => {
+    const formDataToSend = new FormData();
+
+    // Add text fields
+    if (formData.bloodPressure)
+      formDataToSend.append("blood_pressure", formData.bloodPressure);
+    if (formData.temperature)
+      formDataToSend.append("temperature", formData.temperature);
+    if (formData.pulseRate)
+      formDataToSend.append("pulse_rate", formData.pulseRate);
+    if (formData.bloodSugar)
+      formDataToSend.append("blood_sugar", formData.bloodSugar);
+    if (formData.oxygenSaturation)
+      formDataToSend.append("oxygen_saturation", formData.oxygenSaturation);
+    if (formData.currentCondition)
+      formDataToSend.append("patient_condition", formData.currentCondition);
+    if (formData.treatmentNotes)
+      formDataToSend.append("treatment_notes", formData.treatmentNotes);
+    if (formData.medicationsAdministered)
+      formDataToSend.append(
+        "medications_administered",
+        formData.medicationsAdministered
+      );
+    if (formData.nextStepsRecommendations)
+      formDataToSend.append("next_steps", formData.nextStepsRecommendations);
+    if (formData.sessionRating)
+      formDataToSend.append("rating", formData.sessionRating.toString());
+
+    // Add status and timestamp
+    formDataToSend.append("status", status);
+    if (status === "completed") {
+      formDataToSend.append("completed", new Date().toISOString());
+    }
+
+    // Add photos
+    photos.forEach((photo, index) => {
+      formDataToSend.append(`photos[${index}]photo`, photo);
+    });
+
+    return formDataToSend;
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.treatmentNotes.trim()) {
+      toast.error("Treatment notes are required.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const submissionData = prepareSubmissionData("completed");
+      await api.post(
+        `services/nurse-procedure-bookings/${bookingId}/session-report/`,
+        submissionData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      toast.success("Treatment report submitted successfully");
+      onClose();
+    } catch (error) {
+      console.error("Error submitting treatment report:", error);
+      toast.error("Failed to submit treatment report. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    setIsSubmitting(true);
+    try {
+      const draftData = prepareSubmissionData("draft");
+      await api.post(
+        `services/nurse-procedure-bookings/${bookingId}/session-report/`,
+        draftData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Treatment report saved as draft");
+      onClose();
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      toast.error("Failed to save draft. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -66,6 +159,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-6 h-6" />
           </button>
@@ -84,7 +178,9 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
               </h3>
             </div>
             <p className="text-sm text-gray-600">
-              Record treatment details for {patientName} - {treatmentType}
+              Record treatment details for{" "}
+              {bookingData.patient_detail.first_name} -{" "}
+              {bookingData.patient_detail.last_name}
             </p>
           </div>
 
@@ -102,32 +198,36 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
                 onChange={(e) =>
                   handleInputChange("bloodPressure", e.target.value)
                 }
+                disabled={isSubmitting}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Temperature
+                Temperature (°C)
               </label>
               <input
-                type="text"
-                placeholder="e.g., 36.5°C"
+                type="number"
+                step="0.1"
+                placeholder="e.g., 36.5"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 value={formData.temperature}
                 onChange={(e) =>
                   handleInputChange("temperature", e.target.value)
                 }
+                disabled={isSubmitting}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Pulse Rate
+                Pulse Rate (bpm)
               </label>
               <input
-                type="text"
-                placeholder="e.g., 72 bpm"
+                type="number"
+                placeholder="e.g., 72"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 value={formData.pulseRate}
                 onChange={(e) => handleInputChange("pulseRate", e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -136,30 +236,35 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Blood Sugar
+                Blood Sugar (mg/dL)
               </label>
               <input
-                type="text"
-                placeholder="e.g., 95 mg/dL"
+                type="number"
+                step="0.1"
+                placeholder="e.g., 95"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 value={formData.bloodSugar}
                 onChange={(e) =>
                   handleInputChange("bloodSugar", e.target.value)
                 }
+                disabled={isSubmitting}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Oxygen Saturation
+                Oxygen Saturation (%)
               </label>
               <input
-                type="text"
-                placeholder="e.g., 98%"
+                type="number"
+                step="0.1"
+                max="100"
+                placeholder="e.g., 98"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                 value={formData.oxygenSaturation}
                 onChange={(e) =>
                   handleInputChange("oxygenSaturation", e.target.value)
                 }
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -175,6 +280,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
               onChange={(e) =>
                 handleInputChange("currentCondition", e.target.value)
               }
+              disabled={isSubmitting}
             >
               <option value="">Select condition status</option>
               <option value="improving">Improving</option>
@@ -197,6 +303,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
               onChange={(e) =>
                 handleInputChange("treatmentNotes", e.target.value)
               }
+              disabled={isSubmitting}
             />
           </div>
 
@@ -213,6 +320,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
               onChange={(e) =>
                 handleInputChange("medicationsAdministered", e.target.value)
               }
+              disabled={isSubmitting}
             />
           </div>
 
@@ -229,6 +337,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
               onChange={(e) =>
                 handleInputChange("nextStepsRecommendations", e.target.value)
               }
+              disabled={isSubmitting}
             />
           </div>
 
@@ -237,10 +346,25 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Treatment Photos (Optional)
             </label>
-            <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-              <Camera className="w-4 h-4" />
-              Add Photo
-            </button>
+            <div className="flex flex-col gap-2">
+              <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">
+                <Camera className="w-4 h-4" />
+                Add Photo
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handlePhotoUpload}
+                  disabled={isSubmitting}
+                />
+              </label>
+              {photos.length > 0 && (
+                <div className="text-sm text-gray-600">
+                  {photos.length} photo(s) selected
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Rate This Session */}
@@ -256,6 +380,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
                   onMouseEnter={() => handleStarHover(star)}
                   onMouseLeave={() => setHoveredStar(0)}
                   className="p-1"
+                  disabled={isSubmitting}
                 >
                   <Star
                     className={`w-6 h-6 ${
@@ -276,16 +401,18 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
           <div className="flex justify-end gap-3">
             <button
               onClick={handleSaveDraft}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
             >
-              Save as Draft
+              {isSubmitting ? "Saving..." : "Save as Draft"}
             </button>
             <button
               onClick={handleSubmit}
-              className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting || !formData.treatmentNotes.trim()}
             >
               <Send className="w-4 h-4" />
-              Submit Report
+              {isSubmitting ? "Submitting..." : "Submit Report"}
             </button>
           </div>
         </div>

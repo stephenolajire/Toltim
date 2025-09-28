@@ -20,6 +20,7 @@ const queryKeys = {
   useNurseProcedures: "useNurseProcedures",
   useNurseProfile: "useNurseProfile",
   useNurseActiveBooking:"useNurseActiveBooking",
+  useInBedProcedures:"useInBedProcedures",
 };
 
 export const GlobalContext = createContext<Context | undefined>(undefined);
@@ -203,5 +204,19 @@ export const useNurseActiveBooking = () => {
     retry: 1,
     staleTime: 20 * 60 * 1000,
     gcTime: 20 * 60 * 1000,
+  });
+};
+
+export const useInBedProcedures = () => {
+  return useQuery({
+    queryKey: [queryKeys.useInBedProcedures],
+    queryFn: async () => {
+      const response = await api.get("/inpatient-caregiver/services/");
+      // console.log("API Response:", response);
+      return response.data;
+    },
+    enabled: true,
+    retry: 1,
+    staleTime: 20 * 60 * 1000,
   });
 };

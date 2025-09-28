@@ -69,6 +69,7 @@ import "react-toastify/dist/ReactToastify.css";
 import ScrollToTop from "./components/ScrollToTop";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GlobalProvider } from "./constant/GlobalContext";
+import InBedProcedures from "./admin/pages/InBedProcedure";
 
 const queryClient = new QueryClient();
 
@@ -135,7 +136,9 @@ const App: React.FC = () => {
                 <Route path="bedside" element={<BedSideBooking />} />
               </Route>
 
-              <Route path="procedures" element={<Procedures />} />
+              <Route path="nurse/procedures" element={<Procedures />} />
+              <Route path="chw/procedures" element={<Procedures />} />
+              <Route path="in-bed/procedures" element={<InBedProcedures />} />
 
               {/* Verifications Management */}
               <Route path="verifications" element={<AdminVerificationLayout />}>

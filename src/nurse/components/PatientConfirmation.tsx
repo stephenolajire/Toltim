@@ -25,84 +25,109 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
   const [sessionExpired, setSessionExpired] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Track if we've already processed this session
+  const hasProcessedSession = useRef(false);
+  const sessionId = useRef<string | null>(null);
+
   const id = bookingData?.id;
   const currentDate = new Date().toISOString().split("T")[0];
   const date = bookingData?.service_dates;
 
-  // Check session validity and send OTP
- useEffect(() => {
-   if (!isOpen || !date || !id) return;
+  // Generate unique session identifier
+  const currentSessionId = `${id}-${currentDate}-${isOpen}`;
 
-   const currentDateExists = date.includes(currentDate);
+  // Check session validity and send OTP - ONLY ONCE per session
+  useEffect(() => {
+    if (!isOpen || !date || !id) {
+      // Reset when modal closes
+      if (!isOpen) {
+        hasProcessedSession.current = false;
+        sessionId.current = null;
+      }
+      return;
+    }
 
-   // Better localStorage handling
-   if (currentDateExists) {
-     localStorage.setItem("service_date", currentDate);
-   } else {
-     // Don't store invalid dates - remove any existing service_date
-     localStorage.removeItem("service_date");
-   }
+    // Check if we've already processed this exact session
+    if (hasProcessedSession.current && sessionId.current === currentSessionId) {
+      return;
+    }
 
-   if (!currentDateExists) {
-     setSessionExpired(true);
-     console.log(
-       `Current date ${currentDate} is not in scheduled service dates:`,
-       date
-     );
+    // Mark this session as processed
+    hasProcessedSession.current = true;
+    sessionId.current = currentSessionId;
 
-     // Auto-close after 5 seconds
-     const timer = setTimeout(() => {
-       onClose();
-     }, 5000);
+    const currentDateExists = date.includes(currentDate);
 
-     return () => clearTimeout(timer);
-   } else {
-     setSessionExpired(false);
+    // Better localStorage handling
+    if (currentDateExists) {
+      localStorage.setItem("service_date", currentDate);
+    } else {
+      // Don't store invalid dates - remove any existing service_date
+      localStorage.removeItem("service_date");
+    }
 
-     // Send OTP when valid session opens
-     const sendOtp = async () => {
-       try {
-         console.log("Sending OTP for service_date:", currentDate);
-         console.log("Available service dates:", date);
+    if (!currentDateExists) {
+      setSessionExpired(true);
+      console.log(
+        `Current date ${currentDate} is not in scheduled service dates:`,
+        date
+      );
 
-         const response = await api.post(
-           `services/nurse-procedure-bookings/${id}/generate-verification-code/${currentDate}/`
-         );
+      // Auto-close after 5 seconds
+      const timer = setTimeout(() => {
+        onClose();
+      }, 5000);
 
-         console.log("OTP Response:", response);
-         toast.success("Session OTP has been sent to the patient successfully");
-       } catch (error: any) {
-         console.error("Error sending OTP:", error);
+      return () => clearTimeout(timer);
+    } else {
+      setSessionExpired(false);
 
-         if (error.response) {
-           if (error.response.status === 429) {
-             toast.error(
-               "Too many requests. Please try again later in 10mins."
-             );
-           } else if (error.response.status === 400) {
-             // Handle case where date might not be valid for this booking
-             toast.error(
-               "Invalid service date. Please check the scheduled dates."
-             );
-           } else {
-             const errorMessage =
-               error.response.data.errors ||
-               error.response.data.detail ||
-               error.response.data.message ||
-               "Failed to send OTP. Please try again.";
-             toast.error(errorMessage);
-           }
-         } else {
-           toast.error("Network error. Please check your connection.");
-         }
-       }
-     };
+      // Send OTP when valid session opens
+      const sendOtp = async () => {
+        try {
+          console.log("Sending OTP for service_date:", currentDate);
+          console.log("Available service dates:", date);
 
-     sendOtp();
-   }
- }, [isOpen, date, id, currentDate, onClose]);
+          const response = await api.post(
+            `services/nurse-procedure-bookings/${id}/generate-verification-code/${currentDate}/`
+          );
 
-  // Reset OTP when modal opens
+          console.log("OTP Response:", response);
+          toast.success(
+            "Session OTP has been sent to the patient successfully"
+          );
+        } catch (error: any) {
+          console.error("Error sending OTP:", error);
+
+          if (error.response) {
+            if (error.response.status === 429) {
+              toast.error(
+                "Too many requests. Please try again later in 10mins."
+              );
+            } else if (error.response.status === 400) {
+              // Handle case where date might not be valid for this booking
+              toast.error(
+                "Invalid service date. Please check the scheduled dates."
+              );
+            } else {
+              const errorMessage =
+                error.response.data.errors ||
+                error.response.data.detail ||
+                error.response.data.message ||
+                "Failed to send OTP. Please try again.";
+              toast.error(errorMessage);
+            }
+          } else {
+            toast.error("Network error. Please check your connection.");
+          }
+        }
+      };
+
+      sendOtp();
+    }
+  }, [isOpen, date, id, currentDate, onClose, currentSessionId]);
+
+  // Reset OTP when modal opens - but only for UI, not for API calls
   useEffect(() => {
     if (isOpen && !sessionExpired) {
       setOtp(["", "", "", "", "", ""]);
@@ -169,7 +194,41 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
   const handleClose = () => {
     setOtp(["", "", "", "", "", ""]);
     setSessionExpired(false);
+    // Reset the session tracking when manually closing
+    hasProcessedSession.current = false;
+    sessionId.current = null;
     onClose();
+  };
+
+  // Manual resend OTP function
+  const handleResendOtp = async () => {
+    if (!id) {
+      toast.error("Cannot resend OTP at this time");
+      return;
+    }
+
+    if (bookingData.draft_sessions !== bookingData.total_sessions) {
+      try {
+        const response = await api.post(
+          `services/nurse-procedure-bookings/${id}/generate-verification-code/${currentDate}/`
+        );
+
+        console.log("Resend OTP Response:", response);
+        toast.success("OTP has been resent successfully");
+
+        // Clear current OTP
+        setOtp(["", "", "", "", "", ""]);
+        inputRefs.current[0]?.focus();
+      } catch (error: any) {
+        console.error("Error resending OTP:", error);
+
+        if (error.response?.status === 429) {
+          toast.error("Too many requests. Please try again later in 10mins.");
+        } else {
+          toast.error("Failed to resend OTP. Please try again.");
+        }
+      }
+    }
   };
 
   const isComplete = otp.every((digit) => digit !== "");
@@ -181,6 +240,13 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
+          <button
+            onClick={handleClose}
+            className="text-red-500 hover:text-gray-600 transition-colors"
+            disabled={isLoading}
+          >
+            <X className="w-5 h-5" />
+          </button>
           <div className="text-center">
             <div className="mb-4">
               <svg
@@ -200,7 +266,8 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
                 Session Expired
               </h3>
               <p className="text-red-500 mb-4">
-                Invalid session or session has expired or session has not started
+                Invalid session or session has expired or session has not
+                started
               </p>
             </div>
 
@@ -217,9 +284,15 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
               </div>
             )}
 
-            <p className="text-xs text-gray-500">
-              This dialog will close automatically in 5 seconds
+            <p className="text-sm mb-3 text-gray-500">
+              Do you have un recorded session ? pls click the button
             </p>
+
+            <button 
+            onClick={()=> setSessionExpired(false)}
+             className="w-auto py-2 px-8 text-lg bg-green-500 rounded-2xl text-white ">
+              click
+            </button>
           </div>
         </div>
       </div>
@@ -303,7 +376,8 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
               Didn't receive the code?{" "}
               <button
                 type="button"
-                className="text-green-600 hover:text-green-700 font-medium transition-colors"
+                onClick={handleResendOtp}
+                className="text-green-600 hover:text-green-700 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isLoading}
               >
                 Resend Code
