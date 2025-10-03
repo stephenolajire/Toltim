@@ -57,9 +57,48 @@ const HealthPractitionersMatching: React.FC<
     relationship: "",
   });
   const [searchTerm, setSearchTerm] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number | null;
+    longitude: number | null;
+  }>({
+    latitude: null,
+    longitude: null,
+  });
+
+  console.log(locationError)
+  console.log(loadingLocation)
+
+  const getUserLocation = () => {
+    setLoadingLocation(true);
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      setLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoordinates({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setLoadingLocation(false);
+      },
+      (error) => {
+        setLocationError("Unable to retrieve your location");
+        setLoadingLocation(false);
+        console.error("Error getting location:", error);
+      }
+    );
+  };
 
   // Load selected services from localStorage on component mount
   useEffect(() => {
+    getUserLocation();
     const storedServices = localStorage.getItem("selectedServices");
     if (storedServices) {
       try {
@@ -90,37 +129,32 @@ const HealthPractitionersMatching: React.FC<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 👈 run only once
 
-  // Get user location from localStorage
-  const getUserLocation = () => {
-    const userLocation = localStorage.getItem("userLocation");
-    if (userLocation) {
-      return JSON.parse(userLocation);
-    }
-    // Fallback to default location if not found
-    return { latitude: 4.878023, longitude: 6.9853474 };
-  };
-
-  const { latitude, longitude } = getUserLocation();
-
   // Fetch nearby health practitioners using TanStack Query
   const {
     data: practitioners = [],
     isLoading: loading,
     error,
   } = useQuery({
-    queryKey: ["nearbyPractitioners", latitude, longitude],
+    queryKey: [
+      "nearbyPractitioners",
+      coordinates.latitude,
+      coordinates.longitude,
+    ],
     queryFn: async () => {
       const res = await api.get(
-        `/services/nurses/nearby/?latitude=${latitude}&longitude=${longitude}`
+        `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
       );
-      console.log("Fetched practitioners:", res.data);
-      return res.data; // 👈 return array only
+      console.log(res.data)
+      return res.data;
     },
+    enabled:
+      !!selectedService &&
+      coordinates.latitude !== null &&
+      coordinates.longitude !== null,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    enabled: !!selectedService,
   });
 
   const filteredPractitioners = practitioners.filter((practitioner: any) => {
@@ -134,6 +168,7 @@ const HealthPractitionersMatching: React.FC<
 
   const handlePractitionerSelect = (practitioner: Practitioner) => {
     setSelectedPractitioner(practitioner);
+    console.log(selectedPractitioner)
     setCurrentStep("schedule-config");
   };
 
@@ -180,8 +215,8 @@ const HealthPractitionersMatching: React.FC<
               address: bookingDetails.address,
               relationship_to_patient: bookingDetails.relationship,
             },
-        latitude: latitude,
-        longitude: longitude,
+        latitude: coordinates.latitude!,
+        longitude: coordinates.longitude!,
         service_address: bookingDetails.address || "", // Use patient address or empty string
       };
 
@@ -322,7 +357,7 @@ const HealthPractitionersMatching: React.FC<
         {/* Main Content */}
         <div className="space-y-6">
           {currentStep === "practitioners" && (
-            <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {loading ? (
                 <div className="text-center py-12">
                   <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>

@@ -13,9 +13,16 @@ const NurseLayout: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
+  const userRole = localStorage.getItem("userType")
+
   const handleKycClick = () => {
     if (kyc === "pending") {
-      navigate("/kyc-nurse");
+      if(userRole == 'nurse') {
+        navigate("/kyc-nurse");
+      }
+      else if (userRole == 'chw') {
+        navigate("/kyc-chw");
+      }
     } else if (kyc === "submitted") {
       navigate("/nurse/kyc-status");
     }

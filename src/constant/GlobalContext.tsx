@@ -21,6 +21,8 @@ const queryKeys = {
   useNurseProfile: "useNurseProfile",
   useNurseActiveBooking:"useNurseActiveBooking",
   useInBedProcedures:"useInBedProcedures",
+  useNearByCHW:"useNearByCHW",
+  useCHWVerification:"useCHWVerification",
 };
 
 export const GlobalContext = createContext<Context | undefined>(undefined);
@@ -90,6 +92,20 @@ export const useNurseVerification = () => {
     queryKey: [queryKeys.useNurseVerification],
     queryFn: async () => {
       const response = await api.get("user/nurse/verification");
+      // console.log("API Response:", response);
+      return response.data;
+    },
+    enabled: true,
+    retry: 1,
+    staleTime: 20 * 60 * 1000,
+  });
+};
+
+export const useCHWVerification = () => {
+  return useQuery({
+    queryKey: [queryKeys.useCHWVerification],
+    queryFn: async () => {
+      const response = await api.get("user/chw/verification");
       // console.log("API Response:", response);
       return response.data;
     },
@@ -177,17 +193,25 @@ export const useNurseProcedures = () => {
   });
 };
 
-export const useNurseProfile = () => {
+
+export const useNurseProfile = (userRole: string) => {
   return useQuery({
-    queryKey: ['nurseProfile'],
+    queryKey: ["nurseProfile", userRole],
     queryFn: async () => {
-      const response = await api.get("/user/nurse/profile/");
-      return response.data;
+      if (userRole === "nurse") {
+        const response = await api.get("/user/nurse/profile/");
+        return response.data;
+      } else if (userRole === "chw") {
+        const response = await api.get(`/user/chw-profile/`);
+        return response.data;
+      }
+
+      throw new Error("Invalid user role or missing userId");
     },
-    enabled: true,
+    enabled: userRole === "nurse" || (userRole === "chw"),
     retry: 1,
     staleTime: 20 * 60 * 1000,
-    gcTime: 20 * 60 * 1000, 
+    gcTime: 20 * 60 * 1000,
   });
 };
 

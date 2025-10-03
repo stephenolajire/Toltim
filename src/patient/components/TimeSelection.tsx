@@ -1,6 +1,6 @@
 // TimeSelection.tsx
 import React from "react";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock } from "lucide-react";
 import type { Service, Practitioner, ScheduleConfig } from "./types";
 
 interface TimeSelectionProps {
@@ -54,21 +54,44 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
     }
   };
 
+  // Generate time slots (8:00 AM to 8:00 PM in 1-hour intervals)
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour <= 20; hour++) {
+      const time12h =
+        hour > 12
+          ? `${hour - 12}:00 PM`
+          : hour === 12
+          ? `${hour}:00 PM`
+          : `${hour}:00 AM`;
+      const time24h = `${hour.toString().padStart(2, "0")}:00`;
+      slots.push({ display: time12h, value: time24h });
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
   return (
     <div className="space-y-6">
-      {/* Selected Practitioner Summary with Schedule Config */}
+      {/* Selected Practitioner Summary */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <img
-            src={selectedPractitioner.profileImage}
-            alt={selectedPractitioner.name}
+            src={
+              selectedPractitioner.profile_picture ||
+              "https://via.placeholder.com/48"
+            }
+            alt={selectedPractitioner.full_name}
             className="w-12 h-12 rounded-full object-cover self-center sm:self-start flex-shrink-0"
           />
           <div className="flex-1 min-w-0 text-center sm:text-left">
             <h3 className="font-semibold text-gray-900 truncate">
-              {selectedPractitioner.name}
+              {selectedPractitioner.full_name}
             </h3>
-            <p className="text-green-600">{selectedPractitioner.title}</p>
+            <p className="text-green-600">
+              {selectedPractitioner.specialization}
+            </p>
             <p className="text-sm text-gray-600">
               {selectedService.name} - {selectedService.duration}
             </p>
@@ -88,93 +111,117 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
       </div>
 
       {/* Time Selection */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Select Preferred Time
-        </h3>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-green-600" />
+            Select Preferred Time
+          </h3>
+        </div>
 
-        <div className="space-y-4">
-          {/* Available Time Slots from Practitioner */}
+        <div className="p-4 sm:p-6 space-y-6">
+          {/* Show Practitioner Availability Info */}
+          {selectedPractitioner?.availability?.length > 0 && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-blue-600" />
+                Practitioner's Available Days/Times
+              </h4>
+              <div className="grid gap-2">
+                {selectedPractitioner.availability.map(
+                  (availability, index) => (
+                    <div
+                      key={index}
+                      className="bg-white p-3 rounded-md shadow-sm"
+                    >
+                      <p className="text-sm font-medium text-gray-800">
+                        {availability}
+                      </p>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Time Slot Selection */}
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">
-              Available Time Slots
+            <h4 className="font-semibold text-gray-900 mb-3">
+              Choose Your Time Slot
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-              {selectedPractitioner?.availability?.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-                  {selectedPractitioner.availability[0].slots.map(
-                    (slot: string) => (
-                      <button
-                        key={slot}
-                        onClick={() => onTimeSlotSelect(slot)}
-                        className={`p-2 sm:p-3 text-sm rounded-lg border transition-colors ${
-                          scheduleConfig.timeSlot === slot
-                            ? "bg-green-600 text-white border-green-600"
-                            : "border-gray-300 hover:border-green-500 hover:bg-green-50"
-                        }`}
-                      >
-                        {slot}
-                      </button>
-                    )
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  No available slots for this practitioner.
-                </p>
-              )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {timeSlots.map((slot) => (
+                <button
+                  key={slot.value}
+                  onClick={() => onTimeSlotSelect(slot.value)}
+                  className={`p-3 text-sm font-medium rounded-lg border-2 transition-all ${
+                    scheduleConfig.timeSlot === slot.value
+                      ? "bg-green-600 text-white border-green-600 shadow-md scale-105"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:bg-green-50 hover:shadow-sm"
+                  }`}
+                >
+                  {slot.display}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Custom Time Input */}
-          <div className="border-t border-gray-200 pt-4">
-            <h4 className="font-medium text-gray-900 mb-3">
+          <div className="border-t border-gray-200 pt-6">
+            <h4 className="font-semibold text-gray-900 mb-3">
               Or Enter Custom Time
             </h4>
-            <div className="flex items-center space-x-4">
+            <div className="space-y-2">
               <input
                 type="time"
                 value={scheduleConfig.timeSlot}
                 onChange={(e) => onTimeSlotSelect(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full sm:w-auto px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
               />
-              <p className="text-sm text-gray-600">
-                Subject to practitioner availability
+              <p className="text-sm text-gray-500">
+                💡 Please ensure the time aligns with the practitioner's
+                availability above
               </p>
             </div>
           </div>
-        </div>
 
-        {scheduleConfig.timeSlot && (
-          <div className="mt-6 p-4 bg-green-50 rounded-lg">
-            <div className="flex items-start space-x-2 text-green-700">
-              <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div>
-                <span className="font-medium text-sm sm:text-base break-words">
-                  Selected Time: {scheduleConfig.timeSlot}
-                </span>
-                <p className="text-sm mt-1">{getScheduleDescription()}</p>
-                <p className="text-sm font-medium mt-1">
-                  Total Cost: ₦{calculateTotalCost().toLocaleString()}
-                </p>
+          {/* Selected Time Confirmation */}
+          {scheduleConfig.timeSlot && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border-2 border-green-200">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <CheckCircle className="w-6 h-6 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold text-green-900 mb-1">
+                    Time Selected: {scheduleConfig.timeSlot}
+                  </p>
+                  <p className="text-sm text-green-700 mb-2">
+                    {getScheduleDescription()}
+                  </p>
+                  <p className="text-sm font-semibold text-green-900">
+                    Total Cost: ₦{calculateTotalCost().toLocaleString()}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="flex flex-col sm:flex-row justify-between mt-6 space-y-3 sm:space-y-0">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row justify-between gap-3 p-4 sm:p-6 bg-gray-50 border-t border-gray-200">
           <button
             onClick={onBack}
-            className="flex items-center justify-center sm:justify-start space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Back to Schedule Config</span>
+            <span>Back to Schedule</span>
           </button>
 
           <button
             onClick={onContinue}
             disabled={!scheduleConfig.timeSlot}
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            className="px-6 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
           >
             Continue to Booking
           </button>

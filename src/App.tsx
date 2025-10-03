@@ -70,6 +70,9 @@ import ScrollToTop from "./components/ScrollToTop";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GlobalProvider } from "./constant/GlobalContext";
 import InBedProcedures from "./admin/pages/InBedProcedure";
+import NurseProfile from "./nurse/pages/Profile";
+import CHWVerification from "./nurse/pages/CHWVerification";
+import CareProcedures from "./admin/pages/CHWProcedure";
 
 const queryClient = new QueryClient();
 
@@ -110,6 +113,7 @@ const App: React.FC = () => {
             {/* KYC ROUTES */}
             <Route path="/kyc-verification" element={<KYCVerification />} />
             <Route path="/kyc-nurse" element={<NurseKycVerification />} />
+            <Route path="/kyc-chw" element={<CHWVerification />} />
 
             {/* ADMIN DASHBOARD - Protected Routes */}
             <Route
@@ -137,7 +141,7 @@ const App: React.FC = () => {
               </Route>
 
               <Route path="nurse/procedures" element={<Procedures />} />
-              <Route path="chw/procedures" element={<Procedures />} />
+              <Route path="chw/procedures" element={<CareProcedures />} />
               <Route path="in-bed/procedures" element={<InBedProcedures />} />
 
               {/* Verifications Management */}
@@ -200,7 +204,7 @@ const App: React.FC = () => {
             <Route
               path="/nurse"
               element={
-                <ProtectedRoute allowedRoles={["nurse"]}>
+                <ProtectedRoute allowedRoles={["nurse", "chw"]}>
                   <NurseLayout />
                 </ProtectedRoute>
               }
@@ -212,6 +216,7 @@ const App: React.FC = () => {
               <Route path="id-card" element={<IDCard />} />
               <Route path="kyc-status" element={<KycStatus />} />
             </Route>
+            <Route path="/nurse/profile" element={<NurseProfile />} />
 
             {/* 404 Route - Must be last */}
             <Route path="*" element={<NotFound />} />

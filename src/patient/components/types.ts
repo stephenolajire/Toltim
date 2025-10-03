@@ -31,11 +31,9 @@ export interface Practitioner {
   isVerified: boolean;
   responseTime: string;
   completedCases: number;
-  availability: {
-    date: string;
-    slots: string[];
-  }[];
+  availability: string[];
   bio: string;
+  profile_picture:string;
 }
 
 export interface BookingDetails {

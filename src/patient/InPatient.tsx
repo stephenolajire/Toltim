@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -8,11 +8,14 @@ import {
   FileText,
   Shield,
   Loader2,
+  CheckCircle,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useInBedProcedures } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
 import api from "../constant/api";
 import { toast } from "react-toastify";
+import Error from "../components/Error";
 
 // Types
 interface ServiceOption {
@@ -25,6 +28,14 @@ interface ServiceOption {
   included: boolean;
 }
 
+interface CHWWorker {
+  user: string;
+  full_name: string;
+  profile_picture?: string;
+  distance?: number;
+  rating?: number;
+}
+
 interface BookingData {
   patientName: string;
   hospitalName: string;
@@ -35,10 +46,22 @@ interface BookingData {
   numberOfDays: string;
   services: ServiceOption[];
   specialRequirements: string;
+  chw: string;
 }
 
 const InPatientCaregiverService: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [locationError, setLocationError] = useState("");
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number | null;
+    longitude: number | null;
+  }>({
+    latitude: null,
+    longitude: null,
+  });
+  const [selectedCHW, setSelectedCHW] = useState<string>("");
+
   const [bookingData, setBookingData] = useState<BookingData>({
     patientName: "",
     hospitalName: "",
@@ -49,13 +72,80 @@ const InPatientCaregiverService: React.FC = () => {
     numberOfDays: "",
     services: [],
     specialRequirements: "",
+    chw: "",
   });
 
-  const { data: inBedProceduresData, isLoading } = useInBedProcedures();
-  console.log(inBedProceduresData)
+  // Load coordinates from localStorage on mount
+  useEffect(() => {
+    const savedLatitude = localStorage.getItem("latitude");
+    const savedLongitude = localStorage.getItem("longitude");
+
+    if (savedLatitude && savedLongitude) {
+      setCoordinates({
+        latitude: parseFloat(savedLatitude),
+        longitude: parseFloat(savedLongitude),
+      });
+    } else {
+      getUserLocation();
+    }
+  }, []);
+
+  const getUserLocation = () => {
+    setLoadingLocation(true);
+    setLocationError("");
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      setLoadingLocation(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        setCoordinates({
+          latitude: lat,
+          longitude: lng,
+        });
+
+        localStorage.setItem("latitude", lat.toString());
+        localStorage.setItem("longitude", lng.toString());
+
+        setLoadingLocation(false);
+      },
+      (error) => {
+        setLocationError("Unable to retrieve your location");
+        setLoadingLocation(false);
+        console.error("Error getting location:", error);
+      }
+    );
+  };
+
+  const { data: inBedProceduresData, isLoading: proceduresLoading } =
+    useInBedProcedures();
+
+  const {
+    data: nearByCHWData,
+    isLoading: chwLoading,
+    error: chwError,
+  } = useQuery({
+    queryKey: ["nearByCHW", coordinates.latitude, coordinates.longitude],
+    queryFn: async () => {
+      const response = await api.get(
+        `inpatient-caregiver/nearby-workers/?role=chw&latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
+      );
+      console.log(response.data)
+      return response.data;
+    },
+    enabled: !!coordinates.latitude && !!coordinates.longitude,
+    staleTime: 20 * 60 * 1000,
+    gcTime: 20 * 60 * 1000,
+  });
 
   // Load fetched services
-  React.useEffect(() => {
+  useEffect(() => {
     if (inBedProceduresData?.results) {
       const fetchedServices: ServiceOption[] = inBedProceduresData.results
         .filter((procedure: any) => procedure.is_active)
@@ -76,8 +166,12 @@ const InPatientCaregiverService: React.FC = () => {
     }
   }, [inBedProceduresData]);
 
-  if (isLoading) {
+  if (proceduresLoading || loadingLocation) {
     return <Loading />;
+  }
+
+  if (chwError) {
+    return <Error />;
   }
 
   const handleInputChange = (field: keyof BookingData, value: string) => {
@@ -98,12 +192,26 @@ const InPatientCaregiverService: React.FC = () => {
     }));
   };
 
+  const handleCHWSelect = (chwId: string) => {
+    setSelectedCHW(chwId);
+    setBookingData((prev) => ({
+      ...prev,
+      chw: chwId,
+    }));
+  };
+
   const calculateDailyRate = () => {
     return bookingData.services
       .filter((service) => service.included)
       .reduce((total, service) => {
         return total + parseFloat(service.price_per_day);
       }, 0);
+  };
+
+  const calculateTotalCost = () => {
+    const dailyRate = calculateDailyRate();
+    const days = parseInt(bookingData.numberOfDays) || 0;
+    return dailyRate * days;
   };
 
   const isFormValid = () => {
@@ -118,17 +226,20 @@ const InPatientCaregiverService: React.FC = () => {
       bookingData.admissionDate &&
       bookingData.expectedDischarge &&
       bookingData.numberOfDays &&
+      bookingData.chw &&
       hasSelectedService
     );
   };
 
   const handleSubmit = async () => {
-    if (!isFormValid()) return;
+    if (!isFormValid()) {
+      toast.error("Please fill all required fields and select a CHW");
+      return;
+    }
 
     setIsSubmitting(true);
 
     try {
-      // Prepare items array with selected services
       const items = bookingData.services
         .filter((service) => service.included)
         .map((service) => ({
@@ -146,15 +257,13 @@ const InPatientCaregiverService: React.FC = () => {
         number_of_days: parseInt(bookingData.numberOfDays),
         special_requirements: bookingData.specialRequirements,
         items: items,
+        chw: bookingData.chw,
       };
 
       const response = await api.post("inpatient-caregiver/bookings/", payload);
 
       console.log("Booking created successfully:", response.data);
       toast.success("Booking request submitted successfully!");
-
-      // Reset form or redirect as needed
-      // You might want to redirect to a success page or reset the form
     } catch (error: any) {
       console.error("Error creating booking:", error);
 
@@ -164,7 +273,9 @@ const InPatientCaregiverService: React.FC = () => {
           `Error: ${error.response.data.message || "Failed to submit booking"}`
         );
       } else {
-        toast.error("Network error: Please check your connection and try again");
+        toast.error(
+          "Network error: Please check your connection and try again"
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -194,6 +305,19 @@ const InPatientCaregiverService: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Location Error */}
+        {locationError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <p className="text-red-800">{locationError}</p>
+            <button
+              onClick={getUserLocation}
+              className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content */}
@@ -413,6 +537,82 @@ const InPatientCaregiverService: React.FC = () => {
                   )}
               </div>
 
+              {/* Select CHW */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <User className="w-5 h-5 text-gray-600" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                    Select Community Health Worker{" "}
+                    <span className="text-red-500">*</span>
+                  </h3>
+                </div>
+
+                {chwLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-green-500" />
+                    <p className="text-sm text-gray-500 mt-2">
+                      Loading available CHWs...
+                    </p>
+                  </div>
+                ) : nearByCHWData?.results?.length > 0 ? (
+                  <div className="grid gap-3">
+                    {nearByCHWData.results.map((chw: CHWWorker) => (
+                      <div
+                        key={chw.user}
+                        onClick={() => handleCHWSelect(chw.user)}
+                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                          selectedCHW === chw.user
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-200 hover:border-green-300"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            {chw.profile_picture ? (
+                              <img
+                                src={chw.profile_picture}
+                                alt={chw.full_name}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
+                                <span className="text-white font-semibold">
+                                  {chw.full_name
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")}
+                                </span>
+                              </div>
+                            )}
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {chw.full_name}
+                              </p>
+                              {chw.distance && (
+                                <p className="text-sm text-gray-500">
+                                  {chw.distance.toFixed(1)} km away
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          {selectedCHW === chw.user && (
+                            <CheckCircle className="w-6 h-6 text-green-500" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <User className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                    <p>No CHWs available in your area.</p>
+                    <p className="text-sm">
+                      Please try again later or contact support.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {/* Special Requirements */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -467,19 +667,40 @@ const InPatientCaregiverService: React.FC = () => {
                       <span className="text-gray-600">{service.name}:</span>
                       <span className="text-gray-900">
                         ₦{parseFloat(service.price_per_day).toLocaleString()}
+                        /day
                       </span>
                     </div>
                   ))}
 
                 {bookingData.services.some((service) => service.included) ? (
-                  <div className="border-t border-gray-200 pt-3">
-                    <div className="flex justify-between text-base sm:text-lg font-semibold">
-                      <span className="text-gray-900">Total daily rate:</span>
-                      <span className="text-green-600">
-                        ₦{calculateDailyRate().toLocaleString()}
-                      </span>
+                  <>
+                    <div className="border-t border-gray-200 pt-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-900">Daily rate:</span>
+                        <span className="text-gray-900">
+                          ₦{calculateDailyRate().toLocaleString()}
+                        </span>
+                      </div>
+                      {bookingData.numberOfDays && (
+                        <div className="flex justify-between text-sm mt-2">
+                          <span className="text-gray-900">Number of days:</span>
+                          <span className="text-gray-900">
+                            {bookingData.numberOfDays}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                    {bookingData.numberOfDays && (
+                      <div className="border-t border-gray-200 pt-3">
+                        <div className="flex justify-between text-base sm:text-lg font-semibold">
+                          <span className="text-gray-900">Total cost:</span>
+                          <span className="text-green-600">
+                            ₦{calculateTotalCost().toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <div className="text-center py-4 text-gray-500">
                     <p className="text-sm">Select services to see pricing</p>

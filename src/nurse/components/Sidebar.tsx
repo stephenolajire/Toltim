@@ -39,6 +39,12 @@ const adminLinks = [
     href: "/nurse/id-card",
     icon: <Shield size={16} />,
   },
+
+  {
+    name: "profile",
+    href: "/nurse/profile",
+    icon: <User size={16} />,
+  },
 ];
 
 const Sidebar: React.FC<SidebarProp> = ({ close }) => {
