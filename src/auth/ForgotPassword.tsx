@@ -52,7 +52,7 @@ const ForgotPassword: React.FC = () => {
       try {
         setStatus(null);
         const response = await api.post("/user/password-reset/request/", {
-          email_address: values.email,
+          identifier: values.email,
         });
 
         if (response.data) {
