@@ -40,7 +40,7 @@ const PasswordResetVerifyOtp: React.FC = () => {
         setStatus(null);
 
         const response = await api.post("user/password-reset/verify-otp/", {
-          email_address: email,
+          identifier: email,
           otp_code: values.verificationCode,
         });
 

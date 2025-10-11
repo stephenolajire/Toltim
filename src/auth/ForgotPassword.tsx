@@ -69,15 +69,9 @@ const ForgotPassword: React.FC = () => {
     onSubmit: async (values, { setSubmitting, setStatus, setErrors }) => {
       try {
         setStatus(null);
-        const payload =
-          contactMethod === "email"
-            ? { email_address: values.email }
-            : { phone_number: values.phone };
-
-        const response = await api.post(
-          "/user/password-reset/request/",
-          payload
-        );
+        const response = await api.post("/user/password-reset/request/", {
+          identifier: values.email,
+        });
 
         if (response.data) {
           console.log(response.data);

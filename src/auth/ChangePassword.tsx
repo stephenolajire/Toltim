@@ -57,7 +57,7 @@ const ChangePassword: React.FC = () => {
                 new_password: values.newpassword,
                 confirm_new_password: values.confirmnewpassword,
                 reset_token:tokenReset,
-                email_address:email
+                identifier:email
             })
 
             console.log(response.data)
