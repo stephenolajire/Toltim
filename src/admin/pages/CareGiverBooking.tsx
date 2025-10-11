@@ -2,6 +2,38 @@ import React from "react";
 import BookingNavigation from "../components/booking/BookingNavigation";
 import Filter from "../components/booking/Filter";
 import AppointmentCard from "../components/booking/AppointmentCard";
+import { useCareGiverBooking } from "../../constant/GlobalContext";
+import Loading from "../../components/common/Loading";
+import Error from "../../components/Error";
+import api from "../../constant/api";
+
+interface CaregiverBooking {
+  id: string;
+  user: string;
+  caregiver_type: string;
+  duration: string;
+  patient_name: string;
+  patient_age: number;
+  medical_condition: string;
+  care_location: string;
+  care_address: string;
+  start_date: string;
+  total_price: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  special_requirements: string;
+  status: "pending" | "assigned" | "active" | "completed" | "cancelled";
+  assigned_worker: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// interface BookingResponse {
+//   count: number;
+//   next: string | null;
+//   previous: string | null;
+//   results: CaregiverBooking[];
+// }
 
 interface Appointment {
   id: string;
@@ -14,74 +46,35 @@ interface Appointment {
   assignedNurse?: string;
 }
 
-// Sample data
-const appointmentsData: Appointment[] = [
-  {
-    id: "1",
-    patientId: "NP001",
-    patientName: "John Doe",
-    appointmentType: "Blood Pressure Check",
-    time: "09:00 AM",
-    location: "Lagos",
-    status: "pending",
-  },
-  {
-    id: "2",
-    patientId: "NP002",
-    patientName: "Jane Smith",
-    appointmentType: "Wound Dressing",
-    time: "10:30 AM",
-    location: "Abuja",
-    status: "assigned",
-    assignedNurse: "nurse.jane@hospital.com",
-  },
-  {
-    id: "3",
-    patientId: "NP003",
-    patientName: "Michael Johnson",
-    appointmentType: "Injection Administration",
-    time: "11:15 AM",
-    location: "Port Harcourt",
-    status: "active",
-    assignedNurse: "nurse.mary@hospital.com",
-  },
-  {
-    id: "4",
-    patientId: "NP004",
-    patientName: "Sarah Wilson",
-    appointmentType: "Vital Signs Check",
-    time: "02:00 PM",
-    location: "Lagos",
-    status: "completed",
-    assignedNurse: "nurse.john@hospital.com",
-  },
-  {
-    id: "5",
-    patientId: "NP005",
-    patientName: "David Brown",
-    appointmentType: "Blood Pressure Check",
-    time: "03:30 PM",
-    location: "Kano",
-    status: "pending",
-  },
-  {
-    id: "6",
-    patientId: "NP006",
-    patientName: "Lisa Anderson",
-    appointmentType: "Medication Review",
-    time: "04:15 PM",
-    location: "Abuja",
-    status: "assigned",
-    assignedNurse: "nurse.sarah@hospital.com",
-  },
-];
-
 const CaregiverBooking: React.FC = () => {
+  const {
+    data: CareBookings,
+    isLoading,
+    error,
+    refetch,
+  } = useCareGiverBooking();
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
+  const [actionLoading, setActionLoading] = React.useState<string | null>(null);
+
+  // Transform backend data to match AppointmentCard interface
+  const transformedAppointments: Appointment[] = React.useMemo(() => {
+    if (!CareBookings?.results) return [];
+
+    return CareBookings.results.map((booking: CaregiverBooking) => ({
+      id: booking.id,
+      patientId: booking.user,
+      patientName: booking.patient_name,
+      appointmentType: booking.caregiver_type,
+      time: new Date(booking.start_date).toLocaleString(),
+      location: `${booking.care_location} - ${booking.care_address}`,
+      status: booking.status,
+      assignedNurse: booking.assigned_worker || undefined,
+    }));
+  }, [CareBookings]);
 
   const filteredAppointments = React.useMemo(() => {
-    return appointmentsData.filter((appointment) => {
+    return transformedAppointments.filter((appointment) => {
       const matchesSearch =
         appointment.patientName
           .toLowerCase()
@@ -99,17 +92,88 @@ const CaregiverBooking: React.FC = () => {
 
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, statusFilter]);
+  }, [transformedAppointments, searchTerm, statusFilter]);
 
-  const handleAssignNurse = (appointmentId: string) => {
-    console.log(`Assign nurse to appointment ${appointmentId}`);
-    // Here you would typically open a modal or navigate to assignment page
+  const handleAssignNurse = async (appointmentId: string, patientId:string) => {
+    try {
+      setActionLoading(appointmentId);
+      await api.post(`/caregiver-booking/${appointmentId}/assign/`, {
+        user_id: patientId,
+      });
+
+      // Refetch data to update UI
+      if (refetch) {
+        await refetch();
+      }
+
+      console.log(`Nurse assigned to appointment ${appointmentId}`);
+    } catch (err) {
+      console.error("Error assigning nurse:", err);
+      // You might want to show a toast notification here
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleApprove = async (appointmentId: string, patientId:string) => {
+    try {
+      setActionLoading(appointmentId);
+      await api.post(`/caregiver-booking/${appointmentId}/approve/`, {
+        user_id: patientId,
+      });
+
+      // Refetch data to update UI
+      if (refetch) {
+        await refetch();
+      }
+
+      console.log(`Appointment ${appointmentId} approved`);
+    } catch (err) {
+      console.error("Error approving appointment:", err);
+      // You might want to show a toast notification here
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleCancel = async (appointmentId: string) => {
+    try {
+      setActionLoading(appointmentId);
+      await api.post(`/api/caregiver-booking/${appointmentId}/cancel/`, {
+        id: appointmentId,
+      });
+
+      // Refetch data to update UI
+      if (refetch) {
+        await refetch();
+      }
+
+      console.log(`Appointment ${appointmentId} cancelled`);
+    } catch (err) {
+      console.error("Error cancelling appointment:", err);
+      // You might want to show a toast notification here
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   const handleViewDetails = (appointmentId: string) => {
     console.log(`View details for appointment ${appointmentId}`);
+    // Find the original booking data
+    const booking = CareBookings?.results.find(
+      (b: CaregiverBooking) => b.id === appointmentId
+    );
+    console.log("Booking details:", booking);
     // Here you would typically open a modal or navigate to details page
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <Error />;
+  }
 
   return (
     <div className="w-full mx-auto ">
@@ -131,8 +195,8 @@ const CaregiverBooking: React.FC = () => {
           Caregiver Bookings
         </h1>
         <p className="text-gray-500 mt-1">
-          Track all caregiver bookings for today (
-          {filteredAppointments.length} appointments)
+          Track all caregiver bookings for today ({filteredAppointments.length}{" "}
+          appointments)
         </p>
       </div>
 
@@ -144,19 +208,24 @@ const CaregiverBooking: React.FC = () => {
           onStatusChange={setStatusFilter}
         />
 
-        <div className="py-3 space-y-3">
+        <div className="py-3 space-y-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
           {filteredAppointments.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No appointments found matching your criteria.
             </div>
           ) : (
             filteredAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                onAssignNurse={handleAssignNurse}
-                onViewDetails={handleViewDetails}
-              />
+              <div>
+                <AppointmentCard
+                  key={appointment.id}
+                  appointment={appointment}
+                  onAssignNurse={handleAssignNurse}
+                  onViewDetails={handleViewDetails}
+                  onApprove={handleApprove}
+                  onCancel={handleCancel}
+                  isLoading={actionLoading === appointment.id}
+                />
+              </div>
             ))
           )}
         </div>

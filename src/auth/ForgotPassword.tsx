@@ -1,5 +1,5 @@
-import React, {useEffect, useState} from "react";
-import { Heart, Mail, ArrowLeft } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Heart, Mail, ArrowLeft, Phone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { Loader } from "lucide-react";
@@ -9,19 +9,35 @@ import { toast } from "react-toastify";
 
 interface Value {
   email: string;
+  phone: string;
 }
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex =
+  /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/;
 
-const ForgotPasswordSchema = Yup.object({
-  email: Yup.string()
-    .matches(emailRegex, "Invalid email format")
-    .required("Email is required"),
-});
+const ForgotPasswordSchema = (contactMethod: "email" | "phone") =>
+  Yup.object({
+    email:
+      contactMethod === "email"
+        ? Yup.string()
+            .matches(emailRegex, "Invalid email format")
+            .required("Email is required")
+        : Yup.string(),
+    phone:
+      contactMethod === "phone"
+        ? Yup.string()
+            .matches(phoneRegex, "Invalid phone number format")
+            .required("Phone number is required")
+        : Yup.string(),
+  });
 
 const ForgotPassword: React.FC = () => {
   const [countdown, setCountdown] = useState<number>(0);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [contactMethod, setContactMethod] = useState<"email" | "phone">(
+    "email"
+  );
 
   const navigate = useNavigate();
 
@@ -34,7 +50,7 @@ const ForgotPassword: React.FC = () => {
   useEffect(() => {
     if (countdown > 0) {
       const timer = setInterval(() => {
-        setCountdown((prev:any) => prev - 1);
+        setCountdown((prev: any) => prev - 1);
       }, 1000);
 
       return () => clearInterval(timer);
@@ -46,18 +62,32 @@ const ForgotPassword: React.FC = () => {
   const formik = useFormik<Value>({
     initialValues: {
       email: "",
+      phone: "",
     },
-    validationSchema: ForgotPasswordSchema,
+    validationSchema: ForgotPasswordSchema(contactMethod),
+    enableReinitialize: true,
     onSubmit: async (values, { setSubmitting, setStatus, setErrors }) => {
       try {
         setStatus(null);
-        const response = await api.post("/user/password-reset/request/", {
-          email_address: values.email,
-        });
+        const payload =
+          contactMethod === "email"
+            ? { email_address: values.email }
+            : { phone_number: values.phone };
+
+        const response = await api.post(
+          "/user/password-reset/request/",
+          payload
+        );
 
         if (response.data) {
           console.log(response.data);
-          localStorage.setItem("email", values.email);
+          if (contactMethod === "email") {
+            localStorage.setItem("email", values.email);
+          } else {
+            localStorage.setItem("phone", values.phone);
+          }
+          localStorage.setItem("contactMethod", contactMethod);
+
           setStatus({
             type: "success",
             message: response.data.message,
@@ -67,13 +97,13 @@ const ForgotPassword: React.FC = () => {
           setTimeout(() => {
             navigate("/password-reset/verify-otp");
           }, 2000);
-        } 
+        }
       } catch (error: any) {
-        console.error("Paasword reset failed:", error);
+        console.error("Password reset failed:", error);
 
         if (error.response?.status === 429) {
           setIsRateLimited(true);
-          setCountdown(300); // 5 minutes in seconds
+          setCountdown(300);
           setStatus({
             type: "error",
             message: "Too many attempts. Please try again in 5 minutes.",
@@ -82,21 +112,18 @@ const ForgotPassword: React.FC = () => {
         }
 
         if (error.response?.data) {
-          // Handle validation errors
           const apiErrors = error.response.data.errors;
-
-          // Map API error fields to form fields
           const formErrors: { [key: string]: string } = {};
 
           if (apiErrors.email_address) {
             formErrors.email = apiErrors.email_address[0];
           }
-          // Add other field mappings as needed
+          if (apiErrors.phone_number) {
+            formErrors.phone = apiErrors.phone_number[0];
+          }
 
-          // Set form-level errors
           setErrors(formErrors);
 
-          // Set general error message
           setStatus({
             type: "error",
             message: error.response.data.message || "Validation error occurred",
@@ -119,6 +146,11 @@ const ForgotPassword: React.FC = () => {
     status,
   } = formik;
 
+  const handleContactMethodChange = (method: "email" | "phone") => {
+    setContactMethod(method);
+    formik.resetForm();
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 md:px-0 py-4">
       <div className="max-w-lg w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
@@ -131,22 +163,55 @@ const ForgotPassword: React.FC = () => {
             Forgot Password?
           </h2>
           <p className="text-gray-500 text-center mt-1">
-            Enter your email address and we'll send you a link to reset your
-            password
+            Enter your{" "}
+            {contactMethod === "email" ? "email address" : "phone number"} and
+            we'll send you an OTP to reset your password
           </p>
+        </div>
+
+        {/* Contact Method Toggle */}
+        <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+          <button
+            type="button"
+            onClick={() => handleContactMethodChange("email")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md font-medium text-sm transition-all duration-200 ${
+              contactMethod === "email"
+                ? "bg-white text-green-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Mail className="w-4 h-4" />
+            Email
+          </button>
+          <button
+            type="button"
+            onClick={() => handleContactMethodChange("phone")}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md font-medium text-sm transition-all duration-200 ${
+              contactMethod === "phone"
+                ? "bg-white text-green-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Phone className="w-4 h-4" />
+            Phone
+          </button>
         </div>
 
         {/* Password Reset Info Banner */}
         <div className="w-full bg-blue-50 border border-blue-200 py-4 px-4 rounded-lg">
           <div className="flex items-center mb-2">
-            <Mail className="text-blue-600 text-xl" />
+            {contactMethod === "email" ? (
+              <Mail className="text-blue-600 text-xl" />
+            ) : (
+              <Phone className="text-blue-600 text-xl" />
+            )}
             <span className="text-blue-700 text-base font-semibold ml-2">
               Password Reset Request
             </span>
           </div>
           <p className="text-blue-600 text-sm">
-            We'll send a six digit OTP to your registered email
-            address
+            We'll send a six digit OTP to your registered{" "}
+            {contactMethod === "email" ? "email address" : "phone number"}
           </p>
         </div>
 
@@ -165,33 +230,62 @@ const ForgotPassword: React.FC = () => {
                   <p className="text-sm">{status.message}</p>
                 </div>
               )}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={values.email}
-                  required
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  className={`mt-1 block w-full px-3 py-2 border ${
-                    errors.email && touched.email
-                      ? "border-red-300"
-                      : "border-gray-300"
-                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm`}
-                  placeholder="Enter your registered email address"
-                />
 
-                {errors.email && touched.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                )}
-              </div>
+              {contactMethod === "email" ? (
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={values.email}
+                    required
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full px-3 py-2 border ${
+                      errors.email && touched.email
+                        ? "border-red-300"
+                        : "border-gray-300"
+                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm`}
+                    placeholder="Enter your registered email address"
+                  />
+                  {errors.email && touched.email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Phone Number
+                  </label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={values.phone}
+                    required
+                    onBlur={handleBlur}
+                    onChange={handleChange}
+                    className={`mt-1 block w-full px-3 py-2 border ${
+                      errors.phone && touched.phone
+                        ? "border-red-300"
+                        : "border-gray-300"
+                    } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm`}
+                    placeholder="Enter your registered phone number"
+                  />
+                  {errors.phone && touched.phone && (
+                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="mt-6">

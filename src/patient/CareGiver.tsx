@@ -2,14 +2,17 @@ import React, { useState } from "react";
 import {
   ArrowLeft,
   Clock,
-  Stethoscope,
   HeartHandshake,
   CheckCircle,
   FileText,
   User,
-
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCHWProcedures } from "../constant/GlobalContext";
+import { toast } from "react-toastify";
+import Loading from "../components/common/Loading";
+import Error from "../components/Error";
+import api from "../constant/api";
 
 // Types
 interface CaregiverType {
@@ -30,47 +33,42 @@ interface BookingData {
   patientAge: string;
   medicalCondition: string;
   careLocation: string;
+  careAddress: string;
   startDate: string;
-  emergencyContact: string;
+  emergencyContactName: string;
+  emergencyContactPhone: string;
   specialRequirements: string;
   period: number;
 }
 
-// Mock Data
-const caregiverTypes: CaregiverType[] = [
-  {
-    id: "professional-nurse",
-    name: "Professional Nurse",
-    label: "Medical Expert",
-    description: "Qualified registered nurse with medical training",
-    dailyRate: 4000,
-    fullTimeRate: 8000,
-    icon: <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Medical administration",
-      "Vital signs monitoring",
-      "Wound care",
-      "Emergency response",
-    ],
-  },
-  {
-    id: "community-health-worker",
-    name: "Community Health Worker",
-    label: "Community Care",
-    description: "Trained community health professional",
-    dailyRate: 2000,
-    fullTimeRate: 5000,
-    icon: <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />,
-    features: [
-      "Basic health monitoring",
-      "Medication reminders",
-      "Companionship",
-      "Daily living assistance",
-    ],
-  },
-];
-
 const CaregiverBooking: React.FC = () => {
+  const { data: caregiver, isLoading, error } = useCHWProcedures();
+
+  // Transform API data to match CaregiverType interface
+  const caregiverTypes: CaregiverType[] =
+    caregiver?.results?.map((item: any) => {
+      const isNurse = item.slug === "nurse";
+      const features =
+        typeof item.features === "string"
+          ? item.features.split(",").map((f: string) => f.trim())
+          : item.features;
+
+      return {
+        id: item.slug,
+        name: item.name,
+        label: isNurse ? "Medical Expert" : "Community Care",
+        description: item.short_description,
+        dailyRate: parseFloat(item.daily_rate),
+        fullTimeRate: parseFloat(item.full_time_rate),
+        icon: isNurse ? (
+          <User className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+        ) : (
+          <HeartHandshake className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+        ),
+        features: features,
+      };
+    }) || [];
+
   const [bookingData, setBookingData] = useState<BookingData>({
     caregiverType: null,
     duration: "daily",
@@ -78,18 +76,67 @@ const CaregiverBooking: React.FC = () => {
     patientAge: "",
     medicalCondition: "",
     careLocation: "",
+    careAddress: "",
     startDate: "",
-    emergencyContact: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
     specialRequirements: "",
     period: 30,
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const navigate = useNavigate();
 
-  const handleBooking = () => {
-    // Handle booking logic here
-    alert("Booking confirmed!");
-    navigate("/patient/receipt");
+  const handleBooking = async () => {
+    if (
+      !bookingData.caregiverType ||
+      !bookingData.patientName ||
+      !bookingData.careLocation ||
+      !bookingData.startDate
+    ) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        caregiver_type: bookingData.caregiverType.id, // "nurse" or "chw"
+        duration:
+          bookingData.duration === "daily" ? "daily_visits" : "full_time",
+        patient_name: bookingData.patientName,
+        patient_age: parseInt(bookingData.patientAge) || 0,
+        medical_condition: bookingData.medicalCondition,
+        care_location: bookingData.careLocation,
+        care_address: bookingData.careAddress,
+        start_date: bookingData.startDate,
+        emergency_contact_name: bookingData.emergencyContactName,
+        emergency_contact_phone: bookingData.emergencyContactPhone,
+        special_requirements: bookingData.specialRequirements,
+        latitude: 0,
+        longitude: 0,
+      };
+
+      const response = await api.post("/caregiver-booking/", payload);
+      // console.log(response.data)
+
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Booking confirmed successfully!");
+        // navigate("/patient/receipt", { state: { bookingData: response.data } });
+        navigate("/patient")
+      }
+    } catch (error: any) {
+      console.error("Booking error:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        "Failed to complete booking. Please try again.";
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCaregiverSelect = (caregiver: CaregiverType) => {
@@ -98,6 +145,14 @@ const CaregiverBooking: React.FC = () => {
       caregiverType: caregiver,
     }));
   };
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <Error />;
+  }
 
   const handleDurationSelect = (duration: "daily" | "fulltime") => {
     setBookingData((prev) => ({
@@ -280,7 +335,15 @@ const CaregiverBooking: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              {caregiverTypes.map(renderCaregiverCard)}
+              {caregiverTypes.length > 0 ? (
+                caregiverTypes.map(renderCaregiverCard)
+              ) : (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                  <p className="text-gray-500">
+                    No caregivers available at the moment
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Step 2: Select Care Duration */}
@@ -332,7 +395,7 @@ const CaregiverBooking: React.FC = () => {
                   <div className="grid sm:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Patient Name
+                        Patient Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -349,7 +412,7 @@ const CaregiverBooking: React.FC = () => {
                         Patient Age
                       </label>
                       <input
-                        type="text"
+                        type="number"
                         placeholder="Age"
                         value={bookingData.patientAge}
                         onChange={(e) =>
@@ -378,11 +441,11 @@ const CaregiverBooking: React.FC = () => {
                   <div className="grid sm:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Care Location
+                        Care Location <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
-                        placeholder="Full address"
+                        placeholder="City or area"
                         value={bookingData.careLocation}
                         onChange={(e) =>
                           handleInputChange("careLocation", e.target.value)
@@ -392,7 +455,7 @@ const CaregiverBooking: React.FC = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Start Date
+                        Start Date <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -407,17 +470,54 @@ const CaregiverBooking: React.FC = () => {
 
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Emergency Contact
+                      Full Care Address
                     </label>
                     <input
                       type="text"
-                      placeholder="Name and phone number"
-                      value={bookingData.emergencyContact}
+                      placeholder="Complete address with street, house number, etc."
+                      value={bookingData.careAddress}
                       onChange={(e) =>
-                        handleInputChange("emergencyContact", e.target.value)
+                        handleInputChange("careAddress", e.target.value)
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                     />
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Emergency Contact Name
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Full name"
+                        value={bookingData.emergencyContactName}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "emergencyContactName",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Emergency Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="Phone number"
+                        value={bookingData.emergencyContactPhone}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "emergencyContactPhone",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -504,14 +604,17 @@ const CaregiverBooking: React.FC = () => {
 
                     <button
                       onClick={handleBooking}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={
                         !bookingData.patientName ||
                         !bookingData.careLocation ||
-                        !bookingData.startDate
+                        !bookingData.startDate ||
+                        isSubmitting
                       }
                     >
-                      Book Caregiver Service
+                      {isSubmitting
+                        ? "Processing..."
+                        : "Book Caregiver Service"}
                     </button>
                   </div>
                 ) : (

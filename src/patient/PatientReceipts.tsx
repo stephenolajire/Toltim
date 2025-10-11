@@ -5,69 +5,45 @@ import {
   Clock,
   MapPin,
   User,
-  Shield,
+  // Shield,
   Download,
   Share2,
   Printer,
   ArrowLeft,
   CheckCircle,
   AlertCircle,
+  HeartHandshake,
+  Phone,
 } from "lucide-react";
 
-interface BookingData {
-  id?: number;
-  booking_id?: string;
+interface CaregiverBookingData {
+  id?: string;
   user?: string;
-  nurse?: string;
-  nurse_full_name?: string;
-  scheduling_option?: string;
+  caregiver_type?: "nurse" | "chw";
+  duration?: "daily_visits" | "full_time";
+  patient_name?: string;
+  patient_age?: number;
+  medical_condition?: string;
+  care_location?: string;
+  care_address?: string;
   start_date?: string;
-  time_of_day?: string;
-  selected_days?: string[];
-  service_dates?: string;
-  is_for_self?: boolean;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  special_requirements?: string;
+  assigned_worker?: string | null;
   status?: "pending" | "assigned" | "active" | "completed";
-  total_amount?: string;
-  procedure_item?: {
-    procedure?: {
-      id?: number;
-      procedure_id?: string;
-      title?: string;
-      description?: string;
-      duration?: string;
-      repeated_visits?: boolean;
-      price?: string;
-      icon_url?: string;
-      status?: string;
-      inclusions?: Array<{ id?: number; item?: string }>;
-      requirements?: Array<{ id?: number; item?: string }>;
-      created_at?: string;
-      updated_at?: string;
-    };
-    procedure_id?: number;
-    num_days?: number;
-    subtotal?: string;
-  };
-  patient_detail?: {
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    phone_number?: string;
-    address?: string;
-    relationship_to_patient?: string;
-  };
-  service_address?: string;
-  service_location?: string;
+  total_price?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-const AppointmentReceipt: React.FC = () => {
+const CaregiverBookingReceipt: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   // Get booking data from navigation state
-  const bookingData: BookingData = location.state?.booking || {};
+  const bookingData: CaregiverBookingData = location.state?.bookingData || {};
+  console.log(bookingData)
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Date not available";
@@ -81,20 +57,6 @@ const AppointmentReceipt: React.FC = () => {
       });
     } catch {
       return "Invalid date";
-    }
-  };
-
-  const formatTime = (timeString?: string) => {
-    if (!timeString) return "Time not available";
-
-    try {
-      return new Date(timeString).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      return "Invalid time";
     }
   };
 
@@ -135,29 +97,30 @@ const AppointmentReceipt: React.FC = () => {
     }
   };
 
-  const getScheduleDescription = () => {
-    const { scheduling_option, selected_days, procedure_item } = bookingData;
-    const numDays = procedure_item?.num_days;
-
-    if (!scheduling_option) return "Schedule not specified";
-
-    switch (scheduling_option) {
-      case "daily":
-        return `Daily appointments${numDays ? ` for ${numDays} days` : ""}`;
-      case "specific-days":
-        const days = selected_days?.join(", ") || "Selected days";
-        return `${days} each week${numDays ? ` for ${numDays} days` : ""}`;
-      case "every-other-day":
-        return `Every other day${numDays ? ` for ${numDays} days` : ""}`;
-      case "weekly":
-        return `Weekly appointments${numDays ? ` for ${numDays} days` : ""}`;
+  const getCaregiverTypeName = (type?: string) => {
+    switch (type) {
+      case "nurse":
+        return "Professional Nurse";
+      case "chw":
+        return "Community Health Worker";
       default:
-        return scheduling_option;
+        return "Caregiver";
+    }
+  };
+
+  const getDurationText = (duration?: string) => {
+    switch (duration) {
+      case "daily_visits":
+        return "Daily Visits (2-4 hours per day)";
+      case "full_time":
+        return "Full-time Stay (24-hour live-in care)";
+      default:
+        return "Not specified";
     }
   };
 
   // If no booking data, show error state
-  if (!bookingData.id && !bookingData.booking_id) {
+  if (!bookingData.id) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="max-w-md mx-auto text-center">
@@ -186,11 +149,11 @@ const AppointmentReceipt: React.FC = () => {
       <div className="max-w-2xl mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/patient/dashboard")}
           className="flex items-center space-x-2 mb-6 px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-white rounded-lg transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back</span>
+          <span>Back to Dashboard</span>
         </button>
 
         <div className="bg-white rounded-lg shadow-lg">
@@ -199,16 +162,15 @@ const AppointmentReceipt: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Appointment Confirmation
+                  Caregiver Booking Confirmation
                 </h1>
                 <p className="text-green-600">
-                  Booking ID:{" "}
-                  {bookingData.booking_id || `#${bookingData.id || "N/A"}`}
+                  Booking ID: #{bookingData.id?.substring(0, 8) || "N/A"}
                 </p>
               </div>
               <div className="flex items-center space-x-2">
                 {getStatusIcon(bookingData.status)}
-                <Shield className="w-8 h-8 text-green-600" />
+                <HeartHandshake className="w-8 h-8 text-green-600" />
               </div>
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -217,200 +179,201 @@ const AppointmentReceipt: React.FC = () => {
             </div>
           </div>
 
-          {/* Appointment Details */}
+          {/* Booking Details */}
           <div className="p-6 space-y-6">
-            {/* Service & Provider */}
+            {/* Service Type */}
             <div className="flex items-start space-x-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                {bookingData.procedure_item?.procedure?.icon_url ? (
-                  <img
-                    src={bookingData.procedure_item.procedure.icon_url}
-                    alt="Service icon"
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
-                ) : (
-                  <User className="w-8 h-8 text-green-600" />
-                )}
+                <HeartHandshake className="w-8 h-8 text-green-600" />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 text-lg">
-                  {bookingData.procedure_item?.procedure?.title ||
-                    "Service not specified"}
+                  {getCaregiverTypeName(bookingData.caregiver_type)}
                 </h3>
                 <p className="text-green-600 font-medium">
-                  {bookingData.nurse_full_name || "Nurse not assigned"}
+                  {bookingData.assigned_worker ||
+                    "Caregiver will be assigned soon"}
                 </p>
-                <p className="text-sm text-gray-600">Registered Nurse</p>
-                <div className="flex items-center text-sm text-gray-600 mt-1">
-                  <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
-                  <span>
-                    {bookingData.service_location || "Location not specified"}
-                  </span>
-                </div>
-                {bookingData.procedure_item?.procedure?.description && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    {bookingData.procedure_item.procedure.description}
-                  </p>
-                )}
+                <p className="text-sm text-gray-600">
+                  {getDurationText(bookingData.duration)}
+                </p>
               </div>
             </div>
 
-            {/* Date & Time */}
+            {/* Start Date */}
             <div className="bg-green-50 rounded-lg p-4">
               <div className="flex items-start space-x-4">
                 <Calendar className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
                 <div>
                   <p className="font-medium text-gray-900">
-                    {formatDate(bookingData.start_date)}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {formatTime(bookingData.time_of_day)}
-                    {bookingData.procedure_item?.procedure?.duration &&
-                      ` (${bookingData.procedure_item.procedure.duration})`}
+                    Start Date: {formatDate(bookingData.start_date)}
                   </p>
                   <p className="text-sm text-gray-600 mt-1">
-                    <strong>Schedule:</strong> {getScheduleDescription()}
+                    Service begins on this date
                   </p>
-                  {bookingData.selected_days &&
-                    bookingData.selected_days.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {bookingData.selected_days.map((day) => (
-                          <span
-                            key={day}
-                            className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-md"
-                          >
-                            {day}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                 </div>
               </div>
             </div>
 
-            {/* Patient Details */}
+            {/* Patient Information */}
             <div className="border rounded-lg p-4">
               <h3 className="font-medium text-gray-900 mb-3 flex items-center">
                 <User className="w-4 h-4 mr-2" />
                 Patient Information
               </h3>
 
-              {bookingData.is_for_self ? (
-                <div className="text-sm">
-                  <p className="font-medium text-gray-900 mb-2">
-                    Booking for self
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">Patient Name</p>
+                  <p className="font-medium">
+                    {bookingData.patient_name || "Not provided"}
                   </p>
-                  {bookingData.service_address && (
-                    <div>
-                      <p className="text-gray-600">Service Address</p>
-                      <p className="font-medium">
-                        {bookingData.service_address}
-                      </p>
-                    </div>
-                  )}
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {bookingData.patient_age && (
                   <div>
-                    <p className="text-gray-600">Name</p>
+                    <p className="text-gray-600">Age</p>
                     <p className="font-medium">
-                      {bookingData.patient_detail?.first_name &&
-                      bookingData.patient_detail?.last_name
-                        ? `${bookingData.patient_detail.first_name} ${bookingData.patient_detail.last_name}`
-                        : "Not provided"}
+                      {bookingData.patient_age} years
                     </p>
                   </div>
-                  <div>
-                    <p className="text-gray-600">Phone</p>
-                    <p className="font-medium">
-                      {bookingData.patient_detail?.phone_number ||
-                        "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-600">Email</p>
-                    <p className="font-medium">
-                      {bookingData.patient_detail?.email || "Not provided"}
-                    </p>
-                  </div>
-                  {bookingData.patient_detail?.relationship_to_patient && (
-                    <div>
-                      <p className="text-gray-600">Relationship</p>
-                      <p className="font-medium capitalize">
-                        {bookingData.patient_detail.relationship_to_patient}
-                      </p>
-                    </div>
-                  )}
+                )}
+                {bookingData.medical_condition && (
                   <div className="md:col-span-2">
-                    <p className="text-gray-600">Address</p>
+                    <p className="text-gray-600">Medical Condition</p>
                     <p className="font-medium">
-                      {bookingData.patient_detail?.address ||
-                        bookingData.service_address ||
-                        "Not provided"}
+                      {bookingData.medical_condition}
                     </p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* Service Inclusions */}
-            {bookingData.procedure_item?.procedure?.inclusions &&
-              bookingData.procedure_item.procedure.inclusions.length > 0 && (
-                <div className="border rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-3">
-                    Service Inclusions
-                  </h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    {bookingData.procedure_item.procedure.inclusions.map(
-                      (inclusion, index) => (
-                        <li
-                          key={inclusion.id || index}
-                          className="text-sm text-gray-600"
-                        >
-                          {inclusion.item}
-                        </li>
-                      )
-                    )}
-                  </ul>
+            {/* Care Location */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                <MapPin className="w-4 h-4 mr-2" />
+                Care Location
+              </h3>
+              <p className="text-sm text-gray-600">
+                {bookingData.care_address || "Address not provided"}
+              </p>
+            </div>
+
+            {/* Emergency Contact */}
+            {(bookingData.emergency_contact_name ||
+              bookingData.emergency_contact_phone) && (
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 mb-3 flex items-center">
+                  <Phone className="w-4 h-4 mr-2" />
+                  Emergency Contact
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {bookingData.emergency_contact_name && (
+                    <div>
+                      <p className="text-gray-600">Name</p>
+                      <p className="font-medium">
+                        {bookingData.emergency_contact_name}
+                      </p>
+                    </div>
+                  )}
+                  {bookingData.emergency_contact_phone && (
+                    <div>
+                      <p className="text-gray-600">Phone</p>
+                      <p className="font-medium">
+                        {bookingData.emergency_contact_phone}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* Special Requirements */}
+            {bookingData.special_requirements && (
+              <div className="border rounded-lg p-4">
+                <h3 className="font-medium text-gray-900 mb-3">
+                  Special Requirements
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {bookingData.special_requirements}
+                </p>
+              </div>
+            )}
+
+            {/* Service Inclusions */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-medium text-gray-900 mb-3">
+                What's Included
+              </h3>
+              <ul className="list-disc list-inside space-y-1">
+                <li className="text-sm text-gray-600">
+                  Professional caregiver assignment
+                </li>
+                <li className="text-sm text-gray-600">24/7 support hotline</li>
+                <li className="text-sm text-gray-600">
+                  Regular progress reports
+                </li>
+                <li className="text-sm text-gray-600">
+                  Emergency response protocol
+                </li>
+                {bookingData.caregiver_type === "nurse" && (
+                  <>
+                    <li className="text-sm text-gray-600">
+                      Medical administration
+                    </li>
+                    <li className="text-sm text-gray-600">
+                      Vital signs monitoring
+                    </li>
+                    <li className="text-sm text-gray-600">Wound care</li>
+                  </>
+                )}
+                {bookingData.caregiver_type === "chw" && (
+                  <>
+                    <li className="text-sm text-gray-600">
+                      Basic health monitoring
+                    </li>
+                    <li className="text-sm text-gray-600">
+                      Medication reminders
+                    </li>
+                    <li className="text-sm text-gray-600">Companionship</li>
+                  </>
+                )}
+              </ul>
+            </div>
 
             {/* Payment Details */}
             <div className="border-t pt-4">
               <div className="space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Price per session</span>
-                  <span className="font-medium">
-                    ₦
-                    {formatAmount(bookingData.procedure_item?.procedure?.price)}
-                  </span>
-                </div>
-                {bookingData.procedure_item?.num_days &&
-                  bookingData.procedure_item.num_days > 1 && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Number of sessions</span>
-                      <span className="font-medium">
-                        {bookingData.procedure_item.num_days}
-                      </span>
-                    </div>
-                  )}
-                {bookingData.procedure_item?.subtotal && (
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">
-                      ₦{formatAmount(bookingData.procedure_item.subtotal)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center text-lg pt-2 border-t">
+                <div className="flex justify-between items-center text-lg pt-2">
                   <span className="font-semibold text-gray-900">
                     Total Amount
                   </span>
                   <span className="font-bold text-green-600">
-                    ₦{formatAmount(bookingData.total_amount)}
+                    ₦{formatAmount(bookingData.total_price)}
                   </span>
                 </div>
+                <p className="text-xs text-gray-500 text-right">Per day rate</p>
               </div>
+            </div>
+
+            {/* Important Notes */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <h4 className="font-medium text-yellow-900 mb-2 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                Important Information
+              </h4>
+              <ul className="text-sm text-yellow-800 space-y-1">
+                <li>• A caregiver will be assigned to you within 24 hours</li>
+                <li>
+                  • You will receive a confirmation call before the start date
+                </li>
+                <li>
+                  • Please ensure someone is available at the care location
+                </li>
+                <li>
+                  • Keep your emergency contact informed about the service
+                </li>
+              </ul>
             </div>
           </div>
 
@@ -441,9 +404,50 @@ const AppointmentReceipt: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Next Steps */}
+        <div className="mt-6 bg-white rounded-lg shadow p-6">
+          <h3 className="font-semibold text-gray-900 mb-4">Next Steps</h3>
+          <div className="space-y-3">
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium">
+                1
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">Wait for Assignment</p>
+                <p className="text-sm text-gray-600">
+                  A qualified caregiver will be assigned within 24 hours
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium">
+                2
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">Confirmation Call</p>
+                <p className="text-sm text-gray-600">
+                  You'll receive a call to confirm details and meet the
+                  caregiver
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-medium">
+                3
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">Service Begins</p>
+                <p className="text-sm text-gray-600">
+                  Caregiver arrives on your scheduled start date
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default AppointmentReceipt;
+export default CaregiverBookingReceipt;

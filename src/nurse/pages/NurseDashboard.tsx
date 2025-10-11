@@ -78,18 +78,26 @@ const NurseDashboard: React.FC = () => {
 
   const queryClient = useQueryClient();
 
+  const userRole = localStorage.getItem("userType")
+
   // Fetch bookings using TanStack Query
   const { data, isLoading, isError, error } = useQuery<ApiResponse>({
     queryKey: ["nurse-procedure-bookings"],
     queryFn: async () => {
-      const response = await api.get("services/nurse-procedure-bookings/");
-      return response.data;
+      if (userRole == 'nurse') {
+        const response = await api.get("services/nurse-procedure-bookings/");
+        return response.data;
+      }else if (userRole == 'chw') {
+        const response = await api.get("caregiver-booking/");
+        return response.data;
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 30 * 1000, // Refetch every 30 seconds for new requests
   });
 
   const bookings = data?.results || [];
+  console.log(bookings)
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {

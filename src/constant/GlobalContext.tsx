@@ -23,6 +23,9 @@ const queryKeys = {
   useInBedProcedures:"useInBedProcedures",
   useNearByCHW:"useNearByCHW",
   useCHWVerification:"useCHWVerification",
+  useCHWProcedures:"useCHWProcedures",
+  useHistory:"useHistory",
+  useCareGiverBooking:"useCareGiverBooking",
 };
 
 export const GlobalContext = createContext<Context | undefined>(undefined);
@@ -194,6 +197,21 @@ export const useNurseProcedures = () => {
 };
 
 
+export const useCHWProcedures = () => {
+  return useQuery({
+    queryKey: [queryKeys.useCHWProcedures],
+    queryFn: async () => {
+      const response = await api.get("caregiver-type/");
+      // console.log("API Response:", response);
+      return response.data;
+    },
+    enabled: true,
+    retry: 1,
+    staleTime: 20 * 60 * 1000,
+  });
+};
+
+
 export const useNurseProfile = (userRole: string) => {
   return useQuery({
     queryKey: ["nurseProfile", userRole],
@@ -244,3 +262,32 @@ export const useInBedProcedures = () => {
     staleTime: 20 * 60 * 1000,
   });
 };
+
+export const useHistory = () => {
+  return useQuery({
+    queryKey: [queryKeys.useHistory],
+    queryFn: async () => {
+      const response = await api.get("history/booking-history/");
+      // console.log("API Response:", response);
+      return response.data;
+    },
+    enabled: true,
+    retry: 1,
+    staleTime: 20 * 60 * 1000,
+  });
+};
+
+export const useCareGiverBooking = () => {
+  return useQuery({
+    queryKey: [queryKeys.useCareGiverBooking],
+    queryFn: async () => {
+      const response = await api.get("caregiver-booking/");
+      // console.log("API Response:", response);
+      return response.data;
+    },
+    enabled: true,
+    retry: 1,
+    staleTime: 20 * 60 * 1000,
+  });
+};
+

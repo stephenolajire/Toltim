@@ -2,11 +2,21 @@ import React from "react";
 import { X, Loader2, RefreshCw } from "lucide-react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../constant/api";
 import { toast } from "react-toastify";
 
+interface CaregiverType {
+  id: number;
+  name: string;
+  short_description: string;
+  daily_rate: string;
+  full_time_rate: string;
+  features: string[] | string;
+  slug: string;
+}
+
 interface FormValues {
-  caregiver_type: "nurse" | "chw";
   name: string;
   short_description: string;
   daily_rate: string;
@@ -16,9 +26,6 @@ interface FormValues {
 }
 
 const validationSchema = Yup.object({
-  caregiver_type: Yup.string()
-    .oneOf(["nurse", "chw"], "Please select a valid caregiver type")
-    .required("Caregiver type is required"),
   name: Yup.string()
     .min(3, "Name must be at least 3 characters")
     .max(100, "Name must be less than 100 characters")
@@ -38,7 +45,7 @@ const validationSchema = Yup.object({
     .max(1000, "Features must be less than 1000 characters")
     .required("Features are required"),
   slug: Yup.string()
-    .length(10, "Slug must be exactly 10 characters")
+    .length(3, "Slug must be exactly 10 characters")
     .matches(/^[a-zA-Z0-9]+$/, "Slug must contain only letters and numbers")
     .required("Slug is required"),
 });
@@ -54,24 +61,67 @@ const generateSlug = (): string => {
   return slug;
 };
 
-const AddCaregiverType: React.FC<{
+interface EditCaregiverTypeProps {
   isOpen: boolean;
   onClose: () => void;
-}> = ({ isOpen, onClose }) => {
+  caregiverType: CaregiverType | null;
+}
+
+const EditCaregiverType: React.FC<EditCaregiverTypeProps> = ({
+  isOpen,
+  onClose,
+  caregiverType,
+}) => {
+  const queryClient = useQueryClient();
+
+  // Mutation for updating caregiver type
+  const updateMutation = useMutation({
+    mutationFn: async (data: { id: number; payload: any }) => {
+      const response = await api.patch(
+        `caregiver-type/${data.id}/`,
+        data.payload
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch caregiver types
+      queryClient.invalidateQueries({ queryKey: ["caregiverTypes"] });
+      toast.success("Caregiver type updated successfully!");
+      onClose();
+    },
+    onError: (error: any) => {
+      console.error("Error updating caregiver type:", error);
+      if (error.response?.data) {
+        toast.error(
+          `Error: ${
+            error.response.data.message || "Failed to update caregiver type"
+          }`
+        );
+      } else {
+        toast.error(
+          "Network error: Please check your connection and try again"
+        );
+      }
+    },
+  });
+
+  if (!isOpen || !caregiverType) return null;
+
+  // Convert features to string - handle both array and string formats
+  const featuresString = Array.isArray(caregiverType.features)
+    ? caregiverType.features.join(", ")
+    : caregiverType.features;
+
   const initialValues: FormValues = {
-    name: "",
-    short_description: "",
-    daily_rate: "",
-    full_time_rate: "",
-    features: "",
-    caregiver_type: "chw",
-    slug: "",
+    name: caregiverType.name,
+    short_description: caregiverType.short_description,
+    daily_rate: caregiverType.daily_rate,
+    full_time_rate: caregiverType.full_time_rate,
+    features: featuresString,
+    slug: caregiverType.slug,
   };
 
-  const handleSubmit = async (
-    values: FormValues,
-    { setSubmitting, resetForm }: any
-  ) => {
+  const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
     try {
       setSubmitting(true);
 
@@ -85,31 +135,12 @@ const AddCaregiverType: React.FC<{
         slug: values.slug,
       };
 
-      const response = await api.post("caregiver-type/", payload);
-      console.log("Caregiver type created successfully:", response.data);
-
-      // Reset form and close modal
-      resetForm();
-      onClose();
-
-      // Show success toast
-      toast.success("Caregiver type added successfully!");
-    } catch (error: any) {
-      console.error("Error creating caregiver type:", error);
-
-      // Handle different error scenarios
-      if (error.response?.data) {
-        console.error("Server error:", error.response.data);
-        toast.error(
-          `Error: ${
-            error.response.data.message || "Failed to create caregiver type"
-          }`
-        );
-      } else {
-        toast.error(
-          "Network error: Please check your connection and try again"
-        );
-      }
+      await updateMutation.mutateAsync({
+        id: caregiverType.id,
+        payload,
+      });
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
     } finally {
       setSubmitting(false);
     }
@@ -120,8 +151,6 @@ const AddCaregiverType: React.FC<{
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -129,6 +158,7 @@ const AddCaregiverType: React.FC<{
           initialValues={initialValues}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
+          enableReinitialize
         >
           {({ resetForm, isSubmitting, setFieldValue}) => (
             <Form>
@@ -136,10 +166,10 @@ const AddCaregiverType: React.FC<{
               <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
-                    Add New Caregiver Type
+                    Edit Caregiver Type
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    Fill in the details for the new caregiver type.
+                    Update the details for this caregiver type.
                   </p>
                 </div>
                 <button
@@ -272,7 +302,7 @@ const AddCaregiverType: React.FC<{
                     name="features"
                     as="textarea"
                     rows={5}
-                    placeholder="Enter the key features and responsibilities of this caregiver type (e.g., medication administration, wound care, vital signs monitoring)"
+                    placeholder="Enter the key features and responsibilities of this caregiver type (separate with commas)"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors resize-none"
                   />
                   <ErrorMessage
@@ -282,6 +312,7 @@ const AddCaregiverType: React.FC<{
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     List the main features, skills, or responsibilities
+                    (comma-separated)
                   </p>
                 </div>
               </div>
@@ -304,7 +335,7 @@ const AddCaregiverType: React.FC<{
                   {isSubmitting && (
                     <Loader2 size={16} className="animate-spin" />
                   )}
-                  {isSubmitting ? "Creating..." : "Add Caregiver Type"}
+                  {isSubmitting ? "Updating..." : "Update Caregiver Type"}
                 </button>
               </div>
             </Form>
@@ -315,4 +346,4 @@ const AddCaregiverType: React.FC<{
   );
 };
 
-export default AddCaregiverType;
+export default EditCaregiverType;

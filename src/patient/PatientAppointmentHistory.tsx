@@ -2,92 +2,92 @@ import { useState } from "react";
 import { Search, Calendar, Filter } from "lucide-react";
 import HistoryNavigation from "./HistoryNav";
 import PatientAppointmentHistoryCard from "./AppointmentHistoryCard";
+import { useHistory } from "../constant/GlobalContext";
+import Loading from "../components/common/Loading";
+import Error from "../components/Error";
 
-// Sample appointment data based on your images
-const sampleAppointments = [
-  {
-    id: 1,
-    doctor: {
-      name: "CHW Peter Nwankwo",
-      specialty: "Community Health",
-      avatar: "P",
-    },
-    date: "7/20/2025",
-    time: "9:00 AM",
-    location: "Onitsha South",
-    consultationType: "In-Person Consultation",
-    fee: 3000,
-    status: "rejected",
-    rejectionReason: "Provider unavailable due to emergency",
-  },
-  {
-    id: 2,
-    doctor: {
-      name: "Dr. Sarah Johnson",
-      specialty: "Gynecologist",
-      avatar: "S",
-    },
-    date: "7/18/2025",
-    time: "11:00 AM",
-    location: "Onitsha Main Market",
-    consultationType: "In-Person Consultation",
-    fee: 8000,
-    status: "pending",
-  },
-  {
-    id: 3,
-    doctor: {
-      name: "Dr. Sarah Johnson",
-      specialty: "Gynecologist",
-      avatar: "S",
-    },
-    date: "7/24/2025",
-    time: "2:00 PM",
-    location: "Onitsha Main Market",
-    consultationType: "In-Person Consultation",
-    fee: 8000,
-    status: "accepted",
-  },
-  {
-    id: 4,
-    doctor: {
-      name: "Nurse Mary Okafor",
-      specialty: "General Care",
-      avatar: "M",
-    },
-    date: "7/21/2025",
-    time: "10:00 AM",
-    location: "Home Visit",
-    consultationType: "Home Visit",
-    fee: 12000,
-    status: "completed",
-  },
-];
-
-// PatientAppointmentHistoryCard Component
-
-
-// PatientAppointmentHistory Parent Component
 const PatientAppointmentHistory = () => {
-  const appointments = sampleAppointments;
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("All Appointments");
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const matchesSearch =
-      appointment.doctor.name
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      appointment.doctor.specialty
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  const { data: AppointmentDataHistory, isLoading, error } = useHistory();
 
-    const matchesFilter =
-      filterStatus === "All Appointments" ||
-      appointment.status.toLowerCase() === filterStatus.toLowerCase();
+  // Transform API data to match the component's expected format
+  const transformedAppointments =
+    AppointmentDataHistory?.results?.map((item: any) => {
+      const bookingDetails = item?.booking_details || {};
+      const performedBy = item?.performed_by || {};
 
-    return matchesSearch && matchesFilter;
-  });
+      // Extract common fields
+      const status =
+        bookingDetails?.status || item?.metadata?.status || "pending";
+      const startDate = bookingDetails?.start_date || "";
+
+      // Determine doctor/provider info based on booking type
+      let providerName = "";
+      let specialty = "";
+      let avatar = "";
+
+      if (
+        item?.booking_type === "CaregiverBooking" ||
+        item?.booking_type === "InPatientCaregiverBooking"
+      ) {
+        providerName =
+          bookingDetails?.caregiver_name ||
+          bookingDetails?.patient_name ||
+          "Caregiver";
+        specialty = "Caregiver Services";
+        avatar = providerName?.charAt(0)?.toUpperCase() || "C";
+      } else if (item?.booking_type === "NurseProcedureBooking") {
+        providerName = bookingDetails?.nurse || "Nurse";
+        specialty = "Nursing Procedure";
+        avatar = providerName?.charAt(0)?.toUpperCase() || "N";
+      }
+
+      return {
+        id: item?.id || "",
+        doctor: {
+          name: providerName,
+          specialty: specialty,
+          avatar: avatar,
+        },
+        date: startDate ? new Date(startDate).toLocaleDateString() : "N/A",
+        time: bookingDetails?.start_time || "N/A",
+        location:
+          bookingDetails?.service_address || bookingDetails?.location || "N/A",
+        consultationType:
+          item?.booking_type?.replace(/([A-Z])/g, " $1").trim() ||
+          "Consultation",
+        fee: bookingDetails?.fee || bookingDetails?.amount || 0,
+        status: status,
+        rejectionReason: bookingDetails?.rejection_reason || "",
+        bookingType: item?.booking_type || "",
+        action: item?.action || "",
+        performedBy: performedBy?.full_name || "",
+        metadata: item?.metadata || {},
+      };
+    }) || [];
+
+  const filteredAppointments = transformedAppointments.filter(
+    (appointment: any) => {
+      const matchesSearch =
+        appointment?.doctor?.name
+          ?.toLowerCase()
+          ?.includes(searchTerm?.toLowerCase() || "") ||
+        appointment?.doctor?.specialty
+          ?.toLowerCase()
+          ?.includes(searchTerm?.toLowerCase() || "") ||
+        appointment?.location
+          ?.toLowerCase()
+          ?.includes(searchTerm?.toLowerCase() || "");
+
+      const matchesFilter =
+        filterStatus === "All Appointments" ||
+        appointment?.status?.toLowerCase() === filterStatus?.toLowerCase();
+
+      return matchesSearch && matchesFilter;
+    }
+  );
 
   const statusOptions = [
     "All Appointments",
@@ -96,6 +96,14 @@ const PatientAppointmentHistory = () => {
     "Completed",
     "Rejected",
   ];
+
+  if (isLoading) {
+    return <Loading />;
+  }
+
+  if (error) {
+    return <Error />;
+  }
 
   return (
     <div className="w-full bg-gray-50 min-h-screen">
@@ -143,17 +151,17 @@ const PatientAppointmentHistory = () => {
       {/* Appointments Count */}
       <div className="mb-6">
         <p className="text-gray-600">
-          Showing {filteredAppointments.length} of {appointments.length}{" "}
-          appointments
+          Showing {filteredAppointments?.length || 0} of{" "}
+          {transformedAppointments?.length || 0} appointments
         </p>
       </div>
 
       {/* Appointments Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-        {filteredAppointments.length > 0 ? (
-          filteredAppointments.map((appointment) => (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+        {filteredAppointments?.length > 0 ? (
+          filteredAppointments.map((appointment: any) => (
             <PatientAppointmentHistoryCard
-              key={appointment.id}
+              key={appointment?.id}
               appointment={appointment}
             />
           ))
