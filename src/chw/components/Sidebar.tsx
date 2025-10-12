@@ -17,38 +17,33 @@ interface SidebarProp {
 const adminLinks = [
   {
     name: "overview",
-    href: "/nurse",
+    href: "/chw",
     icon: <Home size={16} />,
   },
   {
-    name: "active patients",
-    href: "/nurse/active-patients",
-    icon: <User size={16} />,
-  },
-  {
-    name: "caregiver",
-    href: "/nurse/caregiver",
+    name: "bedside",
+    href: "/chw/bedside",
     icon: <Bed size={16} />,
   },
   {
-    name: "procedures",
-    href: "/nurse/procedure",
+    name: "care-giver",
+    href: "/chw/caregiver",
     icon: <Calendar size={16} />,
   },
   {
     name: "wallet",
-    href: "/nurse/wallet",
+    href: "/chw/wallet",
     icon: <Wallet size={16} />,
   },
   {
     name: "id-card",
-    href: "/nurse/id-card",
+    href: "/chw/id-card",
     icon: <Shield size={16} />,
   },
 
   {
     name: "profile",
-    href: "/nurse/profile",
+    href: "/chw/profile",
     icon: <User size={16} />,
   },
 ];
@@ -71,7 +66,7 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
           </div>
           <div>
             <h3 className="text-green-500 text-2xl font-bold">Toltim</h3>
-            <p className="text-sm text-gray-500">Nurse Panel</p>
+            <p className="text-sm text-gray-500">CHW Panel</p>
           </div>
         </div>
 

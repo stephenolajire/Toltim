@@ -12,6 +12,9 @@ import {
 import { useState } from "react";
 import { FaServicestack } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
+import { usePatientProfile } from "../constant/GlobalContext";
+import Loading from "../components/common/Loading";
+import Error from "../components/Error";
 
 // Define the props interface
 interface SidebarProps {
@@ -20,6 +23,9 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
+  const {data, isLoading, error} = usePatientProfile()
+  // console.log(data)
+
   const navigationItems = [
     { name: "Dashboard", href: "/patient", icon: Home },
     { name: "Nursing Procedures", href: "/patient/procedures", icon: FaServicestack },
@@ -44,6 +50,14 @@ const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
     localStorage.removeItem("refreshToken")
     localStorage.removeItem("accessToken")
     navigate("/")
+  }
+
+  if (isLoading) {
+    return <Loading/>
+  }
+
+  if (error) {
+    return <Error/>
   }
 
   return (
@@ -73,7 +87,7 @@ const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
             <User className="w-6 h-6 text-green-600" />
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium text-gray-700">John Doe</p>
+            <p className="text-sm font-medium text-gray-700">{data.first_name} {data.last_name}</p>
             <p className="text-xs text-gray-500">Patient</p>
           </div>
         </div>

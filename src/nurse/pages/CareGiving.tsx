@@ -3,60 +3,80 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   MapPin,
   Clock,
-  FileText,
-  User,
+//   FileText,
   Calendar,
   CheckCircle,
   AlertCircle,
+  XCircle,
+  Heart,
+//   Phone,
 } from "lucide-react";
 import api from "../../constant/api";
-import BookingDetailsModal from "../components/BookingDetailsModal";
-// import BedsideBookingDetailsModal from "../../components/BedSideModal";
-import { type Booking } from "../../types/bookingdata";
 import { useNavigate } from "react-router-dom";
+import CaregiverBookingModal from "../components/CaregiverBookingModal";
 
-
+export interface CaregiverBooking {
+  id: string;
+  user: string;
+  caregiver_type: string;
+  duration: string;
+  patient_name: string;
+  patient_age: number;
+  medical_condition: string;
+  care_location: string;
+  care_address: string;
+  start_date: string;
+  total_price: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  special_requirements: string;
+  status: "pending" | "assigned" | "active" | "completed" | "cancelled";
+  assigned_worker:
+    | string
+    | {
+        id: string;
+        first_name: string;
+        last_name: string;
+        email_address: string;
+      }
+    | null;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ApiResponse {
   count: number;
   next: string | null;
   previous: string | null;
-  results: Booking[];
+  results: CaregiverBooking[];
 }
 
-const NurseDashboard: React.FC = () => {
+const CareGiving: React.FC = () => {
+  const [selectedBooking, setSelectedBooking] =
+    React.useState<CaregiverBooking | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
-  const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(
-    null
-  );
-  const [acceptingRequests, setAcceptingRequests] = React.useState<Set<number>>(
+  const [acceptingRequests, setAcceptingRequests] = React.useState<Set<string>>(
     new Set()
   );
-  const [serviceType, setServiceType] = React.useState<
-    "procedure" | "carebooking"
-  >("procedure");
+  const [rejectingRequests, setRejectingRequests] = React.useState<Set<string>>(
+    new Set()
+  );
 
-  const navigate = useNavigate()
-
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch bookings using TanStack Query
+  // Fetch caregiver bookings using TanStack Query
   const { data, isLoading, isError, error } = useQuery<ApiResponse>({
-    queryKey: ["nurse-bookings", serviceType],
+    queryKey: ["caregiver-bookings"],
     queryFn: async () => {
-      if (serviceType === "procedure") {
-        const response = await api.get("services/nurse-procedure-bookings/");
-        return response.data;
-      } else {
-        navigate("/nurse/caregiver")
-      }
+      const response = await api.get("caregiver-booking/");
+      return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 30 * 1000, // Refetch every 30 seconds for new requests
   });
 
   const bookings = data?.results || [];
-  console.log(bookings);
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -68,6 +88,8 @@ const NurseDashboard: React.FC = () => {
         return "bg-green-100 text-green-800 border-green-200";
       case "completed":
         return "bg-gray-100 text-gray-800 border-gray-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -80,6 +102,8 @@ const NurseDashboard: React.FC = () => {
         return <CheckCircle className="w-4 h-4" />;
       case "assigned":
         return <Clock className="w-4 h-4" />;
+      case "cancelled":
+        return <XCircle className="w-4 h-4" />;
       case "pending":
       default:
         return <AlertCircle className="w-4 h-4" />;
@@ -103,18 +127,6 @@ const NurseDashboard: React.FC = () => {
     }
   };
 
-  const formatTime = (timeString: string) => {
-    try {
-      return new Date(timeString).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      return "Invalid time";
-    }
-  };
-
   const getTimeAgo = (dateString: string) => {
     try {
       const now = new Date();
@@ -132,35 +144,20 @@ const NurseDashboard: React.FC = () => {
     }
   };
 
-  const getPatientName = (booking: Booking) => {
-    if (booking.is_for_self) {
-      return "Self-booking patient";
-    }
-    if (
-      booking.patient_detail?.first_name &&
-      booking.patient_detail?.last_name
-    ) {
-      return `${booking.patient_detail.first_name} ${booking.patient_detail.last_name}`;
-    }
-    return "Patient name not provided";
-  };
-
-  const handleViewFullAssessment = (booking: Booking) => {
+  const handleViewDetails = (booking: CaregiverBooking) => {
     setSelectedBooking(booking);
     setIsModalOpen(true);
   };
 
-  const handleAcceptRequest = async (bookingId: number) => {
+  const handleAcceptRequest = async (bookingId: string) => {
     setAcceptingRequests((prev) => new Set(prev).add(bookingId));
 
     try {
-      await api.patch(
-        `services/nurse-procedure-bookings/${bookingId}/approve/`
-      );
+      await api.patch(`services/caregiver-booking/${bookingId}/approve/`);
 
       // Refetch the data to update the UI
       queryClient.invalidateQueries({
-        queryKey: ["nurse-bookings", serviceType],
+        queryKey: ["caregiver-bookings"],
       });
 
       alert("Request accepted successfully!");
@@ -181,21 +178,46 @@ const NurseDashboard: React.FC = () => {
     }
   };
 
+  const handleRejectRequest = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to reject this request?")) {
+      return;
+    }
+
+    setRejectingRequests((prev) => new Set(prev).add(bookingId));
+
+    try {
+      await api.patch(`services/caregiver-booking/${bookingId}/reject/`);
+
+      // Refetch the data to update the UI
+      queryClient.invalidateQueries({
+        queryKey: ["caregiver-bookings"],
+      });
+
+      alert("Request rejected successfully!");
+    } catch (error: any) {
+      console.error("Failed to reject request:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to reject request";
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setRejectingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(bookingId);
+        return newSet;
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="w-full pb-10">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Patient Requests</h1>
-          <select
-            value={serviceType}
-            onChange={(e) =>
-              setServiceType(e.target.value as "procedure" | "carebooking")
-            }
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="procedure">Procedures</option>
-            <option value="carebooking">Care Bookings</option>
-          </select>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Caregiving Requests
+          </h1>
         </div>
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -220,23 +242,15 @@ const NurseDashboard: React.FC = () => {
     return (
       <div className="w-full pb-10">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Patient Requests</h1>
-          <select
-            value={serviceType}
-            onChange={(e) =>
-              setServiceType(e.target.value as "procedure" | "carebooking")
-            }
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="procedure">Procedures</option>
-            <option value="carebooking">Care Bookings</option>
-          </select>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Caregiving Requests
+          </h1>
         </div>
         <div className="max-w-6xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-red-900 mb-2">
-              Failed to load patient requests
+              Failed to load caregiving requests
             </h3>
             <p className="text-red-700">
               {error?.message || "Please check your connection and try again."}
@@ -250,21 +264,19 @@ const NurseDashboard: React.FC = () => {
   return (
     <div className="w-full pb-10">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Patient Requests</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Caregiving Requests
+        </h1>
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-500">
             {bookings.length} request{bookings.length !== 1 ? "s" : ""} found
           </div>
-          <select
-            value={serviceType}
-            onChange={(e) =>
-              setServiceType(e.target.value as "procedure" | "carebooking")
-            }
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          <button
+            onClick={() => navigate("/nurse")}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
           >
-            <option value="procedure">Procedures</option>
-            <option value="carebooking">Care Bookings</option>
-          </select>
+            Back to Procedures
+          </button>
         </div>
       </div>
 
@@ -272,15 +284,14 @@ const NurseDashboard: React.FC = () => {
         {bookings.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FileText className="h-10 w-10 text-gray-400" />
+              <Heart className="h-10 w-10 text-gray-400" />
             </div>
             <h3 className="text-xl font-medium text-gray-900 mb-3">
-              No {serviceType === "procedure" ? "procedure" : "care booking"}{" "}
-              requests yet
+              No caregiving requests yet
             </h3>
             <p className="text-gray-500 max-w-md mx-auto">
-              New requests will appear here when patients book your services.
-              Check back later or refresh the page.
+              New caregiving requests will appear here when patients book your
+              services. Check back later or refresh the page.
             </p>
           </div>
         ) : (
@@ -295,23 +306,15 @@ const NurseDashboard: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          {booking.procedure_item.procedure.icon_url ? (
-                            <img
-                              src={booking.procedure_item.procedure.icon_url}
-                              alt="Service icon"
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                          ) : (
-                            <User className="w-5 h-5 text-blue-600" />
-                          )}
+                        <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Heart className="w-5 h-5 text-purple-600" />
                         </div>
                         <div>
                           <h3 className="font-semibold text-gray-900 text-sm">
-                            {getPatientName(booking)}
+                            {booking.patient_name}
                           </h3>
                           <p className="text-xs text-gray-500">
-                            Booking #{booking.booking_id}
+                            Age: {booking.patient_age} years
                           </p>
                         </div>
                       </div>
@@ -330,27 +333,32 @@ const NurseDashboard: React.FC = () => {
                   {/* Service Details */}
                   <div className="mb-4">
                     <h4 className="font-medium text-gray-900 mb-1 text-sm">
-                      {booking.procedure_item.procedure.title}
+                      {booking.caregiver_type}
                     </h4>
-                    <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
-                      {booking.procedure_item.procedure.description}
+                    <p className="text-gray-600 text-xs leading-relaxed">
+                      Duration: {booking.duration}
                     </p>
                   </div>
 
-                  {/* Location and Time */}
+                  {/* Medical Condition */}
+                  <div className="mb-4 p-2 bg-blue-50 rounded-lg">
+                    <p className="text-xs font-medium text-blue-900 mb-1">
+                      Medical Condition
+                    </p>
+                    <p className="text-xs text-blue-700">
+                      {booking.medical_condition}
+                    </p>
+                  </div>
+
+                  {/* Location and Date */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <MapPin className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">
-                        {booking.service_location}
-                      </span>
+                      <span className="truncate">{booking.care_address}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <Calendar className="h-3 w-3 flex-shrink-0" />
-                      <span>
-                        {formatDate(booking.start_date)} at{" "}
-                        {formatTime(booking.time_of_day)}
-                      </span>
+                      <span>Starts {formatDate(booking.start_date)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <Clock className="h-3 w-3 flex-shrink-0" />
@@ -358,44 +366,35 @@ const NurseDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Schedule Info */}
-                  {booking.selected_days?.length > 0 && (
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-1">
-                        {booking.selected_days.slice(0, 3).map((day) => (
-                          <span
-                            key={day}
-                            className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md"
-                          >
-                            {day.slice(0, 3)}
-                          </span>
-                        ))}
-                        {booking.selected_days.length > 3 && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
-                            +{booking.selected_days.length - 3}
-                          </span>
-                        )}
-                      </div>
+                  {/* Emergency Contact */}
+                  {/* <div className="mb-4 p-2 bg-amber-50 rounded-lg">
+                    <div className="flex items-center gap-2 text-xs text-amber-900">
+                      <Phone className="h-3 w-3" />
+                      <span className="font-medium">
+                        Emergency: {booking.emergency_contact_name}
+                      </span>
                     </div>
-                  )}
+                    <p className="text-xs text-amber-700 ml-5">
+                      {booking.emergency_contact_phone}
+                    </p>
+                  </div> */}
 
-                  {/* Inclusions */}
-                  {booking.procedure_item.procedure.inclusions &&
-                    booking.procedure_item.procedure.inclusions.length > 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 text-xs text-green-600">
-                          <FileText className="h-3 w-3" />
-                          <span>
-                            {booking.procedure_item.procedure.inclusions.length}{" "}
-                            service inclusion
-                            {booking.procedure_item.procedure.inclusions
-                              .length !== 1
-                              ? "s"
-                              : ""}
-                          </span>
+                  {/* Special Requirements */}
+                  {/* {booking.special_requirements && (
+                    <div className="mb-4">
+                      <div className="flex items-start gap-2 text-xs text-gray-600">
+                        <FileText className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-gray-900 mb-1">
+                            Special Requirements
+                          </p>
+                          <p className="line-clamp-2">
+                            {booking.special_requirements}
+                          </p>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )} */}
                 </div>
 
                 {/* Footer */}
@@ -403,45 +402,67 @@ const NurseDashboard: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-right">
                       <div className="text-lg font-bold text-green-600">
-                        {formatPrice(booking.total_amount)}
+                        {formatPrice(booking.total_price)}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {booking.procedure_item.num_days > 1
-                          ? `${booking.procedure_item.num_days} sessions`
-                          : "per session"}
-                      </div>
+                      <div className="text-xs text-gray-500">Total amount</div>
                     </div>
                   </div>
 
                   {/* Action Buttons */}
                   <div className="space-y-2">
-                    {booking.status !== "pending" ? (
-                      <button
-                        disabled
-                        className="w-full bg-green-100 text-green-800 px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Request Accepted
-                      </button>
+                    {booking.status === "pending" ? (
+                      <>
+                        <button
+                          onClick={() => handleAcceptRequest(booking.id)}
+                          disabled={acceptingRequests.has(booking.id)}
+                          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                          {acceptingRequests.has(booking.id) ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Accepting...
+                            </>
+                          ) : (
+                            "Accept Request"
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(booking.id)}
+                          disabled={rejectingRequests.has(booking.id)}
+                          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                          {rejectingRequests.has(booking.id) ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Rejecting...
+                            </>
+                          ) : (
+                            "Reject Request"
+                          )}
+                        </button>
+                      </>
                     ) : (
                       <button
-                        onClick={() => handleAcceptRequest(booking.id)}
-                        disabled={acceptingRequests.has(booking.id)}
-                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                        disabled
+                        className={`w-full px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2 ${
+                          booking.status === "assigned" ||
+                          booking.status === "active"
+                            ? "bg-green-100 text-green-800"
+                            : booking.status === "cancelled"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                       >
-                        {acceptingRequests.has(booking.id) ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Accepting...
-                          </>
-                        ) : (
-                          "Accept Request"
-                        )}
+                        <CheckCircle className="w-4 h-4" />
+                        {booking.status === "assigned" && "Request Accepted"}
+                        {booking.status === "active" && "Service Active"}
+                        {booking.status === "completed" && "Service Completed"}
+                        {booking.status === "cancelled" && "Request Cancelled"}
                       </button>
                     )}
 
                     <button
-                      onClick={() => handleViewFullAssessment(booking)}
+                      onClick={() => handleViewDetails(booking)}
                       className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200"
                     >
                       View Details
@@ -454,23 +475,15 @@ const NurseDashboard: React.FC = () => {
         )}
       </div>
 
-      {isModalOpen &&
-        selectedBooking &&
-        (serviceType === "procedure" ? (
-          <BookingDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            booking={selectedBooking}
-          />
-        ) : (
-          <BookingDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            booking={selectedBooking}
-          />
-        ))}
+      {isModalOpen && selectedBooking && (
+        <CaregiverBookingModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          booking={selectedBooking}
+        />
+      )}
     </div>
   );
 };
 
-export default NurseDashboard;
+export default CareGiving;

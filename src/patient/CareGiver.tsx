@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -6,6 +6,8 @@ import {
   CheckCircle,
   FileText,
   User,
+  MapPin,
+  AlertCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCHWProcedures } from "../constant/GlobalContext";
@@ -41,8 +43,18 @@ interface BookingData {
   period: number;
 }
 
+interface LocationData {
+  latitude: number;
+  longitude: number;
+}
+
 const CaregiverBooking: React.FC = () => {
   const { data: caregiver, isLoading, error } = useCHWProcedures();
+
+  // Location states
+  const [location, setLocation] = useState<LocationData | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   // Transform API data to match CaregiverType interface
   const caregiverTypes: CaregiverType[] =
@@ -88,6 +100,111 @@ const CaregiverBooking: React.FC = () => {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const getCurrentLocation = async () => {
+    setLocationLoading(true);
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by this browser");
+      setLocationLoading(false);
+      return;
+    }
+
+    try {
+      // Check current permission status
+      if ("permissions" in navigator) {
+        const permission = await navigator.permissions.query({
+          name: "geolocation",
+        });
+        console.log("Current geolocation permission:", permission.state);
+
+        // If permission is denied, we still try to request it
+        // The browser will show the permission prompt again
+        if (permission.state === "denied") {
+          console.log(
+            "Permission was denied, but attempting to request again..."
+          );
+        }
+      }
+
+      // Always attempt to get location - this will trigger permission prompt if needed
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          console.log("Location obtained:", locationData);
+          setLocation(locationData);
+          setLocationLoading(false);
+
+          // Store in localStorage for use in other components
+          localStorage.setItem("userLocation", JSON.stringify(locationData));
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          let errorMessage = "Unable to get your location";
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage =
+                "Location access denied. Please enable location access and try again.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information unavailable";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out";
+              break;
+            default:
+              errorMessage = `Unknown error occurred (${error.code})`;
+          }
+
+          setLocationError(errorMessage);
+          setLocationLoading(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 0, // Changed to 0 to always get fresh location and trigger permission prompt
+        }
+      );
+    } catch (error) {
+      console.error("Permission query error:", error);
+      // Fallback: still try to get location even if permission query fails
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          console.log("Location obtained:", locationData);
+          setLocation(locationData);
+          setLocationLoading(false);
+          localStorage.setItem("userLocation", JSON.stringify(locationData));
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLocationError(
+            "Unable to get your location. Please enable location access."
+          );
+          setLocationLoading(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 0,
+        }
+      );
+    }
+  };
+
   const handleBooking = async () => {
     if (
       !bookingData.caregiverType ||
@@ -96,6 +213,11 @@ const CaregiverBooking: React.FC = () => {
       !bookingData.startDate
     ) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+
+    if (!location) {
+      toast.error("Location not available. Please enable location access.");
       return;
     }
 
@@ -115,17 +237,15 @@ const CaregiverBooking: React.FC = () => {
         emergency_contact_name: bookingData.emergencyContactName,
         emergency_contact_phone: bookingData.emergencyContactPhone,
         special_requirements: bookingData.specialRequirements,
-        latitude: 0,
-        longitude: 0,
+        latitude: location.latitude,
+        longitude: location.longitude,
       };
 
       const response = await api.post("/caregiver-booking/", payload);
-      // console.log(response.data)
 
       if (response.status === 200 || response.status === 201) {
         toast.success("Booking confirmed successfully!");
-        // navigate("/patient/receipt", { state: { bookingData: response.data } });
-        navigate("/patient")
+        navigate("/patient");
       }
     } catch (error: any) {
       console.error("Booking error:", error);
@@ -318,6 +438,40 @@ const CaregiverBooking: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {/* Location Status Banner */}
+          {locationLoading && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2 text-sm">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-blue-700">Getting your location...</span>
+            </div>
+          )}
+
+          {locationError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2 text-sm">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-red-700 font-medium">Location Error</p>
+                <p className="text-red-600">{locationError}</p>
+                <button
+                  onClick={getCurrentLocation}
+                  className="mt-2 text-red-700 underline hover:text-red-800"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
+          )}
+
+          {location && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 text-sm">
+              <MapPin className="w-5 h-5 text-green-600" />
+              <span className="text-green-700">
+                Location detected: {location.latitude.toFixed(4)},{" "}
+                {location.longitude.toFixed(4)}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
@@ -609,6 +763,7 @@ const CaregiverBooking: React.FC = () => {
                         !bookingData.patientName ||
                         !bookingData.careLocation ||
                         !bookingData.startDate ||
+                        !location ||
                         isSubmitting
                       }
                     >
@@ -616,6 +771,12 @@ const CaregiverBooking: React.FC = () => {
                         ? "Processing..."
                         : "Book Caregiver Service"}
                     </button>
+
+                    {!location && (
+                      <p className="text-xs text-red-600 text-center">
+                        Location required to book service
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="text-center py-8">

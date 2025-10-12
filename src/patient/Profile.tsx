@@ -73,46 +73,12 @@ interface Tab {
 const PROFILE_QUERY_KEY = ["user", "profile"];
 
 // API function for fetching profile
-const fetchProfile = async (): Promise<ProfileData> => {
+const fetchProfile = async () => {
   try {
     const response = await api.get<ProfileData>("user/profile");
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 404) {
-      // Return mock data if profile not found
-      return {
-        first_name: "John",
-        last_name: "Doe",
-        email_address: "john.doe@example.com",
-        phone_number: "+234...",
-        date_of_birth: "1990-01-01",
-        gender: "Male",
-        blood_type: "O+",
-        address: "123 Main St",
-        city: "Lagos",
-        state: "Lagos",
-        zipcode: "100001",
-        medical_information: {
-          known_allergies: "None",
-          current_medications: "None",
-          medical_history: "No significant history",
-          primary_physician: "Dr. Smith",
-        },
-        preferences: {
-          preferred_language: "en",
-          communication_preference: "email",
-          appointment_reminders: true,
-        },
-        emergency_contacts: [
-          {
-            name: "Jane Doe",
-            relationship: "spouse",
-            phone_number: "+234...",
-          },
-        ],
-      };
-    }
-    throw error;
+    console.log(error)
   }
 };
 

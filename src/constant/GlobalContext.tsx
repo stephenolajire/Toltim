@@ -26,6 +26,8 @@ const queryKeys = {
   useCHWProcedures:"useCHWProcedures",
   useHistory:"useHistory",
   useCareGiverBooking:"useCareGiverBooking",
+  usePatientProfile:"usePatientProfile",
+  useBedSide:"useBedSide",
 };
 
 export const GlobalContext = createContext<Context | undefined>(undefined);
@@ -290,4 +292,26 @@ export const useCareGiverBooking = () => {
     staleTime: 20 * 60 * 1000,
   });
 };
+
+
+export const usePatientProfile = () => {
+  return useQuery ({
+    queryKey: [queryKeys.usePatientProfile],
+    queryFn: async () => {
+      const response = await api.get("user/profile")
+      return response.data
+    }
+  })
+}
+
+
+export const useBedSide = () => {
+  return useQuery ({
+    queryKey: [queryKeys.useBedSide],
+    queryFn: async () => {
+      const response = await api.get("inpatient-caregiver/bookings/");
+      return response.data
+    }
+  })
+}
 

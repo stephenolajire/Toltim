@@ -75,7 +75,7 @@ const NurseStat: React.FC = () => {
     <div className="w-full bg-white">
       <div className="w-full">
         {/* Nurse Profile Header */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 my-4 lg:my-6 flex flex-col lg:flex-row lg:items-center justify-between p-6 rounded-xl shadow-lg">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 my-4 lg:my-6 flex flex-col lg:flex-row lg:items-center justify-between p-6 rounded-xl shadow-lg">
           <div className="flex items-center space-x-4 mb-4 lg:mb-0">
             <div className="flex-shrink-0">
               <img
@@ -85,12 +85,12 @@ const NurseStat: React.FC = () => {
               />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-xl lg:text-2xl font-bold text-white truncate">
+              <h2 className="text-xl capitalize lg:text-2xl font-bold text-white truncate">
                 {getFullName()}
                 {isNurse() ? ", RN" : ""}
               </h2>
               <p className="text-green-100 text-sm lg:text-base mt-1">
-                {isNurse() && <>License: RN-12345 • </>}
+                {/* {isNurse() && <>License: RN-12345 • </>} */}
                 Specialty: {getSpecialization()}
               </p>
               <div className="flex items-center mt-2 text-green-100 text-sm">
@@ -127,7 +127,7 @@ const NurseStat: React.FC = () => {
         </div>
 
         {/* Services Section for Nurses */}
-        {/* {nurseProfile?.services &&
+        {nurseProfile?.services &&
           Array.isArray(nurseProfile.services) &&
           nurseProfile.services.length > 0 && (
             <div className="mb-6 bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-xl shadow-lg">
@@ -145,7 +145,7 @@ const NurseStat: React.FC = () => {
                 ))}
               </div>
             </div>
-          )} */}
+          )}
 
         {/* Availability Section for Nurses */}
         {/* {nurseProfile?.availability &&

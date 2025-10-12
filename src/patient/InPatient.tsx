@@ -29,11 +29,17 @@ interface ServiceOption {
 }
 
 interface CHWWorker {
+  id: string;
   user: string;
   full_name: string;
-  profile_picture?: string;
-  distance?: number;
-  rating?: number;
+  profile_picture: string | null;
+  distance: number;
+  available: boolean;
+  biography: string;
+  specialization: string;
+  verified_chw: boolean;
+  years_of_experience: number;
+  location: string;
 }
 
 interface BookingData {
@@ -77,17 +83,7 @@ const InPatientCaregiverService: React.FC = () => {
 
   // Load coordinates from localStorage on mount
   useEffect(() => {
-    const savedLatitude = localStorage.getItem("latitude");
-    const savedLongitude = localStorage.getItem("longitude");
-
-    if (savedLatitude && savedLongitude) {
-      setCoordinates({
-        latitude: parseFloat(savedLatitude),
-        longitude: parseFloat(savedLongitude),
-      });
-    } else {
-      getUserLocation();
-    }
+    getUserLocation()
   }, []);
 
   const getUserLocation = () => {
@@ -136,13 +132,15 @@ const InPatientCaregiverService: React.FC = () => {
       const response = await api.get(
         `inpatient-caregiver/nearby-workers/?role=chw&latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
       );
-      console.log(response.data)
+      // console.log(response.data)
       return response.data;
     },
     enabled: !!coordinates.latitude && !!coordinates.longitude,
     staleTime: 20 * 60 * 1000,
     gcTime: 20 * 60 * 1000,
   });
+
+  console.log(nearByCHWData)
 
   // Load fetched services
   useEffect(() => {
@@ -566,38 +564,97 @@ const InPatientCaregiverService: React.FC = () => {
                             : "border-gray-200 hover:border-green-300"
                         }`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-start space-x-3 flex-1">
                             {chw.profile_picture ? (
                               <img
                                 src={chw.profile_picture}
                                 alt={chw.full_name}
-                                className="w-12 h-12 rounded-full object-cover"
+                                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center">
-                                <span className="text-white font-semibold">
+                              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                                <span className="text-white font-semibold text-sm">
                                   {chw.full_name
                                     .split(" ")
                                     .map((n) => n[0])
-                                    .join("")}
+                                    .join("")
+                                    .toUpperCase()}
                                 </span>
                               </div>
                             )}
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {chw.full_name}
-                              </p>
-                              {chw.distance && (
-                                <p className="text-sm text-gray-500">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <p className="font-medium text-gray-900 truncate">
+                                  {chw.full_name}
+                                </p>
+                                {chw.verified_chw && (
+                                  <div className="flex-shrink-0">
+                                    <CheckCircle
+                                      className="w-4 h-4 text-blue-500"
+                                      // title="Verified CHW"
+                                    />
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Specialization */}
+                              {chw.specialization && (
+                                <p className="text-xs text-gray-600 mb-1 capitalize">
+                                  Specialization: {chw.specialization}
+                                </p>
+                              )}
+
+                              {/* Experience */}
+                              {chw.years_of_experience && (
+                                <p className="text-xs text-gray-600 mb-1">
+                                  {chw.years_of_experience}{" "}
+                                  {chw.years_of_experience === 1
+                                    ? "year"
+                                    : "years"}{" "}
+                                  of experience
+                                </p>
+                              )}
+
+                              {/* Distance */}
+                              {chw.distance !== undefined && (
+                                <p className="text-xs text-gray-500">
                                   {chw.distance.toFixed(1)} km away
                                 </p>
                               )}
                             </div>
                           </div>
+
                           {selectedCHW === chw.user && (
-                            <CheckCircle className="w-6 h-6 text-green-500" />
+                            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 ml-2" />
                           )}
+                        </div>
+
+                        {/* Biography */}
+                        {chw.biography && (
+                          <div className="mt-2 pt-2 border-t border-gray-200">
+                            <p className="text-xs text-gray-600 line-clamp-2">
+                              {chw.biography}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Availability Badge */}
+                        <div className="mt-2 flex items-center gap-2">
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              chw.available
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full mr-1 ${
+                                chw.available ? "bg-green-500" : "bg-gray-500"
+                              }`}
+                            ></span>
+                            {chw.available ? "Available" : "Unavailable"}
+                          </span>
                         </div>
                       </div>
                     ))}

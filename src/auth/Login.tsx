@@ -65,12 +65,14 @@ const Login: React.FC = () => {
             if (response.data.role === "patient") {
               navigate("/patient", { replace: true });
             } else if (
-              response.data.role === "nurse" ||
-              response.data.role === "chw"
+              response.data.role === "nurse"
             ) {
               navigate("/nurse", { replace: true });
               localStorage.setItem("kyc", "pending")
-            } else {
+            } else if (response.data.role === "chw") {
+              navigate("/chw", { replace: true });
+            }
+             else {
               navigate("/admin", { replace: true });
             }
           }
