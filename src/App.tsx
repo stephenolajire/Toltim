@@ -78,6 +78,7 @@ import CHWLayout from "./chw/CHWLayout";
 import BedsideDashboard from "./chw/pages/BedSideBooking";
 import OverviewDashboard from "./chw/pages/Overview";
 import NurseOverviewDashboard from "./nurse/pages/Overview";
+import WalletComponent from "./patient/Wallet";
 
 const queryClient = new QueryClient();
 
@@ -193,6 +194,7 @@ const App: React.FC = () => {
 
               {/* Patient Profile */}
               <Route path="profile" element={<PatientProfile />} />
+              <Route path="wallet" element={<WalletComponent />} />
               <Route path="profile/edit" element={<EditUserProfile />} />
 
               {/* Patient Services */}
@@ -216,7 +218,7 @@ const App: React.FC = () => {
             >
               <Route index element={<NurseOverviewDashboard />} />
               <Route path="active-patients" element={<ActivePatients />} />
-              <Route path="procedure" element={<NurseDashboard/>} />
+              <Route path="procedure" element={<NurseDashboard />} />
               <Route path="wallet" element={<WalletEarnings />} />
               <Route path="id-card" element={<IDCard />} />
               <Route path="kyc-status" element={<KycStatus />} />

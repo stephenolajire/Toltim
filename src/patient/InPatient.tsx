@@ -53,6 +53,7 @@ interface BookingData {
   services: ServiceOption[];
   specialRequirements: string;
   chw: string;
+  start_date:string;
 }
 
 const InPatientCaregiverService: React.FC = () => {
@@ -79,6 +80,7 @@ const InPatientCaregiverService: React.FC = () => {
     services: [],
     specialRequirements: "",
     chw: "",
+    start_date: "",
   });
 
   // Load coordinates from localStorage on mount
@@ -225,7 +227,8 @@ const InPatientCaregiverService: React.FC = () => {
       bookingData.expectedDischarge &&
       bookingData.numberOfDays &&
       bookingData.chw &&
-      hasSelectedService
+      hasSelectedService &&
+      bookingData.start_date
     );
   };
 
@@ -256,20 +259,30 @@ const InPatientCaregiverService: React.FC = () => {
         special_requirements: bookingData.specialRequirements,
         items: items,
         chw: bookingData.chw,
+        start_date: bookingData.start_date,
       };
 
       const response = await api.post("inpatient-caregiver/bookings/", payload);
-
       console.log("Booking created successfully:", response.data);
       toast.success("Booking request submitted successfully!");
     } catch (error: any) {
       console.error("Error creating booking:", error);
 
       if (error.response?.data) {
-        console.error("Server error:", error.response.data);
-        toast.error(
-          `Error: ${error.response.data.message || "Failed to submit booking"}`
-        );
+        // Check specifically for wallet balance error
+        if (error.response.data.errors?.wallet_balance) {
+          toast.error(error.response.data.errors.wallet_balance, {
+            position: "top-center",
+            autoClose: 5000,
+          });
+        } else {
+          // Handle other validation errors
+          const errorMessage =
+            error.response.data.errors?.[0] ||
+            error.response.data.message ||
+            "An error occurred while processing your request";
+          toast.error(errorMessage);
+        }
       } else {
         toast.error(
           "Network error: Please check your connection and try again"
@@ -455,20 +468,35 @@ const InPatientCaregiverService: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Number of Days <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={bookingData.numberOfDays}
-                    onChange={(e) =>
-                      handleInputChange("numberOfDays", e.target.value)
-                    }
-                    className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
-                    placeholder="How many days do you need care?"
-                    min="1"
-                  />
+                <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Number of Days <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={bookingData.numberOfDays}
+                      onChange={(e) =>
+                        handleInputChange("numberOfDays", e.target.value)
+                      }
+                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      placeholder="How many days do you need care?"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Start Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={bookingData.start_date}
+                      onChange={(e) =>
+                        handleInputChange("start_date", e.target.value)
+                      }
+                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                    />
+                  </div>
                 </div>
               </div>
 

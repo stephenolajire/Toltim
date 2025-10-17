@@ -8,6 +8,7 @@ import {
   LogOut,
   Clock,
   Bed,
+  Wallet2,
 } from "lucide-react";
 import { useState } from "react";
 import { FaServicestack } from "react-icons/fa";
@@ -34,7 +35,7 @@ const Sidebar = ({ sidebarOpen, closeSidebar }: SidebarProps) => {
     { name: "History", href: "/patient/history", icon: Clock },
     { name: "Messages", href: "/patient/messages", icon: MessageCircle },
     { name: "Profile", href: "/patient/profile", icon: User },
-    // { name: "Settings", href: "/settings", icon: Settings },
+    { name: "Wallet", href: "/patient/wallet", icon: Wallet2 },
     // { name: "My Location", href: "/location", icon: MapPin },
   ];
 

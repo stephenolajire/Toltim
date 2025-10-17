@@ -433,7 +433,7 @@ const BedsideDashboard: React.FC = () => {
                     {booking.status === "pending" ? (
                       <>
                         <button
-                          onClick={() => handleAcceptRequest(booking.id)}
+                          onClick={() => handleAcceptRequest(booking.booking_code)}
                           disabled={acceptingRequests.has(booking.id)}
                           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
                         >
@@ -447,7 +447,7 @@ const BedsideDashboard: React.FC = () => {
                           )}
                         </button>
                         <button
-                          onClick={() => handleRejectRequest(booking.id)}
+                          onClick={() => handleRejectRequest(booking.booking_code)}
                           disabled={rejectingRequests.has(booking.id)}
                           className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
                         >
