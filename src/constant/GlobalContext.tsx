@@ -28,6 +28,9 @@ const queryKeys = {
   useCareGiverBooking:"useCareGiverBooking",
   usePatientProfile:"usePatientProfile",
   useBedSide:"useBedSide",
+  useUser:"useUser",
+  useWallet:"useWallet",
+  useWalletTransactions:"useWalletTransactions",
 };
 
 export const GlobalContext = createContext<Context | undefined>(undefined);
@@ -304,7 +307,6 @@ export const usePatientProfile = () => {
   })
 }
 
-
 export const useBedSide = () => {
   return useQuery ({
     queryKey: [queryKeys.useBedSide],
@@ -314,4 +316,35 @@ export const useBedSide = () => {
     }
   })
 }
+
+export const useUser = (role: string) => {
+  return useQuery({
+    queryKey: [queryKeys.useUser],
+    queryFn: async () => {
+      const response = await api.get(`/user/role-filter/?role=${role}`);
+      return response.data;
+    },
+  });
+};
+
+export const useWallet = () => {
+  return useQuery({
+    queryKey: [queryKeys.useWallet],
+    queryFn: async () => {
+      const response = await api.get("wallet/balance");
+      return response.data;
+    },
+  });
+};
+
+export const useWalletTransactions = () => {
+  return useQuery({
+    queryKey: [queryKeys.useWalletTransactions],
+    queryFn: async () => {
+      const response = await api.get("wallet/transactions");
+      return response.data;
+    },
+  });
+};
+
 

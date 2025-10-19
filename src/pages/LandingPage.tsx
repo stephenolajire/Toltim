@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle, Users, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const LandingPage: React.FC = () => {
   return (
@@ -15,9 +16,11 @@ const LandingPage: React.FC = () => {
             professional healthcare services delivered to your home with our
             smart assessment and matching system.
           </p>
-          <button className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200">
-            Start Your Health Journey
-          </button>
+          <Link to="/register">
+            <button className="bg-green-500 hover:bg-green-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors duration-200">
+              Start Your Health Journey
+            </button>
+          </Link>
         </div>
       </div>
 

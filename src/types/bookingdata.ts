@@ -49,7 +49,7 @@ export interface BookingData {
   start_date: string;
   status: string;
   time_of_day: string;
-  total_amount: string;
+  total_amount_display: string;
   updated_at: string;
   user: string;
 }

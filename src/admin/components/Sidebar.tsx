@@ -33,7 +33,7 @@ const adminLinks = [
   },
   {
     name: "payments",
-    href: "/admin/payments",
+    href: "/admin/payment",
     icon: <Wallet size={16} />,
   },
   {

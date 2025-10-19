@@ -256,7 +256,7 @@ const ActivePatients: React.FC = () => {
                     Total Amount
                   </p>
                   <p className="text-sm text-gray-600">
-                    ₦{parseFloat(selectedBooking.total_amount).toLocaleString()}
+                    ₦{parseFloat(selectedBooking.total_amount_display).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -476,7 +476,7 @@ const ActivePatients: React.FC = () => {
               </div>
               <div className="text-right">
                 <div className="text-lg font-semibold text-green-600">
-                  {formatCurrency(booking.total_amount)}
+                  {formatCurrency(booking.total_amount_display)}
                 </div>
                 <div className="text-sm text-gray-500">total amount</div>
               </div>

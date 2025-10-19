@@ -5,7 +5,7 @@ import { useBedSide } from "../../constant/GlobalContext";
 import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
 import BedsideBookingDetailsModal from "../../components/BedSideModal";
-import { Calendar, MapPin, Clock, DollarSign } from "lucide-react";
+import { Calendar, MapPin, Clock, DollarSign, Eye } from "lucide-react";
 import { type BedsideBooking } from "../../types/bookingdata";
 
 const BedSideBooking: React.FC = () => {
@@ -40,6 +40,11 @@ const BedSideBooking: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleAssign = (booking: BedsideBooking) => {
+    console.log("Assigning CHW to booking:", booking.id);
+    // Add your assignment logic here
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString("en-US", {
@@ -67,6 +72,8 @@ const BedSideBooking: React.FC = () => {
         return "bg-green-100 text-green-800 border-green-200";
       case "completed":
         return "bg-gray-100 text-gray-800 border-gray-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -105,7 +112,7 @@ const BedSideBooking: React.FC = () => {
         </p>
       </div>
 
-      <div className="border border-gray-100 shadow-sm p-2 mb-10 rounded-lg">
+      <div className="border border-gray-100 shadow-sm p-2 mb-10 rounded-lg bg-white">
         <Filter
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -113,139 +120,151 @@ const BedSideBooking: React.FC = () => {
           onStatusChange={setStatusFilter}
         />
 
-        <div className="py-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredAppointments.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-gray-500">
-              No bookings found matching your criteria.
+        {/* Table Container with Horizontal Scroll */}
+        <div className="py-3 overflow-x-auto">
+          <div className="min-w-full inline-block align-middle">
+            <div className="overflow-hidden">
+              {filteredAppointments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  No bookings found matching your criteria.
+                </div>
+              ) : (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Patient Info
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Hospital
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Location
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Admission Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Discharge Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Duration
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Total Cost
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredAppointments.map((booking) => (
+                      <tr
+                        key={booking.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="font-semibold text-gray-900 text-sm">
+                              {booking.patient_name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              CHW: {booking.chw_info.full_name}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-sm text-gray-900 max-w-xs">
+                            {booking.hospital_name}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="text-sm text-gray-600 max-w-xs">
+                            <div className="flex items-start gap-1">
+                              <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                              <span>{booking.hospital_address}</span>
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              Ward: {booking.room_ward}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
+                            <span>{formatDate(booking.admission_date)}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
+                            <span>
+                              {formatDate(booking.expected_discharge)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Clock className="w-3 h-3 flex-shrink-0" />
+                            <span>
+                              {booking.number_of_days} day
+                              {booking.number_of_days !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1 text-sm font-semibold text-green-600">
+                            <DollarSign className="w-4 h-4" />
+                            <span>{formatPrice(booking.total_cost)}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(
+                              booking.status
+                            )}`}
+                          >
+                            {booking.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => handleViewDetails(booking)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors"
+                            >
+                              <Eye className="w-3 h-3" />
+                              View
+                            </button>
+                            {(booking.status as string) === "rejected" && (
+                              <button
+                                onClick={() => handleAssign(booking)}
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                              >
+                                Assign
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-          ) : (
-            filteredAppointments.map((booking) => (
-              <div
-                key={booking.id}
-                className="bg-white rounded-xl shadow-sm hover:shadow-md border border-gray-200 transition-all duration-200 overflow-hidden"
-              >
-                {/* Card Header */}
-                <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 border-b border-blue-200">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 text-lg mb-1">
-                        {booking.patient_name}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {booking.hospital_name}
-                      </p>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                        booking.status
-                      )}`}
-                    >
-                      {booking.status.toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Card Body */}
-                <div className="p-4 space-y-3">
-                  {/* Location */}
-                  <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-gray-600">
-                        {booking.hospital_address}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        Ward: {booking.room_ward}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Dates */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-600">
-                      {formatDate(booking.admission_date)} -{" "}
-                      {formatDate(booking.expected_discharge)}
-                    </span>
-                  </div>
-
-                  {/* Duration */}
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                    <span className="text-gray-600">
-                      {booking.number_of_days} day
-                      {booking.number_of_days !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-
-                  {/* Services */}
-                  {/* <div className="border-t border-gray-200 pt-3">
-                    <p className="text-xs text-gray-500 mb-2">
-                      Services ({booking.items.length})
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {booking.items.slice(0, 3).map((item, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md capitalize"
-                        >
-                          {item.service}
-                        </span>
-                      ))}
-                      {booking.items.length > 3 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md">
-                          +{booking.items.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div> */}
-
-                  {/* Assigned CHW */}
-                  {/* <div className="border-t border-gray-200 pt-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        {booking.chw_info.profile_picture ? (
-                          <img
-                            src={booking.chw_info.profile_picture}
-                            alt={booking.chw_info.full_name}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="w-4 h-4 text-blue-600" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500">Assigned CHW</p>
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {booking.chw_info.full_name}
-                        </p>
-                      </div>
-                    </div>
-                  </div> */}
-                </div>
-
-                {/* Card Footer */}
-                <div className="bg-gray-50 border-t border-gray-200 p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <DollarSign className="w-4 h-4" />
-                      <span className="text-sm">Total Cost</span>
-                    </div>
-                    <span className="text-lg font-bold text-green-600">
-                      {formatPrice(booking.total_cost)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => handleViewDetails(booking)}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-medium text-sm transition-colors"
-                  >
-                    View Full Details
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+          </div>
         </div>
+
+        {/* Mobile Hint */}
+        {filteredAppointments.length > 0 && (
+          <div className="mt-2 text-xs text-gray-500 text-center sm:hidden">
+            Scroll horizontally to see all columns →
+          </div>
+        )}
       </div>
 
       {/* Details Modal */}

@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Bell, Home, Menu, X, AlertCircle, Clock } from "lucide-react";
-import NurseStat from "./components/NurseStat";
+// import NurseStat from "./components/NurseStat";
+import { useWallet } from "../constant/GlobalContext";
+import Loading from "../components/common/Loading";
+import Error from "../components/Error";
+import WalletBalance from "../components/Wallet";
 
 const CHWLayout: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -14,6 +18,8 @@ const CHWLayout: React.FC = () => {
   };
 
   const userRole = localStorage.getItem("userType")
+
+  const {data:wallet, isLoading, error} = useWallet() 
 
   const handleKycClick = () => {
     if (kyc === "pending") {
@@ -27,6 +33,20 @@ const CHWLayout: React.FC = () => {
       navigate("/nurse/kyc-status");
     }
   };
+
+  if(isLoading) {
+    return <Loading/>
+  }
+
+  if (error) {
+    return <Error/>
+  }
+
+  if (!wallet) {
+    return <Loading/>
+  }
+
+  console.log(wallet)
 
   const renderKycNotification = () => {
     if (kyc === "pending") {
@@ -106,7 +126,7 @@ const CHWLayout: React.FC = () => {
             <div className="mt-4 mb-4">{renderKycNotification()}</div>
           )}
 
-          <NurseStat />
+          <WalletBalance/>
           <Outlet />
         </div>
       </div>

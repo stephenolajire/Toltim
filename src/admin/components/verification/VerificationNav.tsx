@@ -1,4 +1,4 @@
-import { Calendar, Heart, Stethoscope, User2 } from "lucide-react";
+import { Heart, Stethoscope, User2 } from "lucide-react";
 import React from "react";
 import { NavLink } from "react-router-dom";
 
@@ -22,12 +22,12 @@ const VerificationNavigation: React.FC = () => {
       name: "Doctor",
       icon: <Stethoscope size={18} />,
     },
-    {
-      id: 4,
-      href: "/admin/verifications/history",
-      name: "History",
-      icon: <Calendar size={18} />,
-    },
+    // {
+    //   id: 4,
+    //   href: "/admin/verifications/history",
+    //   name: "History",
+    //   icon: <Calendar size={18} />,
+    // },
   ];
   return (
     <div className="Py-10 flex md:space-x-5 bg-gray-100 items-center justify-center p-1 overflow-x-auto">

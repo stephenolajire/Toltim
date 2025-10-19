@@ -12,6 +12,8 @@ import api from "../../constant/api";
 import { useBedSide } from "../../constant/GlobalContext";
 import BedsideBookingModal from "../components/BedSideModal";
 import { toast } from "react-toastify";
+import VerifySessionModal from "../../components/SessionVerification";
+
 
 
 export interface CHWInfo {
@@ -47,6 +49,7 @@ export interface BedsideBooking {
   status: "pending" | "assigned" | "active" | "completed";
   created_at: string;
   updated_at: string;
+  total_cost_display: string;
 }
 
 const BedsideDashboard: React.FC = () => {
@@ -59,6 +62,8 @@ const BedsideDashboard: React.FC = () => {
   const [rejectingRequests, setRejectingRequests] = React.useState<Set<string>>(
     new Set()
   );
+
+  const [recordingSessions, setRecordingSessions] = React.useState<boolean>(false);
 
   const queryClient = useQueryClient();
 
@@ -96,11 +101,16 @@ const BedsideDashboard: React.FC = () => {
     }
   };
 
-  const formatPrice = (price: string | number) => {
-    const numPrice = typeof price === "string" ? parseFloat(price) : price;
-    return `₦${numPrice.toLocaleString()}`;
-  };
+  const formatPrice = (total_cost_display: string | number | undefined | null): string => {
+  if (!total_cost_display) return '₦0';
 
+  try {
+    const numPrice = typeof total_cost_display === "string" ? parseFloat(total_cost_display) : total_cost_display;
+    return `₦${numPrice.toLocaleString()}`;
+  } catch {
+    return '₦0';
+  }
+};
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString("en-US", {
@@ -130,25 +140,38 @@ const BedsideDashboard: React.FC = () => {
     }
   };
 
-//   const calculateDuration = (admissionDate: string, dischargeDate: string) => {
-//     try {
-//       const admission = new Date(admissionDate);
-//       const discharge = new Date(dischargeDate);
-//       const diffTime = Math.abs(discharge.getTime() - admission.getTime());
-//       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-//       return diffDays;
-//     } catch {
-//       return 0;
-//     }
-//   };
 
   const handleViewDetails = (booking: BedsideBooking) => {
     setSelectedBooking(booking);
     setIsModalOpen(true);
   };
 
+  const handleRecordSession = async (bookingId: string, booking: BedsideBooking) => {
+    setRecordingSessions(!recordingSessions);
+    setSelectedBooking(booking);
+
+    // Format today's date as YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0];
+
+    try {
+      const response = await api.post(
+        `inpatient-caregiver/generate-code/${bookingId}/`,
+        {
+          date: today,
+        }
+      );
+      if (response.data) {
+        toast.success("Session code generated successfully!");
+      }
+      console.log(response.data);
+    } catch (error) {
+      console.error("Failed to generate session code:", error);
+    }
+  };
+
   const handleAcceptRequest = async (bookingId: string) => {
     setAcceptingRequests((prev) => new Set(prev).add(bookingId));
+    console.log(bookingId);
 
     try {
       await api.post(`inpatient-caregiver/bookings/${bookingId}/set_status/`, {
@@ -272,7 +295,10 @@ const BedsideDashboard: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">
           Bedside Care Requests
         </h1>
-        <div onClick={()=> window.history.back()} className="text-sm text-gray-500 border-gray-500 border-1 rounded-2xl px-10 py-2">
+        <div
+          onClick={() => window.history.back()}
+          className="text-sm text-gray-500 border-gray-500 border-1 rounded-2xl px-10 py-2"
+        >
           Back
         </div>
       </div>
@@ -293,7 +319,7 @@ const BedsideDashboard: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {bookings.map((booking:any) => (
+            {bookings.map((booking: any) => (
               <div
                 key={booking.id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-lg border border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden"
@@ -422,7 +448,7 @@ const BedsideDashboard: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-right">
                       <div className="text-lg font-bold text-green-600">
-                        {formatPrice(booking.total_cost)}
+                        {formatPrice(booking.total_cost_display)}
                       </div>
                       <div className="text-xs text-gray-500">Total cost</div>
                     </div>
@@ -433,7 +459,7 @@ const BedsideDashboard: React.FC = () => {
                     {booking.status === "pending" ? (
                       <>
                         <button
-                          onClick={() => handleAcceptRequest(booking.booking_code)}
+                          onClick={() => handleAcceptRequest(booking.id)}
                           disabled={acceptingRequests.has(booking.id)}
                           className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
                         >
@@ -447,7 +473,9 @@ const BedsideDashboard: React.FC = () => {
                           )}
                         </button>
                         <button
-                          onClick={() => handleRejectRequest(booking.booking_code)}
+                          onClick={() =>
+                            handleRejectRequest(booking.booking_code)
+                          }
                           disabled={rejectingRequests.has(booking.id)}
                           className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
                         >
@@ -461,21 +489,15 @@ const BedsideDashboard: React.FC = () => {
                           )}
                         </button>
                       </>
-                    ) : (
+                    ):(
+                      booking.status === "approved" && (
                       <button
-                        disabled
-                        className={`w-full px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2 ${
-                          booking.status === "assigned" ||
-                          booking.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                        className="w-full px-3 text-blue-600 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                        onClick={() => handleRecordSession(booking.id, booking)}
                       >
-                        <CheckCircle className="w-4 h-4" />
-                        {booking.status === "assigned" && "Request Accepted"}
-                        {booking.status === "active" && "Service Active"}
-                        {booking.status === "completed" && "Service Completed"}
+                        Verify Session
                       </button>
+                    )
                     )}
 
                     <button
@@ -498,6 +520,10 @@ const BedsideDashboard: React.FC = () => {
           onClose={() => setIsModalOpen(false)}
           booking={selectedBooking}
         />
+      )}
+
+      {recordingSessions && selectedBooking?.id && (
+        <VerifySessionModal booking_id={selectedBooking.id} close={setRecordingSessions}/>
       )}
     </div>
   );

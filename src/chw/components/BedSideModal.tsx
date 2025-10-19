@@ -47,6 +47,7 @@ export interface BedsideBooking {
   status: "pending" | "assigned" | "active" | "completed";
   created_at: string;
   updated_at: string;
+  total_cost_display: string;
 }
 
 interface BedsideBookingModalProps {
@@ -355,7 +356,7 @@ const BedsideBookingModal: React.FC<BedsideBookingModalProps> = ({
                   <div>
                     <p className="text-sm text-green-700 mb-1">Total Cost</p>
                     <p className="text-3xl font-bold text-green-900">
-                      {formatPrice(booking.total_cost)}
+                      {formatPrice(booking.total_cost_display)}
                     </p>
                     <p className="text-xs text-green-600 mt-1">
                       For {booking.number_of_days} day

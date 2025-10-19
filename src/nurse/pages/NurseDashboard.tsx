@@ -45,7 +45,7 @@ const NurseDashboard: React.FC = () => {
     queryKey: ["nurse-bookings", serviceType],
     queryFn: async () => {
       if (serviceType === "procedure") {
-        const response = await api.get("services/nurse-procedure-bookings/");
+        const response = await api.get("services/nursing-procedures");
         return response.data;
       } else {
         navigate("/nurse/caregiver")

@@ -1,19 +1,19 @@
 // Update the import statement to separate type imports
 import type {
   CaregiverBookingData,
-  Appointment,
   NearbyWorker,
 } from "../../types/bookingdata";
+import { type CaregiverBookingInfo } from "../../types/carebooking";
 import React from "react";
 import BookingNavigation from "../components/booking/BookingNavigation";
 import Filter from "../components/booking/Filter";
-import AppointmentCard from "../components/booking/AppointmentCard";
 import { useCareGiverBooking } from "../../constant/GlobalContext";
 import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
 import api from "../../constant/api";
 import { X, MapPin, User, CheckCircle } from "lucide-react";
 import { toast } from "react-toastify";
+import CaregiverBookingTable from "../components/booking/CaregiverBookingTable";
 
 // Rest of your component code stays the same
 
@@ -24,7 +24,7 @@ const CaregiverBooking: React.FC = () => {
     error,
     refetch,
   } = useCareGiverBooking();
-  // console.log(CareBookings)
+  console.log(CareBookings)
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
   const [actionLoading, setActionLoading] = React.useState<string | null>(null);
@@ -57,53 +57,19 @@ const CaregiverBooking: React.FC = () => {
     }
   };
 
-  // Transform backend data to match AppointmentCard interface
-  const transformedAppointments: Appointment[] = React.useMemo(() => {
+  const filteredAppointments = React.useMemo(() => {
     if (!CareBookings?.results) return [];
 
-    return CareBookings.results.map((booking: CaregiverBookingData) => {
-      let assignedNurseName: string | undefined;
-      if (booking.assigned_worker) {
-        if (typeof booking.assigned_worker === "string") {
-          assignedNurseName = booking.assigned_worker;
-        } else if (typeof booking.assigned_worker === "object") {
-          assignedNurseName = `${booking.assigned_worker.first_name} ${booking.assigned_worker.last_name}`;
-        }
-      }
-
-      return {
-        id: booking.id,
-        patientId: booking.user,
-        patientName: booking.patient_name,
-        appointmentType: booking.caregiver_type,
-        time: new Date(booking.start_date).toLocaleString(),
-        location: `${booking.care_location} - ${booking.care_address}`,
-        status: booking.status,
-        assignedNurse: assignedNurseName,
-      };
-    });
-  }, [CareBookings]);
-
-  const filteredAppointments = React.useMemo(() => {
-    return transformedAppointments.filter((appointment) => {
+    return CareBookings.results.filter((booking: CaregiverBookingInfo) => {
       const matchesSearch =
-        appointment.patientName
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        appointment.patientId
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (appointment.assignedNurse &&
-          appointment.assignedNurse
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()));
-
-      const matchesStatus =
-        !statusFilter || appointment.status === statusFilter;
+        booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.booking_code.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = !statusFilter || booking.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [transformedAppointments, searchTerm, statusFilter]);
+  }, [CareBookings, searchTerm, statusFilter]);
 
   const fetchNearbyWorkers = async (booking: CaregiverBookingData) => {
     setLoadingWorkers(true);
@@ -266,23 +232,20 @@ const CaregiverBooking: React.FC = () => {
           onStatusChange={setStatusFilter}
         />
 
-        <div className="py-3 space-y-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 w-full">
+        <div className="w-full">
           {filteredAppointments.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No appointments found matching your criteria.
             </div>
           ) : (
-            filteredAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                onAssignNurse={handleAssignNurse}
-                onViewDetails={handleViewDetails}
-                onApprove={handleApprove}
-                onCancel={handleCancel}
-                isLoading={actionLoading === appointment.id}
-              />
-            ))
+            <CaregiverBookingTable
+              bookings={filteredAppointments}
+              onAssignWorker={handleAssignNurse}
+              onViewDetails={handleViewDetails}
+              onApprove={handleApprove}
+              onCancel={handleCancel}
+              // actionLoading={actionLoading}
+            />
           )}
         </div>
       </div>

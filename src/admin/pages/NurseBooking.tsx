@@ -2,7 +2,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import BookingNavigation from "../components/booking/BookingNavigation";
 import Filter from "../components/booking/Filter";
-import AppointmentCard from "../components/booking/AppointmentCard";
+import AppointmentTable from "../components/booking/AppointmentTable";
 import BookingDetailsModal from "../components/booking/BookingDetailsModal";
 import api from "../../constant/api";
 
@@ -52,8 +52,8 @@ interface Booking {
   is_for_self: boolean;
   status: "pending" | "assigned" | "active" | "completed";
   total_amount: string;
-  procedure_item: ProcedureItem;
-  patient_detail: PatientDetail;
+  procedure_item?: ProcedureItem; // Made optional
+  patient_detail?: PatientDetail; // Made optional
   service_address: string;
   service_location: string;
   created_at: string;
@@ -88,7 +88,15 @@ const NurseBooking: React.FC = () => {
 
   const filteredAppointments = React.useMemo(() => {
     return bookings.filter((appointment) => {
-      const patientName = `${appointment.patient_detail?.first_name} ${appointment.patient_detail?.last_name}`;
+      // Add null checks for nested properties
+      if (
+        !appointment.patient_detail ||
+        !appointment.procedure_item?.procedure
+      ) {
+        return false;
+      }
+
+      const patientName = `${appointment.patient_detail.first_name} ${appointment.patient_detail.last_name}`;
 
       const matchesSearch =
         patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,26 +174,37 @@ const NurseBooking: React.FC = () => {
               No appointments found matching your criteria.
             </div>
           ) : (
-            filteredAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={{
-                  id: appointment.booking_id,
-                  patientId: appointment.booking_id,
-                  patientName: `${appointment.patient_detail?.first_name} ${appointment.patient_detail?.last_name}`,
-                  appointmentType: appointment.procedure_item.procedure.title,
-                  time: new Date(appointment.time_of_day).toLocaleTimeString(
-                    [],
-                    { hour: "2-digit", minute: "2-digit" }
-                  ),
-                  location: appointment.service_location,
-                  status: appointment.status,
-                  assignedNurse: appointment.nurse_full_name,
-                }}
-                onAssignNurse={() => handleAssignNurse(appointment.id)}
-                onViewDetails={() => handleViewDetails(appointment.id)}
-              />
-            ))
+            filteredAppointments.map((appointment) => {
+              if (
+                !appointment.procedure_item?.procedure ||
+                !appointment.patient_detail
+              ) {
+                return null;
+              }
+
+              const appointmentProps = {
+                id: appointment.booking_id,
+                patientId: appointment.booking_id,
+                patientName: `${appointment.patient_detail.first_name} ${appointment.patient_detail.last_name}`,
+                appointmentType: appointment.procedure_item.procedure.title,
+                time: new Date(appointment.time_of_day).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+                location: appointment.service_location,
+                status: appointment.status,
+                assignedNurse: appointment.nurse_full_name,
+              };
+
+              return (
+                <AppointmentTable
+                  key={appointment.id}
+                  appointments={[appointmentProps]}
+                  onAssignNurse={(id) => handleAssignNurse(Number(id))}
+                  onViewDetails={(id) => handleViewDetails(Number(id))}
+                />
+              );
+            })
           )}
         </div>
       </div>

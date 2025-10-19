@@ -31,21 +31,20 @@ import AdminVerificationLayout from "./admin/components/verification/AdminVerifi
 import PendingNurseVerifications from "./admin/pages/PendingNurseVerification";
 import PendingCHWVerifications from "./admin/pages/CHWVerification";
 import DoctorPendingVerifications from "./admin/pages/DoctorsVerification";
-import VerificationHistory from "./admin/pages/VerificationHistory";
+// import VerificationHistory from "./admin/pages/VerificationHistory";
 import CareGiverBooking from "./admin/pages/CareGiverBooking";
 import BedSideBooking from "./admin/pages/BedSideBooking";
-import AdminPaymentLayout from "./admin/components/payment/AdminPaymentLayout";
-import PatientFunding from "./admin/pages/PatientFunding";
-import WalletTransactions from "./admin/pages/WalletTransaction";
-import WithdrawalRequests from "./admin/pages/WithdrawalRequest";
-import SystemCommission from "./admin/pages/SystemCommission";
+// import AdminPaymentLayout from "./admin/components/payment/AdminPaymentLayout";
+// import PatientFunding from "./admin/pages/PatientFunding";
+// import WalletTransactions from "./admin/pages/WalletTransaction";
+// import WithdrawalRequests from "./admin/pages/WithdrawalRequest";
+// import SystemCommission from "./admin/pages/SystemCommission";
 
 // Nurse Dashboard
 import NurseLayout from "./nurse/NurseLayout";
 import NurseKycVerification from "./nurse/pages/KYCVerification";
 import NurseDashboard from "./nurse/pages/NurseDashboard";
 import ActivePatients from "./nurse/pages/ActivePatient";
-import WalletEarnings from "./nurse/pages/Wallet";
 import IDCard from "./nurse/pages/IDCard";
 import KycStatus from "./nurse/pages/KYCStatus";
 
@@ -131,6 +130,7 @@ const App: React.FC = () => {
               }
             >
               <Route index element={<Overview />} />
+              <Route path="payment" element={<WalletComponent />} />
 
               {/* Users Management */}
               <Route path="users" element={<AdminUserLayout />}>
@@ -155,16 +155,16 @@ const App: React.FC = () => {
                 <Route index element={<PendingNurseVerifications />} />
                 <Route path="chw" element={<PendingCHWVerifications />} />
                 <Route path="doctor" element={<DoctorPendingVerifications />} />
-                <Route path="history" element={<VerificationHistory />} />
+                {/* <Route path="history" element={<VerificationHistory />} /> */}
               </Route>
 
               {/* Payments Management */}
-              <Route path="payments" element={<AdminPaymentLayout />}>
-                <Route index element={<PatientFunding />} />
+              {/* <Route path="payments" element={<AdminPaymentLayout />}>
+                <Route index element={<WalletComponent />} />
                 <Route path="wallet" element={<WalletTransactions />} />
                 <Route path="withdrawal" element={<WithdrawalRequests />} />
                 <Route path="commission" element={<SystemCommission />} />
-              </Route>
+              </Route> */}
             </Route>
 
             {/* PATIENT DASHBOARD - Protected Routes */}
@@ -219,7 +219,7 @@ const App: React.FC = () => {
               <Route index element={<NurseOverviewDashboard />} />
               <Route path="active-patients" element={<ActivePatients />} />
               <Route path="procedure" element={<NurseDashboard />} />
-              <Route path="wallet" element={<WalletEarnings />} />
+              <Route path="wallet" element={<WalletComponent />} />
               <Route path="id-card" element={<IDCard />} />
               <Route path="kyc-status" element={<KycStatus />} />
               <Route path="caregiver" element={<CareGiving />} />
@@ -237,7 +237,7 @@ const App: React.FC = () => {
             >
               <Route index element={<OverviewDashboard />} />
               <Route path="caregiver" element={<CaregiverDashboard />} />
-              <Route path="wallet" element={<WalletEarnings />} />
+              <Route path="wallet" element={<WalletComponent />} />
               <Route path="id-card" element={<IDCard />} />
               <Route path="kyc-status" element={<KycStatus />} />
               <Route path="bedside" element={<BedsideDashboard />} />

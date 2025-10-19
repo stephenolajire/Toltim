@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Bell, Home, Menu, X, AlertCircle, Clock } from "lucide-react";
-import NurseStat from "./components/NurseStat";
+import WalletBalance from "../components/Wallet";
 
 const NurseLayout: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -106,7 +106,7 @@ const NurseLayout: React.FC = () => {
             <div className="mt-4 mb-4">{renderKycNotification()}</div>
           )}
 
-          <NurseStat />
+          <WalletBalance/>
           <Outlet />
         </div>
       </div>

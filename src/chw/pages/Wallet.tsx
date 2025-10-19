@@ -1,5 +1,8 @@
 import React from "react";
-import { Wallet, Clock, TrendingUp, TrendingDown } from "lucide-react";
+import {TrendingUp, TrendingDown } from "lucide-react";
+import { useWalletTransactions } from "../../constant/GlobalContext";
+import Loading from "../../components/common/Loading";
+import Error from "../../components/Error";
 
 interface Transaction {
   id: string;
@@ -11,8 +14,8 @@ interface Transaction {
 }
 
 const WalletEarnings: React.FC = () => {
-  const walletBalance = 125000;
-  const pendingEarnings = 34000;
+
+  const {data:walletTransactions, isLoading, error} = useWalletTransactions()
 
   const transactions: Transaction[] = [
     {
@@ -40,71 +43,34 @@ const WalletEarnings: React.FC = () => {
     },
   ];
 
+
+
   const formatCurrency = (amount: number): string => {
     return `₦${Math.abs(amount).toLocaleString()}`;
   };
 
-  const handleRequestWithdrawal = () => {
-    console.log("Request withdrawal clicked");
-    // Handle withdrawal request
-  };
+  // const handleRequestWithdrawal = () => {
+  //   console.log("Request withdrawal clicked");
+  //   // Handle withdrawal request
+  // };
+
+  if(isLoading) {
+    return <Loading/>
+  }
+
+  if (error) {
+    return <Error/>
+  }
+
+  if (!walletTransactions) {
+    return <Loading/>
+  }
+
+  console.log(walletTransactions)
 
   return (
     <div className="bg-white rounded-lg pb-10">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
-        Wallet & Earnings
-      </h2>
-
-      {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Wallet Balance Card */}
-        <div className="border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-green-100 rounded flex items-center justify-center">
-              <Wallet className="w-4 h-4 text-green-600" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900">
-              Wallet Balance
-            </h3>
-          </div>
-
-          <div className="mb-4">
-            <span className="text-3xl font-bold text-green-600">
-              {formatCurrency(walletBalance)}
-            </span>
-          </div>
-
-          <button
-            onClick={handleRequestWithdrawal}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-md transition-colors"
-          >
-            Request Withdrawal
-          </button>
-        </div>
-
-        {/* Pending Earnings Card */}
-        <div className="border border-gray-200 rounded-lg p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-6 h-6 bg-orange-100 rounded flex items-center justify-center">
-              <Clock className="w-4 h-4 text-orange-600" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900">
-              Pending Earnings
-            </h3>
-          </div>
-
-          <div className="mb-4">
-            <span className="text-3xl font-bold text-orange-600">
-              {formatCurrency(pendingEarnings)}
-            </span>
-          </div>
-
-          <p className="text-sm text-gray-600">
-            Earnings from ongoing treatments (will be credited after completion)
-          </p>
-        </div>
-      </div>
-
+      
       {/* Recent Transactions */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">

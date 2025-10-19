@@ -1,7 +1,7 @@
 import React from 'react'
 import PaymentStatsCards from './PaymentStatCard'
 import { Outlet } from 'react-router-dom'
-import PaymentNavigation from './PaymentNav'
+// import PaymentNavigation from './PaymentNav'
 
 const AdminPaymentLayout:React.FC = () => {
   return (
@@ -15,7 +15,7 @@ const AdminPaymentLayout:React.FC = () => {
         </p>
       </div>
       <PaymentStatsCards />
-      <PaymentNavigation />
+      {/* <PaymentNavigation /> */}
       <Outlet />
     </div>
   );
