@@ -12,7 +12,7 @@ import {
 //   Phone,
 } from "lucide-react";
 import api from "../../constant/api";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import CaregiverBookingModal from "../components/CaregiverBookingModal";
 
 export interface CaregiverBooking {
@@ -62,7 +62,7 @@ const CareGiving: React.FC = () => {
     new Set()
   );
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Fetch caregiver bookings using TanStack Query
@@ -268,15 +268,15 @@ const CareGiving: React.FC = () => {
           Caregiving Requests
         </h1>
         <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-500">
+          {/* <div className="text-sm text-gray-500">
             {bookings.length} request{bookings.length !== 1 ? "s" : ""} found
-          </div>
-          <button
+          </div> */}
+          {/* <button
             onClick={() => navigate("/nurse")}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
           >
             Back to Procedures
-          </button>
+          </button> */}
         </div>
       </div>
 
