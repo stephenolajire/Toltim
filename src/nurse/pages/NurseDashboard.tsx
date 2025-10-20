@@ -13,7 +13,7 @@ import api from "../../constant/api";
 import BookingDetailsModal from "../components/BookingDetailsModal";
 // import BedsideBookingDetailsModal from "../../components/BedSideModal";
 import { type Booking } from "../../types/bookingdata";
-import { useNavigate } from "react-router-dom";
+
 
 
 
@@ -32,24 +32,16 @@ const NurseDashboard: React.FC = () => {
   const [acceptingRequests, setAcceptingRequests] = React.useState<Set<number>>(
     new Set()
   );
-  const [serviceType, setServiceType] = React.useState<
-    "procedure" | "carebooking"
-  >("procedure");
 
-  const navigate = useNavigate()
 
   const queryClient = useQueryClient();
 
   // Fetch bookings using TanStack Query
   const { data, isLoading, isError, error } = useQuery<ApiResponse>({
-    queryKey: ["nurse-bookings", serviceType],
+    queryKey: ["nurse-bookings"],
     queryFn: async () => {
-      if (serviceType === "procedure") {
-        const response = await api.get("services/nursing-procedures");
-        return response.data;
-      } else {
-        navigate("/nurse/caregiver")
-      }
+      const response = await api.get("services/nurse-procedure-bookings/");
+      return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 30 * 1000, // Refetch every 30 seconds for new requests
@@ -86,8 +78,8 @@ const NurseDashboard: React.FC = () => {
     }
   };
 
-  const formatPrice = (price: string | number) => {
-    const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  const formatPrice = (total_amount_display: string | number) => {
+    const numPrice = typeof total_amount_display === "string" ? parseFloat(total_amount_display) : total_amount_display;
     return `₦${numPrice.toLocaleString()}`;
   };
 
@@ -160,7 +152,7 @@ const NurseDashboard: React.FC = () => {
 
       // Refetch the data to update the UI
       queryClient.invalidateQueries({
-        queryKey: ["nurse-bookings", serviceType],
+        queryKey: ["nurse-bookings"],
       });
 
       alert("Request accepted successfully!");
@@ -186,16 +178,6 @@ const NurseDashboard: React.FC = () => {
       <div className="w-full pb-10">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Patient Requests</h1>
-          <select
-            value={serviceType}
-            onChange={(e) =>
-              setServiceType(e.target.value as "procedure" | "carebooking")
-            }
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="procedure">Procedures</option>
-            <option value="carebooking">Care Bookings</option>
-          </select>
         </div>
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -221,16 +203,6 @@ const NurseDashboard: React.FC = () => {
       <div className="w-full pb-10">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Patient Requests</h1>
-          <select
-            value={serviceType}
-            onChange={(e) =>
-              setServiceType(e.target.value as "procedure" | "carebooking")
-            }
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="procedure">Procedures</option>
-            <option value="carebooking">Care Bookings</option>
-          </select>
         </div>
         <div className="max-w-6xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
@@ -255,16 +227,6 @@ const NurseDashboard: React.FC = () => {
           <div className="text-sm text-gray-500">
             {bookings.length} request{bookings.length !== 1 ? "s" : ""} found
           </div>
-          <select
-            value={serviceType}
-            onChange={(e) =>
-              setServiceType(e.target.value as "procedure" | "carebooking")
-            }
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          >
-            <option value="procedure">Procedures</option>
-            <option value="carebooking">Care Bookings</option>
-          </select>
         </div>
       </div>
 
@@ -274,10 +236,6 @@ const NurseDashboard: React.FC = () => {
             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FileText className="h-10 w-10 text-gray-400" />
             </div>
-            <h3 className="text-xl font-medium text-gray-900 mb-3">
-              No {serviceType === "procedure" ? "procedure" : "care booking"}{" "}
-              requests yet
-            </h3>
             <p className="text-gray-500 max-w-md mx-auto">
               New requests will appear here when patients book your services.
               Check back later or refresh the page.
@@ -403,7 +361,7 @@ const NurseDashboard: React.FC = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-right">
                       <div className="text-lg font-bold text-green-600">
-                        {formatPrice(booking.total_amount)}
+                        {formatPrice(booking.total_amount_display)}
                       </div>
                       <div className="text-xs text-gray-500">
                         {booking.procedure_item.num_days > 1
@@ -454,21 +412,13 @@ const NurseDashboard: React.FC = () => {
         )}
       </div>
 
-      {isModalOpen &&
-        selectedBooking &&
-        (serviceType === "procedure" ? (
-          <BookingDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            booking={selectedBooking}
-          />
-        ) : (
-          <BookingDetailsModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            booking={selectedBooking}
-          />
-        ))}
+      {isModalOpen && selectedBooking && (
+        <BookingDetailsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          booking={selectedBooking}
+        />
+      )}
     </div>
   );
 };

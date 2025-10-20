@@ -144,7 +144,7 @@ const HealthPractitionersMatching: React.FC<
       const res = await api.get(
         `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
       );
-      console.log(res.data)
+      console.log("NURSES NEARBY RESPONSE:", res.data);
       return res.data;
     },
     enabled:
@@ -192,8 +192,8 @@ const HealthPractitionersMatching: React.FC<
     try {
       // Prepare the booking data in the required format
       const bookingData = {
-        nurse: selectedPractitioner?.id || selectedPractitioner?.user_id,
-        nurse_id: selectedPractitioner?.id || selectedPractitioner?.user_id,
+        nurse: selectedPractitioner?.user_id,
+        nurse_id: selectedPractitioner?.user_id,
         scheduling_option: scheduleConfig.frequency,
         start_date: scheduleConfig.startDate,
         time_of_day: scheduleConfig.timeSlot,
@@ -235,7 +235,8 @@ const HealthPractitionersMatching: React.FC<
       localStorage.removeItem("procedureDays");
 
       alert("Appointment(s) booked successfully!");
-      navigate("/patient/receipt", { state: { booking: response.data } });
+      // navigate("/patient/receipt", { state: { booking: response.data } });
+      navigate("/patient")
     } catch (error: any) {
       console.error("Booking failed:", error);
 

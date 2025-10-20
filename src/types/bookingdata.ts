@@ -100,6 +100,7 @@ export interface Booking {
   service_location: string;
   created_at: string;
   updated_at: string;
+  total_amount_display: string;
 }
 
 

@@ -11,6 +11,7 @@ const PatientAppointmentHistory = () => {
   const [filterStatus, setFilterStatus] = useState("All Appointments");
 
   const { data: AppointmentDataHistory, isLoading, error } = useHistory();
+  console.log(AppointmentDataHistory);
 
   // Transform API data to match the component's expected format
   const transformedAppointments =
