@@ -69,12 +69,20 @@ const ForgotPassword: React.FC = () => {
     onSubmit: async (values, { setSubmitting, setStatus, setErrors }) => {
       try {
         setStatus(null);
-        const response = await api.post("/user/password-reset/request/", {
-          identifier: values.email,
-        });
+
+        // Create payload based on contact method
+        const payload = {
+          identifier: contactMethod === "email" ? values.email : values.phone,
+        };
+
+        const response = await api.post(
+          "/user/password-reset/request/",
+          payload
+        );
 
         if (response.data) {
           console.log(response.data);
+          // Store the correct identifier based on method
           if (contactMethod === "email") {
             localStorage.setItem("email", values.email);
           } else {
@@ -120,7 +128,7 @@ const ForgotPassword: React.FC = () => {
 
           setStatus({
             type: "error",
-            message: error.response.data.message || "Validation error occurred",
+            message: error.response.data.errors.identifier[0],
           });
         }
       } finally {
