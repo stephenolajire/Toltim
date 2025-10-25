@@ -3,17 +3,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   MapPin,
   Clock,
-//   FileText,
+  //   FileText,
   Calendar,
   CheckCircle,
   AlertCircle,
   XCircle,
   Heart,
-//   Phone,
+  //   Phone,
 } from "lucide-react";
 import api from "../../constant/api";
 // import { useNavigate } from "react-router-dom";
 import CaregiverBookingModal from "../components/CaregiverBookingModal";
+import { toast } from "react-toastify";
+
 
 export interface CaregiverBooking {
   id: string;
@@ -211,6 +213,64 @@ const CareGiving: React.FC = () => {
     }
   };
 
+  const handleAcceptAssignment = async (bookingId: string) => {
+    setAcceptingRequests((prev) => new Set(prev).add(bookingId));
+
+    try {
+      await api.patch(
+        `services/caregiver-booking/${bookingId}/accept-assignment/`
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["caregiver-bookings"],
+      });
+      toast.success("Assignment accepted successfully!");
+    } catch (error: any) {
+      console.error("Failed to accept assignment:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to accept assignment";
+      toast.error(`Error: ${errorMessage}`);
+    } finally {
+      setAcceptingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(bookingId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleRejectAssignment = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to reject this assignment?")) {
+      return;
+    }
+
+    setRejectingRequests((prev) => new Set(prev).add(bookingId));
+
+    try {
+      await api.patch(
+        `services/caregiver-booking/${bookingId}/reject-assignment/`
+      );
+      queryClient.invalidateQueries({
+        queryKey: ["caregiver-bookings"],
+      });
+      toast.success("Assignment rejected successfully!");
+    } catch (error: any) {
+      console.error("Failed to reject assignment:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to reject assignment";
+      toast.error(`Error: ${errorMessage}`);
+    } finally {
+      setRejectingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(bookingId);
+        return newSet;
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="w-full pb-10">
@@ -365,36 +425,6 @@ const CareGiving: React.FC = () => {
                       <span>Created {getTimeAgo(booking.created_at)}</span>
                     </div>
                   </div>
-
-                  {/* Emergency Contact */}
-                  {/* <div className="mb-4 p-2 bg-amber-50 rounded-lg">
-                    <div className="flex items-center gap-2 text-xs text-amber-900">
-                      <Phone className="h-3 w-3" />
-                      <span className="font-medium">
-                        Emergency: {booking.emergency_contact_name}
-                      </span>
-                    </div>
-                    <p className="text-xs text-amber-700 ml-5">
-                      {booking.emergency_contact_phone}
-                    </p>
-                  </div> */}
-
-                  {/* Special Requirements */}
-                  {/* {booking.special_requirements && (
-                    <div className="mb-4">
-                      <div className="flex items-start gap-2 text-xs text-gray-600">
-                        <FileText className="h-3 w-3 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-gray-900 mb-1">
-                            Special Requirements
-                          </p>
-                          <p className="line-clamp-2">
-                            {booking.special_requirements}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )} */}
                 </div>
 
                 {/* Footer */}
@@ -441,11 +471,41 @@ const CareGiving: React.FC = () => {
                           )}
                         </button>
                       </>
+                    ) : booking.status === "assigned" ? (
+                      <>
+                        <button
+                          onClick={() => handleAcceptAssignment(booking.id)}
+                          disabled={acceptingRequests.has(booking.id)}
+                          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                          {acceptingRequests.has(booking.id) ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Accepting Assignment...
+                            </>
+                          ) : (
+                            "Accept Assignment"
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleRejectAssignment(booking.id)}
+                          disabled={rejectingRequests.has(booking.id)}
+                          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                          {rejectingRequests.has(booking.id) ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Rejecting Assignment...
+                            </>
+                          ) : (
+                            "Reject Assignment"
+                          )}
+                        </button>
+                      </>
                     ) : (
                       <button
                         disabled
                         className={`w-full px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2 ${
-                          booking.status === "assigned" ||
                           booking.status === "active"
                             ? "bg-green-100 text-green-800"
                             : booking.status === "cancelled"
@@ -454,7 +514,6 @@ const CareGiving: React.FC = () => {
                         }`}
                       >
                         <CheckCircle className="w-4 h-4" />
-                        {booking.status === "assigned" && "Request Accepted"}
                         {booking.status === "active" && "Service Active"}
                         {booking.status === "completed" && "Service Completed"}
                         {booking.status === "cancelled" && "Request Cancelled"}

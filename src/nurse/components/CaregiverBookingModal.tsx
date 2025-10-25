@@ -79,15 +79,13 @@ const CaregiverBookingModal: React.FC<CaregiverBookingDetailsModalProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-      case "active":
-        return <CheckCircle className="w-5 h-5" />;
       case "assigned":
         return <Clock className="w-5 h-5" />;
       case "cancelled":
         return <AlertCircle className="w-5 h-5" />;
-      case "pending":
       default:
-        return <AlertCircle className="w-5 h-5" />;
+      case "active":
+        return <CheckCircle className="w-5 h-5" />;
     }
   };
 
