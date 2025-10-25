@@ -72,7 +72,6 @@ import NurseProfile from "./nurse/pages/Profile";
 import CHWVerification from "./chw/pages/CHWVerification";
 import CareProcedures from "./admin/pages/CHWProcedure";
 import CareGiving from "./nurse/pages/CareGiving";
-import CaregiverDashboard from "./chw/pages/CaregiverDashboard";
 import CHWLayout from "./chw/CHWLayout";
 import BedsideDashboard from "./chw/pages/BedSideBooking";
 import OverviewDashboard from "./chw/pages/Overview";
