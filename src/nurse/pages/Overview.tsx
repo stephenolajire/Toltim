@@ -1,19 +1,19 @@
 import React, { useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+// import {
+//   BarChart,
+//   Bar,
+//   XAxis,
+//   YAxis,
+//   CartesianGrid,
+//   Tooltip,
+//   Legend,
+//   ResponsiveContainer,
+//   LineChart,
+//   Line,
+//   PieChart,
+//   Pie,
+//   Cell,
+// } from "recharts";
 import {
   CheckCircle,
   XCircle,
@@ -48,148 +48,148 @@ const NurseOverviewDashboard = () => {
   };
 
   // Monthly earnings data
-  const monthlyEarningsData = [
-    { month: "Jan", procedures: 95000, caregiving: 70000 },
-    { month: "Feb", procedures: 102000, caregiving: 75000 },
-    { month: "Mar", procedures: 98000, caregiving: 80000 },
-    { month: "Apr", procedures: 110000, caregiving: 82000 },
-    { month: "May", procedures: 105000, caregiving: 85000 },
-    { month: "Jun", procedures: 115000, caregiving: 88000 },
-    { month: "Jul", procedures: 108000, caregiving: 78000 },
-    { month: "Aug", procedures: 120000, caregiving: 90000 },
-    { month: "Sep", procedures: 112000, caregiving: 85000 },
-    { month: "Oct", periods: 125000, caregiving: 92000 },
-    { month: "Nov", procedures: 118000, caregiving: 87000 },
-    { month: "Dec", procedures: 122000, caregiving: 88000 },
-  ];
+  // const monthlyEarningsData = [
+  //   { month: "Jan", procedures: 95000, caregiving: 70000 },
+  //   { month: "Feb", procedures: 102000, caregiving: 75000 },
+  //   { month: "Mar", procedures: 98000, caregiving: 80000 },
+  //   { month: "Apr", procedures: 110000, caregiving: 82000 },
+  //   { month: "May", procedures: 105000, caregiving: 85000 },
+  //   { month: "Jun", procedures: 115000, caregiving: 88000 },
+  //   { month: "Jul", procedures: 108000, caregiving: 78000 },
+  //   { month: "Aug", procedures: 120000, caregiving: 90000 },
+  //   { month: "Sep", procedures: 112000, caregiving: 85000 },
+  //   { month: "Oct", periods: 125000, caregiving: 92000 },
+  //   { month: "Nov", procedures: 118000, caregiving: 87000 },
+  //   { month: "Dec", procedures: 122000, caregiving: 88000 },
+  // ];
 
   // Acceptance rate data
-  const acceptanceRateData = [
-    { month: "Jan", procedures: 82, caregiving: 85 },
-    { month: "Feb", procedures: 85, caregiving: 87 },
-    { month: "Mar", procedures: 83, caregiving: 86 },
-    { month: "Apr", procedures: 86, caregiving: 88 },
-    { month: "May", procedures: 88, caregiving: 90 },
-    { month: "Jun", procedures: 87, caregiving: 89 },
-    { month: "Jul", procedures: 89, caregiving: 91 },
-    { month: "Aug", procedures: 90, caregiving: 92 },
-    { month: "Sep", procedures: 88, caregiving: 90 },
-    { month: "Oct", procedures: 91, caregiving: 93 },
-    { month: "Nov", procedures: 89, caregiving: 91 },
-    { month: "Dec", procedures: 92, caregiving: 94 },
-  ];
+  // const acceptanceRateData = [
+  //   { month: "Jan", procedures: 82, caregiving: 85 },
+  //   { month: "Feb", procedures: 85, caregiving: 87 },
+  //   { month: "Mar", procedures: 83, caregiving: 86 },
+  //   { month: "Apr", procedures: 86, caregiving: 88 },
+  //   { month: "May", procedures: 88, caregiving: 90 },
+  //   { month: "Jun", procedures: 87, caregiving: 89 },
+  //   { month: "Jul", procedures: 89, caregiving: 91 },
+  //   { month: "Aug", procedures: 90, caregiving: 92 },
+  //   { month: "Sep", procedures: 88, caregiving: 90 },
+  //   { month: "Oct", procedures: 91, caregiving: 93 },
+  //   { month: "Nov", procedures: 89, caregiving: 91 },
+  //   { month: "Dec", procedures: 92, caregiving: 94 },
+  // ];
 
   // Monthly booking counts
-  const monthlyBookingsData = [
-    {
-      month: "Jan",
-      proceduresAccepted: 3,
-      proceduresRejected: 1,
-      caregivingAccepted: 2,
-      caregivingRejected: 0,
-    },
-    {
-      month: "Feb",
-      proceduresAccepted: 4,
-      proceduresRejected: 1,
-      caregivingAccepted: 3,
-      caregivingRejected: 1,
-    },
-    {
-      month: "Mar",
-      proceduresAccepted: 3,
-      proceduresRejected: 0,
-      caregivingAccepted: 2,
-      caregivingRejected: 0,
-    },
-    {
-      month: "Apr",
-      proceduresAccepted: 5,
-      proceduresRejected: 1,
-      caregivingAccepted: 3,
-      caregivingRejected: 0,
-    },
-    {
-      month: "May",
-      proceduresAccepted: 4,
-      proceduresRejected: 0,
-      caregivingAccepted: 2,
-      caregivingRejected: 1,
-    },
-    {
-      month: "Jun",
-      proceduresAccepted: 5,
-      proceduresRejected: 1,
-      caregivingAccepted: 4,
-      caregivingRejected: 0,
-    },
-    {
-      month: "Jul",
-      proceduresAccepted: 3,
-      proceduresRejected: 1,
-      caregivingAccepted: 2,
-      caregivingRejected: 1,
-    },
-    {
-      month: "Aug",
-      proceduresAccepted: 4,
-      proceduresRejected: 0,
-      caregivingAccepted: 3,
-      caregivingRejected: 0,
-    },
-    {
-      month: "Sep",
-      proceduresAccepted: 3,
-      proceduresRejected: 1,
-      caregivingAccepted: 2,
-      caregivingRejected: 0,
-    },
-    {
-      month: "Oct",
-      proceduresAccepted: 5,
-      proceduresRejected: 0,
-      caregivingAccepted: 4,
-      caregivingRejected: 1,
-    },
-    {
-      month: "Nov",
-      proceduresAccepted: 3,
-      proceduresRejected: 1,
-      caregivingAccepted: 2,
-      caregivingRejected: 1,
-    },
-    {
-      month: "Dec",
-      proceduresAccepted: 3,
-      proceduresRejected: 0,
-      caregivingAccepted: 3,
-      caregivingRejected: 0,
-    },
-  ];
+  // const monthlyBookingsData = [
+  //   {
+  //     month: "Jan",
+  //     proceduresAccepted: 3,
+  //     proceduresRejected: 1,
+  //     caregivingAccepted: 2,
+  //     caregivingRejected: 0,
+  //   },
+  //   {
+  //     month: "Feb",
+  //     proceduresAccepted: 4,
+  //     proceduresRejected: 1,
+  //     caregivingAccepted: 3,
+  //     caregivingRejected: 1,
+  //   },
+  //   {
+  //     month: "Mar",
+  //     proceduresAccepted: 3,
+  //     proceduresRejected: 0,
+  //     caregivingAccepted: 2,
+  //     caregivingRejected: 0,
+  //   },
+  //   {
+  //     month: "Apr",
+  //     proceduresAccepted: 5,
+  //     proceduresRejected: 1,
+  //     caregivingAccepted: 3,
+  //     caregivingRejected: 0,
+  //   },
+  //   {
+  //     month: "May",
+  //     proceduresAccepted: 4,
+  //     proceduresRejected: 0,
+  //     caregivingAccepted: 2,
+  //     caregivingRejected: 1,
+  //   },
+  //   {
+  //     month: "Jun",
+  //     proceduresAccepted: 5,
+  //     proceduresRejected: 1,
+  //     caregivingAccepted: 4,
+  //     caregivingRejected: 0,
+  //   },
+  //   {
+  //     month: "Jul",
+  //     proceduresAccepted: 3,
+  //     proceduresRejected: 1,
+  //     caregivingAccepted: 2,
+  //     caregivingRejected: 1,
+  //   },
+  //   {
+  //     month: "Aug",
+  //     proceduresAccepted: 4,
+  //     proceduresRejected: 0,
+  //     caregivingAccepted: 3,
+  //     caregivingRejected: 0,
+  //   },
+  //   {
+  //     month: "Sep",
+  //     proceduresAccepted: 3,
+  //     proceduresRejected: 1,
+  //     caregivingAccepted: 2,
+  //     caregivingRejected: 0,
+  //   },
+  //   {
+  //     month: "Oct",
+  //     proceduresAccepted: 5,
+  //     proceduresRejected: 0,
+  //     caregivingAccepted: 4,
+  //     caregivingRejected: 1,
+  //   },
+  //   {
+  //     month: "Nov",
+  //     proceduresAccepted: 3,
+  //     proceduresRejected: 1,
+  //     caregivingAccepted: 2,
+  //     caregivingRejected: 1,
+  //   },
+  //   {
+  //     month: "Dec",
+  //     proceduresAccepted: 3,
+  //     proceduresRejected: 0,
+  //     caregivingAccepted: 3,
+  //     caregivingRejected: 0,
+  //   },
+  // ];
 
   // Completion status for pie chart
-  const completionStatusData = [
-    {
-      name: "Completed",
-      value:
-        bookingSummary.procedures.completed +
-        bookingSummary.caregiving.completed,
-      color: "#10b981",
-    },
-    {
-      name: "Not Completed",
-      value:
-        bookingSummary.procedures.notCompleted +
-        bookingSummary.caregiving.notCompleted,
-      color: "#f59e0b",
-    },
-    {
-      name: "Rejected",
-      value:
-        bookingSummary.procedures.rejected + bookingSummary.caregiving.rejected,
-      color: "#ef4444",
-    },
-  ];
+  // const completionStatusData = [
+  //   {
+  //     name: "Completed",
+  //     value:
+  //       bookingSummary.procedures.completed +
+  //       bookingSummary.caregiving.completed,
+  //     color: "#10b981",
+  //   },
+  //   {
+  //     name: "Not Completed",
+  //     value:
+  //       bookingSummary.procedures.notCompleted +
+  //       bookingSummary.caregiving.notCompleted,
+  //     color: "#f59e0b",
+  //   },
+  //   {
+  //     name: "Rejected",
+  //     value:
+  //       bookingSummary.procedures.rejected + bookingSummary.caregiving.rejected,
+  //     color: "#ef4444",
+  //   },
+  // ];
 
   // Calculate totals
   const totalAccepted =
@@ -435,8 +435,7 @@ const NurseOverviewDashboard = () => {
         </div>
 
         {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Monthly Earnings Chart */}
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -483,7 +482,7 @@ const NurseOverviewDashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Completion Status Pie Chart */}
+        
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -536,11 +535,10 @@ const NurseOverviewDashboard = () => {
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Charts Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Acceptance Rate Trend */}
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -585,7 +583,7 @@ const NurseOverviewDashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Monthly Bookings Activity */}
+          
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -640,7 +638,7 @@ const NurseOverviewDashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </div> */}
 
         {/* Summary Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -755,7 +753,7 @@ const NurseOverviewDashboard = () => {
         </div>
 
         {/* Performance Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm border border-green-200 p-6">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-medium text-green-900">
@@ -796,7 +794,7 @@ const NurseOverviewDashboard = () => {
             </p>
             <p className="text-xs text-amber-600 mt-1">Per month this year</p>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

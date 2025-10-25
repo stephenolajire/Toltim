@@ -236,7 +236,7 @@ const App: React.FC = () => {
               }
             >
               <Route index element={<OverviewDashboard />} />
-              <Route path="caregiver" element={<CaregiverDashboard />} />
+              <Route path="caregiver" element={<CareGiving />} />
               <Route path="wallet" element={<WalletComponent />} />
               <Route path="id-card" element={<IDCard />} />
               <Route path="kyc-status" element={<KycStatus />} />

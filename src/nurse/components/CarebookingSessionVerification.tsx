@@ -5,7 +5,7 @@ import {
   type ClipboardEvent,
 } from "react";
 import { Shield, CheckCircle, XCircle, Clock } from "lucide-react";
-import api from "../constant/api";
+import api from "../../constant/api";
 import { toast } from "react-toastify";
 
 interface valueProp {
@@ -13,7 +13,7 @@ interface valueProp {
     close: (value: boolean) => void;
 }
 
-const VerifySessionModal = ({booking_id, close}:valueProp) => {
+const CareBookingVerifySessionModal = ({booking_id, close}:valueProp) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<
@@ -82,7 +82,7 @@ const VerifySessionModal = ({booking_id, close}:valueProp) => {
 
     try {
         const response = await api.post(
-          `inpatient-caregiver/verify-code/${booking_id}/`, {
+          `caregiver-booking/verify-code/${booking_id}/`, {
             date: today,
             code: otpValue
           }
@@ -153,7 +153,7 @@ const VerifySessionModal = ({booking_id, close}:valueProp) => {
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={index === 0 ? handlePaste : undefined}
                 disabled={isVerifying || verificationStatus === "success"}
-                className={`w-12 h-14 text-center text-2xl font-bold border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                className={`md:w-12 md:h-14 w-8 h-8 text-center text-xl md:text-2xl font-bold border-2 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                   verificationStatus === "success"
                     ? "border-green-500 bg-green-50 text-green-600"
                     : verificationStatus === "error"
@@ -182,7 +182,7 @@ const VerifySessionModal = ({booking_id, close}:valueProp) => {
           )}
 
           {verificationStatus === "error" && (
-            <div className="flex items-center justify-center gap-2 text-red-600 text-sm">
+            <div className="flex items-center justify-center gap-2  text-red-600 text-sm">
               <XCircle className="w-5 h-5" />
               <span className="font-semibold">
                 Invalid code. Please try again.
@@ -229,4 +229,4 @@ const VerifySessionModal = ({booking_id, close}:valueProp) => {
   );
 };
 
-export default VerifySessionModal;
+export default CareBookingVerifySessionModal;

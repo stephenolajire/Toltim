@@ -2,25 +2,27 @@ import {
   Eye,
   EyeOff,
   Plus,
-  Wallet,
   XCircle,
   Lock,
   TrendingUp,
   Minus,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../constant/api";
 import { toast } from "react-toastify";
 import { useWallet } from "../constant/GlobalContext";
 
-const role = localStorage.getItem("userType")
-
 const WalletBalance = () => {
-  const { data: wallet, isLoading, error } = useWallet();
-
   const [showBalance, setShowBalance] = useState(true);
   const [showFundModal, setShowFundModal] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  const { data: wallet, isLoading, error } = useWallet();
+
+  useEffect(() => {
+    setUserRole(localStorage.getItem("userType"));
+  }, []);
 
   const totalBalance = parseFloat(wallet?.balance || "0");
   const lockedBalance = parseFloat(wallet?.locked_balance || "0");
@@ -33,147 +35,100 @@ const WalletBalance = () => {
     }).format(amount);
   };
 
-  const handleFund = async() => {
+  const handleFund = async () => {
     try {
-        const response  =  await api.post("wallet/fund/", {
-        amount: fundAmount
+      const response = await api.post("wallet/fund/", {
+        amount: fundAmount,
       });
       if (response.data) {
-        toast.success("Wallet has been fundedsucessfully")
+        toast.success("Wallet has been fundedsucessfully");
       }
-      setShowFundModal(!setShowFundModal)
-    } catch(error) {
-      console.log(error)
-      toast.error("An error occur pls try again later")
+      setShowFundModal(!setShowFundModal);
+    } catch (error) {
+      console.log(error);
+      toast.error("An error occur pls try again later");
     }
-    
-  }
+  };
 
   if (isLoading) {
-    return (
-      <div className="bg-gradient-to-br from-green-600 via-green-500 to-green-600 rounded-2xl shadow-2xl p-8 text-white">
-        <div className="flex items-center justify-center h-48">
-          <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
+    return <div className="bg-white rounded-lg p-4 animate-pulse h-32" />;
   }
 
-  if (error) {
+  if (error || !wallet) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-red-600">
-        <p className="text-center">Failed to load wallet information</p>
-      </div>
-    );
-  }
-
-  if (!wallet) {
-    return (
-      <div className="bg-gradient-to-br from-green-600 via-green-500 to-green-600 rounded-2xl shadow-2xl p-8 text-white">
-        <div className="flex items-center justify-center h-48">
-          <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-        </div>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <p className="text-sm text-red-600">
+          Failed to load wallet information
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-green-600 via-green-500 to-green-600 rounded-2xl shadow-2xl p-8 text-white relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
-      </div>
-
-      <div className="relative z-10">
-        {/* Main Balance Section */}
-        <div className="md:flex grid grid-cols-1 items-start justify-between mb-8">
-          <div className="flex-1">
-            <p className="text-green-100 text-sm mb-2 flex items-center gap-2">
-              <Wallet className="w-4 h-4" />
-              Total Wallet Balance
-            </p>
-            <div className="flex items-center gap-4 mb-6">
-              <h2 className="md:text-5xl text-4xl font-bold">
-                {showBalance ? formatCurrency(totalBalance) : "₦ •••••••"}
-              </h2>
-              <button
-                onClick={() => setShowBalance(!showBalance)}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                {showBalance ? (
-                  <EyeOff className="w-5 h-5" />
-                ) : (
-                  <Eye className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-
-            {/* Balance Breakdown */}
-            {role == "patient" && (
-              <div className="">
-                <div className="w-full content-center grid md:grid-cols-2 grid-cols-1 gap-4 mt-6">
-                  {/* Available Balance */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="w-4 h-4 text-green-200" />
-                      <p className="text-green-100 text-xs font-medium">
-                        Available Balance
-                      </p>
-                    </div>
-                    <p className="text-2xl font-bold">
-                      {showBalance
-                        ? formatCurrency(availableBalance)
-                        : "₦ •••••"}
-                    </p>
-                    <p className="text-xs text-green-200 mt-1">
-                      Ready to spend
-                    </p>
-                  </div>
-
-                  {/* Locked Balance */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Lock className="w-4 h-4 text-orange-200" />
-                      <p className="text-green-100 text-xs font-medium">
-                        Locked Balance
-                      </p>
-                    </div>
-                    <p className="text-2xl font-bold">
-                      {showBalance ? formatCurrency(lockedBalance) : "₦ •••••"}
-                    </p>
-                    <p className="text-xs text-green-200 mt-1">
-                      Pending transactions
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3 mt-5 md:mt-0 items-center justify-center md:ml-6">
-            {role == "patient" ? (
-              <button
-                onClick={() => setShowFundModal(true)}
-                className="px-6 py-3 bg-white text-green-600 rounded-xl font-semibold hover:bg-green-50 transition-all shadow-lg flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Fund Wallet
-              </button>
-            ) : (
-              <button
-                // onClick={() => setShowFundModal(true)}
-                className="px-6 py-3 bg-white text-green-600 rounded-xl font-semibold hover:bg-green-50 transition-all shadow-lg flex items-center gap-2"
-              >
-                <Minus className="w-5 h-5" />
-                Withdraw
-              </button>
-            )}
+    <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-md p-4">
+      {/* Main Balance Section */}
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-green-100 text-xs mb-1">Total Balance</p>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-white">
+              {showBalance ? formatCurrency(totalBalance) : "₦ •••••••"}
+            </h2>
+            <button
+              onClick={() => setShowBalance(!showBalance)}
+              className="p-1 hover:bg-white/20 rounded transition-colors"
+            >
+              {showBalance ? (
+                <EyeOff className="w-4 h-4 text-white/80" />
+              ) : (
+                <Eye className="w-4 h-4 text-white/80" />
+              )}
+            </button>
           </div>
         </div>
+
+        {userRole === "patient" ? (
+          <button
+            onClick={() => setShowFundModal(true)}
+            className="px-4 py-2 bg-white text-green-700 text-sm rounded-lg font-medium hover:bg-green-50 transition-all flex items-center gap-1"
+          >
+            <Plus className="w-4 h-4" />
+            Fund
+          </button>
+        ) : (
+          <button className="px-4 py-2 bg-white text-green-700 text-sm rounded-lg font-medium hover:bg-green-50 transition-all flex items-center gap-1">
+            <Minus className="w-4 h-4" />
+            Withdraw
+          </button>
+        )}
       </div>
 
-      {/* Fund Modal */}
+      {/* Balance Breakdown - Only for patients */}
+      {userRole === "patient" && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center gap-1 mb-1">
+              <TrendingUp className="w-3 h-3 text-green-200" />
+              <p className="text-green-100 text-xs">Available</p>
+            </div>
+            <p className="text-lg font-semibold text-white">
+              {showBalance ? formatCurrency(availableBalance) : "₦ •••••"}
+            </p>
+          </div>
+
+          <div className="bg-white/10 rounded-lg p-3">
+            <div className="flex items-center gap-1 mb-1">
+              <Lock className="w-3 h-3 text-orange-200" />
+              <p className="text-green-100 text-xs">Locked</p>
+            </div>
+            <p className="text-lg font-semibold text-white">
+              {showBalance ? formatCurrency(lockedBalance) : "₦ •••••"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Fund Modal - Keep existing modal code */}
       {showFundModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">

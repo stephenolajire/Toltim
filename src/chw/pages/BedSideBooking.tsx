@@ -492,7 +492,7 @@ const BedsideDashboard: React.FC = () => {
                     ):(
                       booking.status === "approved" && (
                       <button
-                        className="w-full px-3 text-blue-600 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full px-3 text-white bg-green-600 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
                         onClick={() => handleRecordSession(booking.id, booking)}
                       >
                         Verify Session

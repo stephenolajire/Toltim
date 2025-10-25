@@ -1,20 +1,5 @@
 import React, { useState } from "react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-import {
   Users,
   CheckCircle,
   XCircle,
@@ -52,43 +37,43 @@ const PatientOverviewDashboard = () => {
   };
 
   // Monthly spending data
-  const monthlySpendingData = [
-    { month: "Jan", procedures: 35000, caregiving: 50000, inPatient: 75000 },
-    { month: "Feb", procedures: 42000, caregiving: 55000, inPatient: 80000 },
-    { month: "Mar", procedures: 38000, caregiving: 60000, inPatient: 85000 },
-    { month: "Apr", procedures: 45000, caregiving: 58000, inPatient: 90000 },
-    { month: "May", procedures: 40000, caregiving: 65000, inPatient: 95000 },
-    { month: "Jun", procedures: 48000, caregiving: 62000, inPatient: 88000 },
-    { month: "Jul", procedures: 36000, caregiving: 70000, inPatient: 92000 },
-    { month: "Aug", procedures: 50000, caregiving: 68000, inPatient: 85000 },
-    { month: "Sep", procedures: 43000, caregiving: 72000, inPatient: 98000 },
-    { month: "Oct", procedures: 47000, caregiving: 75000, inPatient: 100000 },
-    { month: "Nov", periods: 41000, caregiving: 80000, inPatient: 87000 },
-    { month: "Dec", procedures: 45000, caregiving: 65000, inPatient: 95000 },
-  ];
+  // const monthlySpendingData = [
+  //   { month: "Jan", procedures: 35000, caregiving: 50000, inPatient: 75000 },
+  //   { month: "Feb", procedures: 42000, caregiving: 55000, inPatient: 80000 },
+  //   { month: "Mar", procedures: 38000, caregiving: 60000, inPatient: 85000 },
+  //   { month: "Apr", procedures: 45000, caregiving: 58000, inPatient: 90000 },
+  //   { month: "May", procedures: 40000, caregiving: 65000, inPatient: 95000 },
+  //   { month: "Jun", procedures: 48000, caregiving: 62000, inPatient: 88000 },
+  //   { month: "Jul", procedures: 36000, caregiving: 70000, inPatient: 92000 },
+  //   { month: "Aug", procedures: 50000, caregiving: 68000, inPatient: 85000 },
+  //   { month: "Sep", procedures: 43000, caregiving: 72000, inPatient: 98000 },
+  //   { month: "Oct", procedures: 47000, caregiving: 75000, inPatient: 100000 },
+  //   { month: "Nov", periods: 41000, caregiving: 80000, inPatient: 87000 },
+  //   { month: "Dec", procedures: 45000, caregiving: 65000, inPatient: 95000 },
+  // ];
 
   // Booking status distribution
-  const bookingStatusData = [
-    { name: "Accepted", value: 25, color: "#10b981" },
-    { name: "Rejected", value: 6, color: "#ef4444" },
-    { name: "Pending", value: 3, color: "#f59e0b" },
-  ];
+  // const bookingStatusData = [
+  //   { name: "Accepted", value: 25, color: "#10b981" },
+  //   { name: "Rejected", value: 6, color: "#ef4444" },
+  //   { name: "Pending", value: 3, color: "#f59e0b" },
+  // ];
 
   // Monthly booking counts
-  const monthlyBookingsData = [
-    { month: "Jan", procedures: 1, caregiving: 1, inPatient: 0 },
-    { month: "Feb", procedures: 2, caregiving: 1, inPatient: 1 },
-    { month: "Mar", procedures: 1, caregiving: 0, inPatient: 1 },
-    { month: "Apr", procedures: 2, caregiving: 1, inPatient: 0 },
-    { month: "May", procedures: 1, caregiving: 1, inPatient: 1 },
-    { month: "Jun", procedures: 2, caregiving: 1, inPatient: 1 },
-    { month: "Jul", procedures: 0, caregiving: 1, inPatient: 0 },
-    { month: "Aug", procedures: 1, caregiving: 1, inPatient: 0 },
-    { month: "Sep", procedures: 1, caregiving: 0, inPatient: 1 },
-    { month: "Oct", procedures: 1, caregiving: 1, inPatient: 0 },
-    { month: "Nov", procedures: 0, caregiving: 0, inPatient: 0 },
-    { month: "Dec", procedures: 0, caregiving: 0, inPatient: 0 },
-  ];
+  // const monthlyBookingsData = [
+  //   { month: "Jan", procedures: 1, caregiving: 1, inPatient: 0 },
+  //   { month: "Feb", procedures: 2, caregiving: 1, inPatient: 1 },
+  //   { month: "Mar", procedures: 1, caregiving: 0, inPatient: 1 },
+  //   { month: "Apr", procedures: 2, caregiving: 1, inPatient: 0 },
+  //   { month: "May", procedures: 1, caregiving: 1, inPatient: 1 },
+  //   { month: "Jun", procedures: 2, caregiving: 1, inPatient: 1 },
+  //   { month: "Jul", procedures: 0, caregiving: 1, inPatient: 0 },
+  //   { month: "Aug", procedures: 1, caregiving: 1, inPatient: 0 },
+  //   { month: "Sep", procedures: 1, caregiving: 0, inPatient: 1 },
+  //   { month: "Oct", procedures: 1, caregiving: 1, inPatient: 0 },
+  //   { month: "Nov", procedures: 0, caregiving: 0, inPatient: 0 },
+  //   { month: "Dec", procedures: 0, caregiving: 0, inPatient: 0 },
+  // ];
 
   // Calculate totals
   const totalAccepted =
@@ -358,9 +343,9 @@ const PatientOverviewDashboard = () => {
           </div>
         </div>
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Monthly Spending Chart */}
+        
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+         
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -413,7 +398,7 @@ const PatientOverviewDashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Booking Status Pie Chart */}
+          
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
@@ -466,10 +451,10 @@ const PatientOverviewDashboard = () => {
               ))}
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Monthly Bookings Trend */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Booking Activity
@@ -518,10 +503,10 @@ const PatientOverviewDashboard = () => {
               />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </div> */}
 
         {/* Summary Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Summary Statistics
@@ -642,7 +627,7 @@ const PatientOverviewDashboard = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

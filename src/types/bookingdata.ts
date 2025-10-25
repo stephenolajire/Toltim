@@ -119,7 +119,7 @@ export interface CaregiverBookingData {
   emergency_contact_name: string;
   emergency_contact_phone: string;
   special_requirements: string;
-  status: "pending" | "assigned" | "active" | "completed" | "cancelled";
+  status: "pending" | "assigned" | "active" | "completed" | "cancelled" | "approved";
   assigned_worker:
     | string
     | {
