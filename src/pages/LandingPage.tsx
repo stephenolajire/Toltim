@@ -1,20 +1,21 @@
 import React from "react";
 import Hero from "../components/home/Hero";
 import HowITWorks from "../components/home/HowITWorks";
-import BottomSection from "../components/home/BottomSection";
+import ServicesSection from "../components/home/Services";
+import HealthcareWorkersSection from "../components/home/HealthCareWorkerSection";
+import ContactSection from "../components/home/ContactSection";
+import TestimonialsSection from "../components/home/TestimonialSection";
 
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50 hide-scrollbar  px-2 sm:px-4 md:px-20 lg:px-50">
-      {/* Updated Hero Section */}
+    <div className="min-h-screen  bg-gray-50 hide-scrollbar">
       <Hero />
-
-      {/* How It Works Section */}
+      <ServicesSection />
       <HowITWorks />
-
-      {/* Bottom Section */}
-      <BottomSection />
+      <HealthcareWorkersSection/>
+      <ContactSection/>
+      <TestimonialsSection/>
     </div>
   );
 };

@@ -243,7 +243,7 @@ export const useNurseActiveBooking = () => {
     queryKey: ["useNurseActiveBooking"],
     queryFn: async () => {
       const response = await api.get(
-        "services/nurse-procedures-bookings/approved/"
+        "/services/nurse-procedure-bookings/approved/"
       );
       return response.data;
     },

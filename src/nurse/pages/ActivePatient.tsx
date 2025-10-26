@@ -27,8 +27,6 @@ const ActivePatients: React.FC = () => {
     error: any;
   };
 
-  console.log("Active Bookings:", activeBooking);
-
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isViewAssessmentOpen, setIsViewAssessmentOpen] = useState(false);
