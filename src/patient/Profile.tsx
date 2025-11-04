@@ -12,7 +12,7 @@ import {
   Loader,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom"; // Add this import
+import { useNavigate } from "react-router-dom";
 import api from "../constant/api";
 import { useState } from "react";
 
@@ -36,7 +36,6 @@ interface EmergencyContact {
 }
 
 interface ProfileData {
-  // Personal Information
   first_name: string;
   last_name: string;
   email_address: string;
@@ -44,20 +43,12 @@ interface ProfileData {
   date_of_birth: string;
   gender: string;
   blood_type: string;
-
-  // Contact Information
   address: string;
   city: string;
   state: string;
   zipcode: string;
-
-  // Medical Information
   medical_information: MedicalInformation;
-
-  // Preferences
   preferences: Preferences;
-
-  // Emergency Contacts
   emergency_contacts: EmergencyContact[];
 }
 
@@ -69,16 +60,14 @@ interface Tab {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// Query key constant
 const PROFILE_QUERY_KEY = ["user", "profile"];
 
-// API function for fetching profile
 const fetchProfile = async () => {
   try {
     const response = await api.get<ProfileData>("user/profile");
     return response.data;
   } catch (error: any) {
-    console.log(error)
+    console.log(error);
   }
 };
 
@@ -86,7 +75,6 @@ const PatientProfile: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabId>("personal");
 
-  // Query to fetch profile data
   const {
     data: profileData,
     isLoading,
@@ -102,7 +90,6 @@ const PatientProfile: React.FC = () => {
   });
 
   const handleEditProfile = () => {
-    // Navigate to edit profile component
     navigate("/patient/profile/edit");
   };
 
@@ -112,7 +99,6 @@ const PatientProfile: React.FC = () => {
     { id: "preferences", name: "Preferences", icon: Settings },
   ];
 
-  // Helper function to calculate age from date of birth
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
@@ -129,12 +115,10 @@ const PatientProfile: React.FC = () => {
     return age;
   };
 
-  // Helper function to format relationship
   const formatRelationship = (relationship: string): string => {
     return relationship.charAt(0).toUpperCase() + relationship.slice(1);
   };
 
-  // Helper function to format language
   const formatLanguage = (lang: string): string => {
     const languages = {
       en: "English",
@@ -145,7 +129,6 @@ const PatientProfile: React.FC = () => {
     return languages[lang as keyof typeof languages] || lang;
   };
 
-  // Helper function to format communication preference
   const formatCommunicationPreference = (pref: string): string => {
     const preferences = {
       email: "Email",
@@ -158,10 +141,10 @@ const PatientProfile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="patient-theme mx-auto bg-gradient-to-br from-gray-50 to-gray-100/50 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader className="animate-spin h-8 w-8 text-green-600 mx-auto" />
-          <p className="mt-2 text-gray-600">Loading profile...</p>
+          <Loader className="animate-spin h-10 w-10 text-primary-600 mx-auto" />
+          <p className="mt-3 text-gray-600 font-medium">Loading profile...</p>
         </div>
       </div>
     );
@@ -169,13 +152,20 @@ const PatientProfile: React.FC = () => {
 
   if (isError) {
     return (
-      <div className="mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 text-red-600 mx-auto" />
-          <p className="mt-2 text-red-600">Failed to load profile data</p>
+      <div className="patient-theme mx-auto bg-gradient-to-br from-gray-50 to-gray-100/50 min-h-screen flex items-center justify-center">
+        <div className="text-center bg-white rounded-xl shadow-lg p-8 max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-red-600" />
+          </div>
+          <p className="text-lg font-semibold text-gray-900 mb-2">
+            Failed to load profile
+          </p>
+          <p className="text-sm text-gray-600 mb-4">
+            We couldn't retrieve your profile data. Please try again.
+          </p>
           <button
             onClick={() => refetch()}
-            className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            className="btn-primary px-6 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors"
           >
             Retry
           </button>
@@ -189,91 +179,113 @@ const PatientProfile: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm mb-6">
+    <div className="patient-theme mx-auto bg-gradient-to-br from-gray-50 to-gray-100/50 min-h-screen pb-8">
+      {/* Header Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
         <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 mb-4 ">
-            <div className="flex items-center">
-              <Heart className="w-8 h-8 text-green-600 mr-3" />
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            {/* <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-sm">
+                <Heart className="w-6 h-6 text-white" fill="white" />
+              </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                   Patient Profile
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-gray-600 text-sm font-medium">
                   View your personal and medical information
                 </p>
               </div>
-            </div>
-            <div className="flex space-x-2 md:justify-end justify-center md:my-0 my-4">
-              <button
-                onClick={handleEditProfile}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
-              </button>
-            </div>
+            </div> */}
+            <div></div>
+            <button
+              onClick={handleEditProfile}
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all font-medium shadow-sm hover:shadow-md"
+            >
+              <Edit className="w-4 h-4" />
+              Edit Profile
+            </button>
           </div>
 
           {/* Profile Picture Section */}
-          <div className="flex items-center mb-6">
+          <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
             <div className="relative">
-              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center">
-                <User className="w-12 h-12 text-green-600" />
+              <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-50 rounded-2xl flex items-center justify-center ring-4 ring-primary-100 ring-offset-2 shadow-sm">
+                <User className="w-12 h-12 text-primary-600" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
+                <Activity className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
-            <div className="ml-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
                 {profileData.first_name} {profileData.last_name}
               </h2>
-              <p className="text-gray-600">Patient ID: PAT-2024-001</p>
-              <div className="flex items-center mt-2">
-                <Activity className="w-4 h-4 text-green-600 mr-1" />
-                <span className="text-sm text-green-600">Active Patient</span>
+              <p className="text-gray-600 font-medium mt-1">
+                Patient ID: PAT-2024-001
+              </p>
+              <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-emerald-50 rounded-full w-fit">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span className="text-sm font-semibold text-emerald-700">
+                  Active Patient
+                </span>
               </div>
             </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 text-green-600 mr-2" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-primary-50 to-primary-100/50 p-4 rounded-xl border border-primary-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600">Age</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="text-xs font-medium text-gray-600">Age</p>
+                  <p className="text-lg font-bold text-gray-900">
                     {calculateAge(profileData.date_of_birth)} years
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center">
-                <Heart className="w-5 h-5 text-blue-600 mr-2" />
+            <div className="bg-gradient-to-br from-red-50 to-red-100/50 p-4 rounded-xl border border-red-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600">Blood Type</p>
-                  <p className="font-semibold text-gray-900">
-                    {profileData.blood_type || "Not specified"}
+                  <p className="text-xs font-medium text-gray-600">
+                    Blood Type
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {profileData.blood_type || "Not set"}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 text-purple-600 mr-2" />
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 rounded-xl border border-purple-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600">Last Visit</p>
-                  <p className="font-semibold text-gray-900">Dec 15, 2024</p>
+                  <p className="text-xs font-medium text-gray-600">
+                    Last Visit
+                  </p>
+                  <p className="text-lg font-bold text-gray-900">
+                    Dec 15, 2024
+                  </p>
                 </div>
               </div>
             </div>
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <div className="flex items-center">
-                <FileText className="w-5 h-5 text-orange-600 mr-2" />
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 p-4 rounded-xl border border-amber-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                  <p className="text-sm text-gray-600">Records</p>
-                  <p className="font-semibold text-gray-900">24 entries</p>
+                  <p className="text-xs font-medium text-gray-600">Records</p>
+                  <p className="text-lg font-bold text-gray-900">24 entries</p>
                 </div>
               </div>
             </div>
@@ -281,19 +293,19 @@ const PatientProfile: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="border-t border-gray-200">
-          <nav className="flex space-x-8 px-6 overflow-x-scroll">
+        <div className="border-t border-gray-200 bg-gray-50/50">
+          <nav className="flex space-x-1 px-6 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`flex items-center gap-2 py-4 px-4 font-medium text-sm transition-all whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "border-green-500 text-green-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "text-primary-600 border-b-3 border-primary-600 bg-white"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 rounded-t-lg"
                 }`}
               >
-                <tab.icon className="w-4 h-4 mr-2" />
+                <tab.icon className="w-4 h-4" />
                 {tab.name}
               </button>
             ))}
@@ -302,139 +314,154 @@ const PatientProfile: React.FC = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow-sm">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="p-6">
           {activeTab === "personal" && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                <User className="w-5 h-5 mr-2" />
-                Personal Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
+                <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                  <User className="w-4 h-4 text-primary-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Personal Information
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     First Name
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.first_name || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Last Name
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.last_name || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Email Address
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.email_address || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Phone Number
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.phone_number || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Date of Birth
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.date_of_birth || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Gender
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.gender || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Blood Type
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.blood_type || "Not specified"}
                   </p>
                 </div>
               </div>
 
-              <h4 className="text-md font-semibold text-gray-900 mt-8 mb-4 flex items-center">
-                <MapPin className="w-4 h-4 mr-2" />
-                Address Information
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="md:col-span-2 mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="flex items-center gap-2 mt-10 mb-6 pb-4 border-b border-gray-200">
+                <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-emerald-600" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-900">
+                  Address Information
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Street Address
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.address || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     City
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.city || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     State
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.state || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     ZIP Code
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.zipcode || "Not specified"}
                   </p>
                 </div>
               </div>
 
-              <h4 className="text-md font-semibold text-gray-900 mt-8 mb-4 flex items-center">
-                <AlertCircle className="w-4 h-4 mr-2" />
-                Emergency Contact
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Emergency Contact Name
+              <div className="flex items-center gap-2 mt-10 mb-6 pb-4 border-b border-gray-200">
+                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-900">
+                  Emergency Contact
+                </h4>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    Contact Name
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.emergency_contacts[0]?.name || "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Emergency Phone
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    Phone Number
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {profileData.emergency_contacts[0]?.phone_number ||
                       "Not specified"}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Relationship
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {formatRelationship(
                       profileData.emergency_contacts[0]?.relationship ||
                         "Not specified"
@@ -447,48 +474,57 @@ const PatientProfile: React.FC = () => {
 
           {activeTab === "medical" && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                <Heart className="w-5 h-5 mr-2" />
-                Medical Information
-              </h3>
-              <div className="space-y-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
+                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-red-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Medical Information
+                </h3>
+              </div>
+
+              <div className="space-y-8">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
                     Known Allergies
                   </label>
-                  <p className="text-gray-900 py-2 whitespace-pre-wrap">
-                    {profileData.medical_information.known_allergies ||
-                      "Not specified"}
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Medications
-                  </label>
-                  <p className="text-gray-900 py-2 whitespace-pre-wrap">
-                    {profileData.medical_information.current_medications ||
-                      "Not specified"}
-                  </p>
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Medical History
-                  </label>
-                  <p className="text-gray-900 py-2 whitespace-pre-wrap">
-                    {profileData.medical_information.medical_history ||
-                      "Not specified"}
-                  </p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Primary Physician
-                    </label>
-                    <p className="text-gray-900 py-2">
-                      {profileData.medical_information.primary_physician ||
-                        "Not specified"}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p className="text-gray-900 font-medium text-base whitespace-pre-wrap">
+                      {profileData.medical_information.known_allergies ||
+                        "No known allergies"}
                     </p>
                   </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    Current Medications
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p className="text-gray-900 font-medium text-base whitespace-pre-wrap">
+                      {profileData.medical_information.current_medications ||
+                        "No current medications"}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    Medical History
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <p className="text-gray-900 font-medium text-base whitespace-pre-wrap">
+                      {profileData.medical_information.medical_history ||
+                        "No medical history recorded"}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    Primary Physician
+                  </label>
+                  <p className="text-gray-900 font-medium text-base">
+                    {profileData.medical_information.primary_physician ||
+                      "Not specified"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -496,38 +532,49 @@ const PatientProfile: React.FC = () => {
 
           {activeTab === "preferences" && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-                <Settings className="w-5 h-5 mr-2" />
-                Preferences & Settings
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <Settings className="w-4 h-4 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Preferences & Settings
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Preferred Language
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {formatLanguage(profileData.preferences.preferred_language)}
                   </p>
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     Communication Preference
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <p className="text-gray-900 font-medium text-base">
                     {formatCommunicationPreference(
                       profileData.preferences.communication_preference
                     )}
                   </p>
                 </div>
-                <div className="md:col-span-2 mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
                     Appointment Reminders
                   </label>
-                  <p className="text-gray-900 py-2">
+                  <div
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm ${
+                      profileData.preferences.appointment_reminders
+                        ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                        : "bg-gray-100 text-gray-700 border border-gray-200"
+                    }`}
+                  >
                     {profileData.preferences.appointment_reminders
                       ? "Enabled"
                       : "Disabled"}
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>

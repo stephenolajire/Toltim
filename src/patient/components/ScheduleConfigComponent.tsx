@@ -87,13 +87,13 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
             <h3 className="font-semibold text-gray-900 truncate">
               {selectedPractitioner.name}
             </h3>
-            <p className="text-green-600">{selectedPractitioner.title}</p>
+            <p className="text-blue-600">{selectedPractitioner.title}</p>
             <p className="text-sm text-gray-600">
               {selectedService.name} - {selectedService.duration}
             </p>
           </div>
           <div className="text-center sm:text-right flex-shrink-0">
-            <p className="font-semibold text-green-600">
+            <p className="font-semibold text-blue-600">
               ₦{selectedService.price.toLocaleString()}/session
             </p>
             <p className="text-sm text-gray-600">
@@ -126,11 +126,11 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 }
                 className={`p-4 border-2 rounded-lg text-left transition-colors ${
                   scheduleConfig.frequency === "daily"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:border-green-300"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <CalendarDays className="w-6 h-6 text-green-600 mb-2" />
+                <CalendarDays className="w-6 h-6 text-blue-600 mb-2" />
                 <h4 className="font-semibold text-gray-900">Daily</h4>
                 <p className="text-sm text-gray-600">Every day</p>
               </button>
@@ -143,11 +143,11 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 }
                 className={`p-4 border-2 rounded-lg text-left transition-colors ${
                   scheduleConfig.frequency === "specific-days"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:border-green-300"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <Calendar className="w-6 h-6 text-green-600 mb-2" />
+                <Calendar className="w-6 h-6 text-blue-600 mb-2" />
                 <h4 className="font-semibold text-gray-900">Specific Days</h4>
                 <p className="text-sm text-gray-600">Select days of week</p>
               </button>
@@ -161,11 +161,11 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 }
                 className={`p-4 border-2 rounded-lg text-left transition-colors ${
                   scheduleConfig.frequency === "every-other-day"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:border-green-300"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <Repeat className="w-6 h-6 text-green-600 mb-2" />
+                <Repeat className="w-6 h-6 text-blue-600 mb-2" />
                 <h4 className="font-semibold text-gray-900">Every Other Day</h4>
                 <p className="text-sm text-gray-600">Skip one day between</p>
               </button>
@@ -179,11 +179,11 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 }
                 className={`p-4 border-2 rounded-lg text-left transition-colors ${
                   scheduleConfig.frequency === "weekly"
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:border-green-300"
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-200 hover:border-blue-300"
                 }`}
               >
-                <Calendar className="w-6 h-6 text-green-600 mb-2" />
+                <Calendar className="w-6 h-6 text-blue-600 mb-2" />
                 <h4 className="font-semibold text-gray-900">Weekly</h4>
                 <p className="text-sm text-gray-600">Once per week</p>
               </button>
@@ -215,8 +215,8 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                     }}
                     className={`p-3 text-sm rounded-lg border transition-colors ${
                       scheduleConfig.selectedDays.includes(day.value)
-                        ? "bg-green-600 text-white border-green-600"
-                        : "border-gray-300 hover:border-green-500"
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "border-gray-300 hover:border-blue-500"
                     }`}
                   >
                     {day.label}
@@ -240,7 +240,7 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                   startDate: e.target.value,
                 })
               }
-              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -275,7 +275,7 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
               (scheduleConfig.frequency === "specific-days" &&
                 scheduleConfig.selectedDays.length === 0)
             }
-            className="px-6 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
           >
             Continue to Time Selection
           </button>

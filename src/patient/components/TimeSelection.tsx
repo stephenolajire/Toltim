@@ -1,6 +1,6 @@
 // TimeSelection.tsx
 import React from "react";
-import { ArrowLeft, CheckCircle, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import type { Service, Practitioner, ScheduleConfig } from "./types";
 
 interface TimeSelectionProps {
@@ -20,6 +20,9 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
   onBack,
   onContinue,
 }) => {
+  const [timeValidationError, setTimeValidationError] =
+    React.useState<string>("");
+
   const calculateTotalCost = () => {
     let multiplier = 1;
 
@@ -51,6 +54,106 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
         return `Weekly appointments for ${totalDays} days`;
       default:
         return "";
+    }
+  };
+
+  const convertTimeToMinutes = (time: string): number => {
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + (minutes || 0);
+  };
+
+  const parseTimeRange = (
+    timeString: string
+  ): { start: number; end: number } | null => {
+    try {
+      const lowerString = timeString.toLowerCase().trim();
+      const match = lowerString.match(/(\d+)(am|pm)\s*-\s*(\d+)(am|pm)/);
+
+      if (!match) return null;
+
+      let startHour = parseInt(match[1]);
+      const startPeriod = match[2];
+      let endHour = parseInt(match[3]);
+      const endPeriod = match[4];
+
+      // Convert to 24-hour format
+      if (startPeriod === "pm" && startHour !== 12) startHour += 12;
+      if (startPeriod === "am" && startHour === 12) startHour = 0;
+      if (endPeriod === "pm" && endHour !== 12) endHour += 12;
+      if (endPeriod === "am" && endHour === 12) endHour = 0;
+
+      return {
+        start: startHour * 60, // Convert to minutes
+        end: endHour * 60,
+      };
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const validateTimeAgainstAvailability = (selectedTime: string): boolean => {
+    if (!selectedTime) {
+      return true;
+    }
+
+    if (
+      !selectedPractitioner.availability ||
+      selectedPractitioner.availability.length === 0
+    ) {
+      return true;
+    }
+
+    const selectedTimeMinutes = convertTimeToMinutes(selectedTime);
+    let isTimeValid = false;
+
+    for (const availability of selectedPractitioner.availability) {
+      if (typeof availability === "string") {
+        const timeRange = parseTimeRange(availability);
+
+        if (timeRange) {
+          // Check if selected time falls within this availability slot
+          if (
+            selectedTimeMinutes >= timeRange.start &&
+            selectedTimeMinutes <= timeRange.end
+          ) {
+            isTimeValid = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!isTimeValid) {
+      const availableTimes = selectedPractitioner.availability
+        .filter((slot): slot is string => typeof slot === "string")
+        .join(", ");
+
+      setTimeValidationError(
+        `Selected time ${selectedTime} is not available. Practitioner is available during: ${availableTimes}`
+      );
+      return false;
+    }
+
+    setTimeValidationError("");
+    return true;
+  };
+
+  const handleTimeSlotSelect = (time: string) => {
+    const isValid = validateTimeAgainstAvailability(time);
+    if (isValid) {
+      onTimeSlotSelect(time);
+      setTimeValidationError("");
+    } else {
+      onTimeSlotSelect(time);
+    }
+  };
+
+  const handleContinue = () => {
+    if (scheduleConfig.timeSlot) {
+      const isValid = validateTimeAgainstAvailability(scheduleConfig.timeSlot);
+      if (isValid) {
+        onContinue();
+      }
     }
   };
 
@@ -89,7 +192,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
             <h3 className="font-semibold text-gray-900 truncate">
               {selectedPractitioner.full_name}
             </h3>
-            <p className="text-green-600">
+            <p className="text-blue-600">
               {selectedPractitioner.specialization}
             </p>
             <p className="text-sm text-gray-600">
@@ -100,10 +203,10 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
             </p>
           </div>
           <div className="text-center sm:text-right flex-shrink-0">
-            <p className="font-semibold text-green-600">
+            <p className="font-semibold text-blue-600">
               ₦{selectedService.price.toLocaleString()}/session
             </p>
-            <p className="text-lg font-bold text-green-600">
+            <p className="text-lg font-bold text-blue-600">
               Total: ₦{calculateTotalCost().toLocaleString()}
             </p>
           </div>
@@ -114,7 +217,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-green-600" />
+            <Clock className="w-5 h-5 text-blue-600" />
             Select Preferred Time
           </h3>
         </div>
@@ -129,7 +232,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
               </h4>
               <div className="grid gap-2">
                 {selectedPractitioner.availability.map(
-                  (availability, index) => (
+                  (availability: any, index) => (
                     <div
                       key={index}
                       className="bg-white p-3 rounded-md shadow-sm"
@@ -144,6 +247,21 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
             </div>
           )}
 
+          {/* Time Validation Error */}
+          {timeValidationError && (
+            <div className="bg-red-50 border-2 border-red-200 p-4 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-900 mb-1">
+                    Invalid Time Selection
+                  </p>
+                  <p className="text-sm text-red-800">{timeValidationError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Time Slot Selection */}
           <div>
             <h4 className="font-semibold text-gray-900 mb-3">
@@ -153,11 +271,11 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
               {timeSlots.map((slot) => (
                 <button
                   key={slot.value}
-                  onClick={() => onTimeSlotSelect(slot.value)}
+                  onClick={() => handleTimeSlotSelect(slot.value)}
                   className={`p-3 text-sm font-medium rounded-lg border-2 transition-all ${
                     scheduleConfig.timeSlot === slot.value
-                      ? "bg-green-600 text-white border-green-600 shadow-md scale-105"
-                      : "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:bg-green-50 hover:shadow-sm"
+                      ? "bg-blue-600 text-white border-blue-600 shadow-md scale-105"
+                      : "bg-white text-gray-700 border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:shadow-sm"
                   }`}
                 >
                   {slot.display}
@@ -175,8 +293,8 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
               <input
                 type="time"
                 value={scheduleConfig.timeSlot}
-                onChange={(e) => onTimeSlotSelect(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all"
+                onChange={(e) => handleTimeSlotSelect(e.target.value)}
+                className="w-full sm:w-auto px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
               />
               <p className="text-sm text-gray-500">
                 💡 Please ensure the time aligns with the practitioner's
@@ -186,20 +304,20 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
           </div>
 
           {/* Selected Time Confirmation */}
-          {scheduleConfig.timeSlot && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border-2 border-green-200">
+          {scheduleConfig.timeSlot && !timeValidationError && (
+            <div className="bg-gradient-to-r from-blue-50 to-emerald-50 p-4 rounded-lg border-2 border-blue-200">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                  <CheckCircle className="w-6 h-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-green-900 mb-1">
+                  <p className="font-semibold text-blue-900 mb-1">
                     Time Selected: {scheduleConfig.timeSlot}
                   </p>
-                  <p className="text-sm text-green-700 mb-2">
+                  <p className="text-sm text-blue-700 mb-2">
                     {getScheduleDescription()}
                   </p>
-                  <p className="text-sm font-semibold text-green-900">
+                  <p className="text-sm font-semibold text-blue-900">
                     Total Cost: ₦{calculateTotalCost().toLocaleString()}
                   </p>
                 </div>
@@ -219,9 +337,9 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
           </button>
 
           <button
-            onClick={onContinue}
-            disabled={!scheduleConfig.timeSlot}
-            className="px-6 py-2.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
+            onClick={handleContinue}
+            disabled={!scheduleConfig.timeSlot || !!timeValidationError}
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
           >
             Continue to Booking
           </button>

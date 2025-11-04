@@ -9,13 +9,14 @@ import {
   Shield,
   Loader2,
   CheckCircle,
+  Heart,
+  AlertCircle,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useInBedProcedures } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
 import api from "../constant/api";
 import { toast } from "react-toastify";
-import Error from "../components/Error";
 
 // Types
 interface ServiceOption {
@@ -53,7 +54,7 @@ interface BookingData {
   services: ServiceOption[];
   specialRequirements: string;
   chw: string;
-  start_date:string;
+  start_date: string;
 }
 
 const InPatientCaregiverService: React.FC = () => {
@@ -85,7 +86,7 @@ const InPatientCaregiverService: React.FC = () => {
 
   // Load coordinates from localStorage on mount
   useEffect(() => {
-    getUserLocation()
+    getUserLocation();
   }, []);
 
   const getUserLocation = () => {
@@ -134,7 +135,6 @@ const InPatientCaregiverService: React.FC = () => {
       const response = await api.get(
         `inpatient-caregiver/nearby-workers/?role=chw&latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
       );
-      // console.log(response.data)
       return response.data;
     },
     enabled: !!coordinates.latitude && !!coordinates.longitude,
@@ -142,7 +142,7 @@ const InPatientCaregiverService: React.FC = () => {
     gcTime: 20 * 60 * 1000,
   });
 
-  console.log(nearByCHWData)
+  console.log(nearByCHWData);
 
   // Load fetched services
   useEffect(() => {
@@ -168,10 +168,6 @@ const InPatientCaregiverService: React.FC = () => {
 
   if (proceduresLoading || loadingLocation) {
     return <Loading />;
-  }
-
-  if (chwError) {
-    return <Error />;
   }
 
   const handleInputChange = (field: keyof BookingData, value: string) => {
@@ -269,14 +265,12 @@ const InPatientCaregiverService: React.FC = () => {
       console.error("Error creating booking:", error);
 
       if (error.response?.data) {
-        // Check specifically for wallet balance error
         if (error.response.data.errors?.wallet_balance) {
           toast.error(error.response.data.errors.wallet_balance, {
             position: "top-center",
             autoClose: 5000,
           });
         } else {
-          // Handle other validation errors
           const errorMessage =
             error.response.data.errors?.[0] ||
             error.response.data.message ||
@@ -294,49 +288,73 @@ const InPatientCaregiverService: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto px-2 py-4 sm:py-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center mb-4">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 mb-4">
             <button
               onClick={() => window.history.back()}
-              className="mr-2 sm:mr-4 p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg hover:bg-white"
+              className="mt-1 sm:mt-0 p-2 text-blue-600 hover:text-blue-700 transition-colors rounded-lg hover:bg-blue-50"
             >
               <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-                In-Patient Caregiver Service
-              </h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+                  In-Patient Care Service
+                </h1>
+              </div>
               <p className="text-sm sm:text-base text-gray-600">
                 Get dedicated support during your hospital stay with our
                 Community Health Workers
               </p>
             </div>
           </div>
+
+          {/* Info Banner */}
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-5 text-white shadow-lg">
+            <div className="flex items-start gap-3">
+              <Shield className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-base sm:text-lg mb-1">
+                  Professional Healthcare Support
+                </h3>
+                <p className="text-sm sm:text-base text-blue-50">
+                  Our verified Community Health Workers provide compassionate,
+                  professional care throughout your hospital stay
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Location Error */}
         {locationError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-            <p className="text-red-800">{locationError}</p>
-            <button
-              onClick={getUserLocation}
-              className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium"
-            >
-              Try Again
-            </button>
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6 shadow-sm">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-red-800 font-medium">{locationError}</p>
+                <button
+                  onClick={getUserLocation}
+                  className="mt-2 text-sm text-red-600 hover:text-red-800 font-semibold underline"
+                >
+                  Try Again
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-5">
             {/* Book In-Patient Care Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+            <div className="bg-white rounded-xl shadow-md border-2 border-blue-100 p-4 sm:p-6">
               <div className="mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                   Book In-Patient Care
                 </h2>
                 <p className="text-sm sm:text-base text-gray-600">
@@ -347,16 +365,18 @@ const InPatientCaregiverService: React.FC = () => {
 
               {/* Patient Information */}
               <div className="mb-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <User className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-blue-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
                     Patient Information
                   </h3>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Patient Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -365,7 +385,7 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("patientName", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                       placeholder="Enter patient's full name"
                     />
                   </div>
@@ -374,16 +394,18 @@ const InPatientCaregiverService: React.FC = () => {
 
               {/* Hospital Details */}
               <div className="mb-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <MapPin className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-blue-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
                     Hospital Details
                   </h3>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Hospital Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -392,13 +414,13 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("hospitalName", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                       placeholder="e.g., Lagos University Teaching Hospital"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Hospital Address <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -407,13 +429,13 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("hospitalAddress", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                       placeholder="Full hospital address"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Room/Ward Number <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -422,7 +444,7 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("roomWardNumber", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                       placeholder="e.g., Ward 3B, Room 205"
                     />
                   </div>
@@ -431,16 +453,18 @@ const InPatientCaregiverService: React.FC = () => {
 
               {/* Service Duration */}
               <div className="mb-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Calendar className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-blue-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
                     Service Duration
                   </h3>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Admission Date <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -449,12 +473,12 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("admissionDate", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Expected Discharge <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -463,14 +487,14 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("expectedDischarge", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                     />
                   </div>
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Number of Days <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -479,13 +503,13 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("numberOfDays", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
-                      placeholder="How many days do you need care?"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
+                      placeholder="How many days?"
                       min="1"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Start Date <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -494,7 +518,7 @@ const InPatientCaregiverService: React.FC = () => {
                       onChange={(e) =>
                         handleInputChange("start_date", e.target.value)
                       }
-                      className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                      className="w-full px-4 py-2.5 sm:py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -502,9 +526,11 @@ const InPatientCaregiverService: React.FC = () => {
 
               {/* Services Available */}
               <div className="mb-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Shield className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-blue-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <Shield className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
                     Available Services <span className="text-red-500">*</span>
                   </h3>
                 </div>
@@ -514,40 +540,47 @@ const InPatientCaregiverService: React.FC = () => {
                     bookingData.services.map((service) => (
                       <div
                         key={service.id}
-                        className="border border-gray-200 rounded-lg p-3 hover:border-green-300 transition-colors"
+                        className={`border-2 rounded-xl p-4 transition-all cursor-pointer ${
+                          service.included
+                            ? "border-blue-500 bg-blue-50 shadow-sm"
+                            : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/50"
+                        }`}
+                        onClick={() => handleServiceToggle(service.id)}
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center gap-3 flex-1">
                             <input
                               type="checkbox"
                               id={service.id}
                               checked={service.included}
                               onChange={() => handleServiceToggle(service.id)}
-                              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                              className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
                             />
                             <label
                               htmlFor={service.id}
-                              className="text-sm sm:text-base text-gray-700 cursor-pointer font-medium"
+                              className="text-sm sm:text-base text-gray-900 cursor-pointer font-semibold"
                             >
                               {service.name}
                             </label>
                           </div>
-                          <span className="text-sm font-medium text-gray-900">
+                          <span className="text-sm font-bold text-blue-600">
                             ₦
                             {parseFloat(service.price_per_day).toLocaleString()}
                             /day
                           </span>
                         </div>
 
-                        <p className="text-xs text-gray-600 ml-7">
+                        <p className="text-xs sm:text-sm text-gray-600 ml-8">
                           {service.description}
                         </p>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl">
                       <Shield className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                      <p>No services available at the moment.</p>
+                      <p className="font-semibold">
+                        No services available at the moment.
+                      </p>
                       <p className="text-sm">
                         Please contact support for assistance.
                       </p>
@@ -557,26 +590,31 @@ const InPatientCaregiverService: React.FC = () => {
 
                 {bookingData.services.length > 0 &&
                   !bookingData.services.some((service) => service.included) && (
-                    <p className="text-sm text-red-600 mt-2">
-                      Please select at least one service to continue.
-                    </p>
+                    <div className="flex items-center gap-2 mt-3 text-red-600 bg-red-50 p-3 rounded-lg">
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <p className="text-sm font-medium">
+                        Please select at least one service to continue.
+                      </p>
+                    </div>
                   )}
               </div>
 
               {/* Select CHW */}
               <div className="mb-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <User className="w-5 h-5 text-gray-600" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-blue-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">
                     Select Community Health Worker{" "}
                     <span className="text-red-500">*</span>
                   </h3>
                 </div>
 
                 {chwLoading ? (
-                  <div className="text-center py-8">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-green-500" />
-                    <p className="text-sm text-gray-500 mt-2">
+                  <div className="text-center py-12 bg-blue-50 rounded-xl">
+                    <Loader2 className="w-10 h-10 animate-spin mx-auto text-blue-500 mb-3" />
+                    <p className="text-sm text-gray-600 font-medium">
                       Loading available CHWs...
                     </p>
                   </div>
@@ -586,23 +624,23 @@ const InPatientCaregiverService: React.FC = () => {
                       <div
                         key={chw.user}
                         onClick={() => handleCHWSelect(chw.user)}
-                        className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
                           selectedCHW === chw.user
-                            ? "border-green-500 bg-green-50"
-                            : "border-gray-200 hover:border-green-300"
+                            ? "border-blue-500 bg-blue-50 shadow-md"
+                            : "border-gray-200 hover:border-blue-300 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-start space-x-3 flex-1">
+                          <div className="flex items-start gap-3 flex-1">
                             {chw.profile_picture ? (
                               <img
                                 src={chw.profile_picture}
                                 alt={chw.full_name}
-                                className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full object-cover flex-shrink-0 border-2 border-blue-200"
                               />
                             ) : (
-                              <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
-                                <span className="text-white font-semibold text-sm">
+                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                                <span className="text-white font-bold text-sm sm:text-base">
                                   {chw.full_name
                                     .split(" ")
                                     .map((n) => n[0])
@@ -613,40 +651,40 @@ const InPatientCaregiverService: React.FC = () => {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <p className="font-medium text-gray-900 truncate">
+                                <p className="font-bold text-gray-900 truncate">
                                   {chw.full_name}
                                 </p>
                                 {chw.verified_chw && (
                                   <div className="flex-shrink-0">
-                                    <CheckCircle
-                                      className="w-4 h-4 text-blue-500"
-                                      // title="Verified CHW"
-                                    />
+                                    <CheckCircle className="w-4 h-4 text-blue-600" />
                                   </div>
                                 )}
                               </div>
 
-                              {/* Specialization */}
                               {chw.specialization && (
                                 <p className="text-xs text-gray-600 mb-1 capitalize">
-                                  Specialization: {chw.specialization}
+                                  <span className="font-semibold">
+                                    Specialization:
+                                  </span>{" "}
+                                  {chw.specialization}
                                 </p>
                               )}
 
-                              {/* Experience */}
                               {chw.years_of_experience && (
                                 <p className="text-xs text-gray-600 mb-1">
+                                  <span className="font-semibold">
+                                    Experience:
+                                  </span>{" "}
                                   {chw.years_of_experience}{" "}
                                   {chw.years_of_experience === 1
                                     ? "year"
-                                    : "years"}{" "}
-                                  of experience
+                                    : "years"}
                                 </p>
                               )}
 
-                              {/* Distance */}
                               {chw.distance !== undefined && (
                                 <p className="text-xs text-gray-500">
+                                  <MapPin className="w-3 h-3 inline mr-1" />
                                   {chw.distance.toFixed(1)} km away
                                 </p>
                               )}
@@ -654,43 +692,53 @@ const InPatientCaregiverService: React.FC = () => {
                           </div>
 
                           {selectedCHW === chw.user && (
-                            <CheckCircle className="w-6 h-6 text-green-500 flex-shrink-0 ml-2" />
+                            <CheckCircle className="w-6 h-6 text-blue-600 flex-shrink-0 ml-2" />
                           )}
                         </div>
 
-                        {/* Biography */}
                         {chw.biography && (
-                          <div className="mt-2 pt-2 border-t border-gray-200">
-                            <p className="text-xs text-gray-600 line-clamp-2">
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
                               {chw.biography}
                             </p>
                           </div>
                         )}
 
-                        {/* Availability Badge */}
-                        <div className="mt-2 flex items-center gap-2">
+                        <div className="mt-3 flex items-center gap-2">
                           <span
-                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
                               chw.available
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-gray-100 text-gray-600"
                             }`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full mr-1 ${
-                                chw.available ? "bg-green-500" : "bg-gray-500"
+                              className={`w-2 h-2 rounded-full mr-1.5 ${
+                                chw.available ? "bg-green-500" : "bg-gray-400"
                               }`}
                             ></span>
-                            {chw.available ? "Available" : "Unavailable"}
+                            {chw.available ? "Available Now" : "Unavailable"}
                           </span>
                         </div>
                       </div>
                     ))}
                   </div>
+                ) : chwError ? (
+                  <div className="text-center py-12 text-gray-500 bg-red-50 rounded-xl border-2 border-red-200">
+                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />
+                    <p className="font-semibold text-red-800">
+                      Error loading CHWs
+                    </p>
+                    <p className="text-sm mt-1">
+                      Please try again later or contact support.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-xl border-2 border-gray-200">
                     <User className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    <p>No CHWs available in your area.</p>
+                    <p className="font-semibold">
+                      No CHWs available in your area.
+                    </p>
                     <p className="text-sm">
                       Please try again later or contact support.
                     </p>
@@ -700,7 +748,7 @@ const InPatientCaregiverService: React.FC = () => {
 
               {/* Special Requirements */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Special Requirements or Notes
                 </label>
                 <textarea
@@ -709,7 +757,7 @@ const InPatientCaregiverService: React.FC = () => {
                     handleInputChange("specialRequirements", e.target.value)
                   }
                   rows={4}
-                  className="w-full px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm sm:text-base resize-none"
                   placeholder="Any specific needs or instructions for the caregiver..."
                 />
               </div>
@@ -718,25 +766,29 @@ const InPatientCaregiverService: React.FC = () => {
               <button
                 onClick={handleSubmit}
                 disabled={!isFormValid() || isSubmitting}
-                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors text-sm sm:text-base flex items-center justify-center gap-2 ${
+                className={`w-full py-3.5 px-4 rounded-xl font-bold transition-all text-sm sm:text-base flex items-center justify-center gap-2 shadow-md ${
                   isFormValid() && !isSubmitting
-                    ? "bg-green-600 hover:bg-green-700 text-white"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-blue-200 hover:shadow-lg transform hover:-translate-y-0.5"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
                 }`}
               >
-                {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-                {isSubmitting ? "Submitting..." : "Submit Booking Request"}
+                {isSubmitting && <Loader2 size={18} className="animate-spin" />}
+                {isSubmitting
+                  ? "Submitting Request..."
+                  : "Submit Booking Request"}
               </button>
             </div>
           </div>
 
           {/* Pricing Summary & What to Expect */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 sm:space-y-5">
             {/* Pricing Summary */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <FileText className="w-5 h-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-white rounded-xl shadow-md border-2 border-blue-100 p-4 sm:p-6 sticky top-4">
+              <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-blue-100">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">
                   Pricing Summary
                 </h3>
               </div>
@@ -747,10 +799,12 @@ const InPatientCaregiverService: React.FC = () => {
                   .map((service) => (
                     <div
                       key={service.id}
-                      className="flex justify-between text-sm"
+                      className="flex justify-between text-sm bg-blue-50 p-3 rounded-lg"
                     >
-                      <span className="text-gray-600">{service.name}:</span>
-                      <span className="text-gray-900">
+                      <span className="text-gray-700 font-medium">
+                        {service.name}:
+                      </span>
+                      <span className="text-gray-900 font-semibold">
                         ₦{parseFloat(service.price_per_day).toLocaleString()}
                         /day
                       </span>
@@ -759,76 +813,104 @@ const InPatientCaregiverService: React.FC = () => {
 
                 {bookingData.services.some((service) => service.included) ? (
                   <>
-                    <div className="border-t border-gray-200 pt-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-900">Daily rate:</span>
-                        <span className="text-gray-900">
+                    <div className="border-t-2 border-blue-100 pt-4 mt-4">
+                      <div className="flex justify-between text-sm mb-3 bg-blue-50 p-3 rounded-lg">
+                        <span className="text-gray-700 font-semibold">
+                          Daily rate:
+                        </span>
+                        <span className="text-blue-600 font-bold">
                           ₦{calculateDailyRate().toLocaleString()}
                         </span>
                       </div>
                       {bookingData.numberOfDays && (
-                        <div className="flex justify-between text-sm mt-2">
-                          <span className="text-gray-900">Number of days:</span>
-                          <span className="text-gray-900">
-                            {bookingData.numberOfDays}
+                        <div className="flex justify-between text-sm bg-blue-50 p-3 rounded-lg">
+                          <span className="text-gray-700 font-semibold">
+                            Number of days:
+                          </span>
+                          <span className="text-gray-900 font-bold">
+                            {bookingData.numberOfDays}{" "}
+                            {parseInt(bookingData.numberOfDays) === 1
+                              ? "day"
+                              : "days"}
                           </span>
                         </div>
                       )}
                     </div>
                     {bookingData.numberOfDays && (
-                      <div className="border-t border-gray-200 pt-3">
-                        <div className="flex justify-between text-base sm:text-lg font-semibold">
-                          <span className="text-gray-900">Total cost:</span>
-                          <span className="text-green-600">
-                            ₦{calculateTotalCost().toLocaleString()}
-                          </span>
+                      <div className="border-t-2 border-blue-100 pt-4 mt-4">
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-xl text-white">
+                          <div className="flex justify-between items-center">
+                            <span className="text-base font-bold">
+                              Total Cost:
+                            </span>
+                            <span className="text-2xl font-bold">
+                              ₦{calculateTotalCost().toLocaleString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="text-center py-4 text-gray-500">
-                    <p className="text-sm">Select services to see pricing</p>
+                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl">
+                    <FileText className="w-10 h-10 mx-auto mb-3 text-gray-400" />
+                    <p className="text-sm font-medium">
+                      Select services to see pricing
+                    </p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* What to Expect */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Clock className="w-5 h-5 text-gray-600" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  What to Expect
-                </h3>
+            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-md p-4 sm:p-6 text-white">
+              <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-blue-500">
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="text-lg font-bold">What to Expect</h3>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm sm:text-base text-gray-700">
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm sm:text-base font-medium">
                     Caregiver matching within 2 hours
                   </p>
                 </div>
 
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm sm:text-base text-gray-700">
+                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm sm:text-base font-medium">
                     Verified Community Health Workers
                   </p>
                 </div>
 
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm sm:text-base text-gray-700">
+                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm sm:text-base font-medium">
                     24/7 support available
                   </p>
                 </div>
 
-                <div className="flex items-start space-x-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                  <p className="text-sm sm:text-base text-gray-700">
+                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
+                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm sm:text-base font-medium">
                     Daily progress updates
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Help Section */}
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <Heart className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-2">Need Help?</h4>
+                  <p className="text-sm text-gray-700">
+                    Our support team is available 24/7 to assist you with your
+                    booking.
                   </p>
                 </div>
               </div>

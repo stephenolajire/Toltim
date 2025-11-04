@@ -1,18 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   MapPin,
   Clock,
-  //   FileText,
   Calendar,
   CheckCircle,
   AlertCircle,
   XCircle,
   Heart,
-  //   Phone,
 } from "lucide-react";
 import api from "../../constant/api";
-// import { useNavigate } from "react-router-dom";
 import CaregiverBookingModal from "../components/CaregiverBookingModal";
 import { toast } from "react-toastify";
 import CareBookingVerifySessionModal from "../components/CarebookingSessionVerification";
@@ -33,7 +30,13 @@ export interface CaregiverBooking {
   emergency_contact_name: string;
   emergency_contact_phone: string;
   special_requirements: string;
-  status: "pending" | "assigned" | "active" | "completed" | "cancelled" | "approved";
+  status:
+    | "pending"
+    | "assigned"
+    | "active"
+    | "completed"
+    | "cancelled"
+    | "approved";
   assigned_worker:
     | string
     | {
@@ -64,10 +67,15 @@ const CareGiving: React.FC = () => {
   const [rejectingRequests, setRejectingRequests] = React.useState<Set<string>>(
     new Set()
   );
-  const [recordingSessions, setRecordingSessions] = React.useState<boolean>(false);
+  const [recordingSessions, setRecordingSessions] =
+    React.useState<boolean>(false);
 
-  // const navigate = useNavigate();
+  const [userType, setUserType] = React.useState<string | null>(null);
+
   const queryClient = useQueryClient();
+
+  // Determine if user is CHW
+  const isChw = userType?.toLowerCase() === "chw";
 
   // Fetch caregiver bookings using TanStack Query
   const { data, isLoading, isError, error } = useQuery<ApiResponse>({
@@ -77,8 +85,8 @@ const CareGiving: React.FC = () => {
       console.log(response.data);
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 30 * 1000, // Refetch every 30 seconds for new requests
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 30 * 1000,
   });
 
   const bookings = data?.results || [];
@@ -90,7 +98,9 @@ const CareGiving: React.FC = () => {
       case "assigned":
         return "bg-blue-100 text-blue-800 border-blue-200";
       case "active":
-        return "bg-green-100 text-green-800 border-green-200";
+        return isChw
+          ? "bg-purple-100 text-purple-800 border-purple-200"
+          : "bg-green-100 text-green-800 border-green-200";
       case "completed":
         return "bg-gray-100 text-gray-800 border-gray-200";
       case "cancelled":
@@ -154,96 +164,99 @@ const CareGiving: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleRecordSession = async (bookingId: string, booking: CaregiverBooking) => {
-      setRecordingSessions(!recordingSessions);
-      setSelectedBooking(booking);
-  
-      // Format today's date as YYYY-MM-DD
-      const today = new Date().toISOString().split("T")[0];
-  
-      try {
-        const response = await api.post(
-          `caregiver-booking/generate-code/${bookingId}/`,
-          {
-            date: today,
-          }
-        );
-        if (response.data) {
-          toast.success("Session code generated successfully!");
+  const handleRecordSession = async (
+    bookingId: string,
+    booking: CaregiverBooking
+  ) => {
+    setRecordingSessions(!recordingSessions);
+    setSelectedBooking(booking);
+
+    const today = new Date().toISOString().split("T")[0];
+
+    try {
+      const response = await api.post(
+        `caregiver-booking/generate-code/${bookingId}/`,
+        {
+          date: today,
         }
-        console.log(response.data);
-      } catch (error) {
-        console.error("Failed to generate session code:", error);
+      );
+      if (response.data) {
+        toast.success("Session code generated successfully!");
       }
-    };
+      console.log(response.data);
+    } catch (error) {
+      console.error("Failed to generate session code:", error);
+    }
+  };
+
+  const handleAcceptRequest = async (bookingId: string) => {
+    setAcceptingRequests((prev) => new Set(prev).add(bookingId));
+    console.log(bookingId);
+
+    try {
+      await api.post(`caregiver-booking/${bookingId}/approve/`);
+
+      queryClient.invalidateQueries({
+        queryKey: ["caregiver-booking"],
+      });
+
+      toast.success("Request accepted successfully!");
+    } catch (error: any) {
+      console.error("Failed to accept request:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to accept request";
+      toast.error(`Error: ${errorMessage}`);
+    } finally {
+      setAcceptingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(bookingId);
+        return newSet;
+      });
+    }
+  };
+
+
+  const handleRejectRequest = async (bookingId: string) => {
+    if (!confirm("Are you sure you want to reject this request?")) {
+      return;
+    }
+
+    setRejectingRequests((prev) => new Set(prev).add(bookingId));
+
+    try {
+      await api.post(`caregiver-booking/${bookingId}/reject/`, {
+        status: "rejected",
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["caregiver-booking"],
+      });
+
+      toast.success("Request rejected successfully!");
+    } catch (error: any) {
+      console.error("Failed to reject request:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to reject request";
+      toast.error(`Error: ${errorMessage}`);
+    } finally {
+      setRejectingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(bookingId);
+        return newSet;
+      });
+    }
+  };
+
   
-    const handleAcceptRequest = async (bookingId: string) => {
-      setAcceptingRequests((prev) => new Set(prev).add(bookingId));
-      console.log(bookingId);
-  
-      try {
-        await api.post(`caregiver-booking/${bookingId}/approve/`);
-  
-        // Refetch the data to update the UI
-        queryClient.invalidateQueries({
-          queryKey: ["caregiver-booking"],
-        });
-  
-        toast.success("Request accepted successfully!");
-      } catch (error: any) {
-        console.error("Failed to accept request:", error);
-  
-        const errorMessage =
-          error.response?.data?.message ||
-          error.response?.data?.detail ||
-          "Failed to accept request";
-        toast.error(`Error: ${errorMessage}`);
-      } finally {
-        setAcceptingRequests((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(bookingId);
-          return newSet;
-        });
-      }
-    };
-  
-    const handleRejectRequest = async (bookingId: string) => {
-      if (!confirm("Are you sure you want to reject this request?")) {
-        return;
-      }
-  
-      setRejectingRequests((prev) => new Set(prev).add(bookingId));
-  
-      try {
-        await api.post(
-          `caregiver-booking/${bookingId}/reject/`,
-          {
-            status: "rejected",
-          }
-        );
-  
-        // Refetch the data to update the UI
-        queryClient.invalidateQueries({
-          queryKey: ["caregiver-booking"],
-        });
-  
-        toast.success("Request rejected successfully!");
-      } catch (error: any) {
-        console.error("Failed to reject request:", error);
-  
-        const errorMessage =
-          error.response?.data?.message ||
-          error.response?.data?.detail ||
-          "Failed to reject request";
-        toast.error(`Error: ${errorMessage}`);
-      } finally {
-        setRejectingRequests((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(bookingId);
-          return newSet;
-        });
-      }
-    };
+  useEffect(() => {
+    setUserType(localStorage.getItem("userType"))
+  }, []);
 
   if (isLoading) {
     return (
@@ -301,17 +314,7 @@ const CareGiving: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">
           Caregiving Requests
         </h1>
-        <div className="flex items-center gap-4">
-          {/* <div className="text-sm text-gray-500">
-            {bookings.length} request{bookings.length !== 1 ? "s" : ""} found
-          </div> */}
-          {/* <button
-            onClick={() => navigate("/nurse")}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-          >
-            Back to Procedures
-          </button> */}
-        </div>
+        <div className="flex items-center gap-4"></div>
       </div>
 
       <div className="w-full mx-auto">
@@ -335,7 +338,6 @@ const CareGiving: React.FC = () => {
                 key={booking.id}
                 className="bg-white rounded-xl shadow-sm hover:shadow-lg border border-gray-100 hover:border-gray-200 transition-all duration-300 overflow-hidden"
               >
-                {/* Header with status */}
                 <div className="p-6 pb-4">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -364,7 +366,6 @@ const CareGiving: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Service Details */}
                   <div className="mb-4">
                     <h4 className="font-medium text-gray-900 mb-1 text-sm">
                       {booking.caregiver_type}
@@ -374,17 +375,6 @@ const CareGiving: React.FC = () => {
                     </p>
                   </div>
 
-                  {/* Medical Condition */}
-                  {/* <div className="mb-4 p-2 bg-blue-50 rounded-lg">
-                    <p className="text-xs font-medium text-blue-900 mb-1">
-                      Medical Condition
-                    </p>
-                    <p className="text-xs text-blue-700">
-                      {booking.medical_condition}
-                    </p>
-                  </div> */}
-
-                  {/* Location and Date */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <MapPin className="h-3 w-3 flex-shrink-0" />
@@ -401,25 +391,31 @@ const CareGiving: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                   <div className="flex items-center justify-between mb-3">
                     <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">
+                      <div
+                        className={`text-lg font-bold ${
+                          isChw ? "text-purple-600" : "text-green-600"
+                        }`}
+                      >
                         {formatPrice(booking.total_price)}
                       </div>
                       <div className="text-xs text-gray-500">Total amount</div>
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div className="space-y-2">
                     {booking.status === "pending" ? (
                       <>
                         <button
                           onClick={() => handleAcceptRequest(booking.id)}
                           disabled={acceptingRequests.has(booking.id)}
-                          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                          className={`w-full ${
+                            isChw
+                              ? "bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400"
+                              : "bg-green-600 hover:bg-green-700 disabled:bg-green-400"
+                          } disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2`}
                         >
                           {acceptingRequests.has(booking.id) ? (
                             <>
@@ -450,7 +446,11 @@ const CareGiving: React.FC = () => {
                         <button
                           onClick={() => handleAcceptRequest(booking.id)}
                           disabled={acceptingRequests.has(booking.id)}
-                          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                          className={`w-full ${
+                            isChw
+                              ? "bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400"
+                              : "bg-green-600 hover:bg-green-700 disabled:bg-green-400"
+                          } disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2`}
                         >
                           {acceptingRequests.has(booking.id) ? (
                             <>
@@ -478,13 +478,17 @@ const CareGiving: React.FC = () => {
                       </>
                     ) : (
                       booking.status === "approved" && (
-                      <button
-                        className="w-full px-3 text-white bg-green-600 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
-                        onClick={() => handleRecordSession(booking.id, booking)}
-                      >
-                        Verify Session
-                      </button>
-                    )
+                        <button
+                          className={`w-full px-3 text-white ${
+                            isChw ? "bg-purple-600" : "bg-green-600"
+                          } py-2 rounded-lg font-medium text-sm cursor-pointer flex items-center justify-center gap-2`}
+                          onClick={() =>
+                            handleRecordSession(booking.id, booking)
+                          }
+                        >
+                          Verify Session
+                        </button>
+                      )
                     )}
 
                     <button

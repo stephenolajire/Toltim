@@ -8,7 +8,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
+  // LineChart,
   Line,
 } from "recharts";
 import {
@@ -260,7 +260,7 @@ const OverviewDashboard = () => {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Bookings Bar Chart */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
                 Bookings Overview
@@ -303,10 +303,10 @@ const OverviewDashboard = () => {
                 />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+          </div> */}
 
           {/* Revenue Line Chart */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
                 Revenue Trend
@@ -347,7 +347,7 @@ const OverviewDashboard = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </div> */}
         </div>
 
         {/* Combined Comparison Chart */}
@@ -415,7 +415,7 @@ const OverviewDashboard = () => {
         </div>
 
         {/* Monthly Data Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+        {/* <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900">
               Monthly Statistics
@@ -495,7 +495,7 @@ const OverviewDashboard = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -302,7 +302,7 @@ const HealthPractitionersMatching: React.FC<
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading selected services...</p>
         </div>
       </div>
@@ -311,7 +311,7 @@ const HealthPractitionersMatching: React.FC<
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto p-4">
+      <div className="mx-auto py-4">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center mb-4">
@@ -349,7 +349,7 @@ const HealthPractitionersMatching: React.FC<
                 placeholder="Search by name or specialization..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           )}
@@ -358,7 +358,7 @@ const HealthPractitionersMatching: React.FC<
         {/* Main Content */}
         <div className="space-y-6">
           {currentStep === "practitioners" && (
-            <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading ? (
                 <div className="text-center py-12">
                   <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>

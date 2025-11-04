@@ -18,6 +18,7 @@ import {
   MapPin,
   Loader,
   AlertCircle,
+  Heart,
 } from "lucide-react";
 import { useNurseProcedures } from "../constant/GlobalContext";
 import { useNavigate } from "react-router-dom";
@@ -61,7 +62,7 @@ interface Service {
   icon?: React.ReactNode;
   features: string[];
   requirements?: string[];
-  procedure_id?: string; // Add this for API integration
+  procedure_id?: string;
 }
 
 interface SelectedService {
@@ -88,11 +89,9 @@ const NursingProcedures: React.FC = () => {
 
   const navigate = useNavigate();
 
-  // API Data Hook
   const { data, isLoading } = useNurseProcedures();
   console.log(data);
 
-  // Get user location on component mount
   useEffect(() => {
     getCurrentLocation();
   }, []);
@@ -108,15 +107,12 @@ const NursingProcedures: React.FC = () => {
     }
 
     try {
-      // Check current permission status
       if ("permissions" in navigator) {
         const permission = await navigator.permissions.query({
           name: "geolocation",
         });
         console.log("Current geolocation permission:", permission.state);
 
-        // If permission is denied, we still try to request it
-        // The browser will show the permission prompt again
         if (permission.state === "denied") {
           console.log(
             "Permission was denied, but attempting to request again..."
@@ -124,7 +120,6 @@ const NursingProcedures: React.FC = () => {
         }
       }
 
-      // Always attempt to get location - this will trigger permission prompt if needed
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const locationData = {
@@ -136,7 +131,6 @@ const NursingProcedures: React.FC = () => {
           setLocation(locationData);
           setLocationLoading(false);
 
-          // Store in localStorage for use in other components
           localStorage.setItem("userLocation", JSON.stringify(locationData));
         },
         (error) => {
@@ -164,12 +158,11 @@ const NursingProcedures: React.FC = () => {
         {
           enableHighAccuracy: false,
           timeout: 15000,
-          maximumAge: 0, // Changed to 0 to always get fresh location and trigger permission prompt
+          maximumAge: 0,
         }
       );
     } catch (error) {
       console.error("Permission query error:", error);
-      // Fallback: still try to get location even if permission query fails
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const locationData = {
@@ -198,7 +191,6 @@ const NursingProcedures: React.FC = () => {
     }
   };
 
-  // Transform API data to Service format
   const transformApiDataToServices = (
     apiProcedures: APIProcedure[]
   ): Service[] => {
@@ -218,11 +210,10 @@ const NursingProcedures: React.FC = () => {
       requirements: procedure.requirements.map(
         (requirement) => requirement.item
       ),
-      procedure_id: procedure.procedure_id, // Store the numeric ID for API calls
+      procedure_id: procedure.procedure_id,
     }));
   };
 
-  // Get appropriate icon based on service title
   const getServiceIcon = (title: string): React.ReactNode => {
     const lowerTitle = title.toLowerCase();
     if (lowerTitle.includes("wound") || lowerTitle.includes("dressing")) {
@@ -241,10 +232,8 @@ const NursingProcedures: React.FC = () => {
     return <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />;
   };
 
-  // Get services data (API data takes priority)
   const getServicesData = (): Service[] => {
     if (data?.results && data.results.length > 0) {
-      // Filter only active procedures
       const activeProcedures: any[] = data.results.filter(
         (procedure: any) => procedure.status === "active"
       );
@@ -260,19 +249,6 @@ const NursingProcedures: React.FC = () => {
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.shortDescription.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getDepartmentColor = (department: string) => {
-    switch (department) {
-      case "nursing":
-        return "bg-blue-100 text-blue-600 border-blue-200";
-      case "caregiver":
-        return "bg-green-100 text-green-600 border-green-200";
-      case "inpatient":
-        return "bg-purple-100 text-purple-600 border-purple-200";
-      default:
-        return "bg-gray-100 text-gray-600 border-gray-200";
-    }
-  };
 
   const handleServiceSelect = (service: Service) => {
     const existingIndex = selectedServices.findIndex(
@@ -330,9 +306,7 @@ const NursingProcedures: React.FC = () => {
     return selectedServices.find((s) => s.service.id === serviceId);
   };
 
-  // Updated handleProceed function to store data for next component
   const handleProceed = () => {
-    // Validation
     if (selectedServices.length === 0) {
       alert("Please select at least one nursing procedure before proceeding.");
       return;
@@ -345,8 +319,6 @@ const NursingProcedures: React.FC = () => {
       return;
     }
 
-    // Store selected services data for the matching component
-    // Remove circular references by excluding non-serializable properties
     const servicesDataForAPI = selectedServices.map((selected) => ({
       service: {
         id: selected.service.id,
@@ -358,7 +330,6 @@ const NursingProcedures: React.FC = () => {
         category: selected.service.category,
         features: selected.service.features,
         requirements: selected.service.requirements,
-        // Ensure we have the procedure_id for API calls
         procedure_id: selected.service.procedure_id,
       },
       days: selected.days,
@@ -371,14 +342,11 @@ const NursingProcedures: React.FC = () => {
         JSON.stringify(servicesDataForAPI)
       );
 
-      // Store the maximum days for schedule configuration
       const maxDays = selectedServices.reduce(
         (max, service) => Math.max(max, service.days),
         1
       );
       localStorage.setItem("procedureDays", maxDays.toString());
-
-      // Store total amount
       localStorage.setItem("totalAmount", getTotalAmount().toString());
 
       console.log("Proceeding with services:", servicesDataForAPI);
@@ -391,31 +359,35 @@ const NursingProcedures: React.FC = () => {
 
   const renderLocationCard = () => {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-green-100 text-green-600 rounded-lg">
+      <div className="bg-white rounded-xl shadow-md border-2 border-blue-100 p-4 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-blue-100 text-blue-600 rounded-lg flex-shrink-0">
             <MapPin className="w-5 h-5" />
           </div>
-          <div className="flex-1">
-            <h3 className="font-medium text-gray-900 text-sm">Your Location</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 text-sm mb-1">
+              Your Location
+            </h3>
             {locationLoading ? (
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Loader className="w-4 h-4 animate-spin" />
                 <span>Getting your location...</span>
               </div>
             ) : locationError ? (
               <div className="text-sm text-red-600">
-                <div className="flex items-center space-x-2 mb-1">
+                <div className="flex items-center gap-2 mb-1">
                   <AlertCircle className="w-4 h-4" />
-                  <span className="font-medium">Location Required</span>
+                  <span className="font-semibold">Location Required</span>
                 </div>
                 <p className="text-xs text-red-500">{locationError}</p>
               </div>
             ) : location ? (
               <div className="text-sm text-gray-600">
-                <div className="flex items-center space-x-1 text-green-600 mb-1">
-                  <CheckCircle className="w-3 h-3" />
-                  <span className="text-xs font-medium">Location obtained</span>
+                <div className="flex items-center gap-1.5 text-green-600 mb-1">
+                  <CheckCircle className="w-4 h-4" />
+                  <span className="text-xs font-semibold">
+                    Location obtained
+                  </span>
                 </div>
                 <p className="text-xs">
                   Lat: {location.latitude.toFixed(6)}, Lng:{" "}
@@ -427,16 +399,15 @@ const NursingProcedures: React.FC = () => {
           {!locationLoading && locationError && (
             <button
               onClick={getCurrentLocation}
-              className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm flex-shrink-0"
             >
               Allow Location
             </button>
           )}
         </div>
 
-        {/* Additional help text when permission is denied */}
         {locationError && locationError.includes("denied") && (
-          <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="mt-3 p-3 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
             <p className="text-xs text-yellow-800">
               <strong>Need help?</strong> Click the location icon in your
               browser's address bar to enable location access, then click "Allow
@@ -456,37 +427,39 @@ const NursingProcedures: React.FC = () => {
     return (
       <div
         key={service.id}
-        className={`bg-white rounded-lg shadow-sm border-2 transition-all duration-200 ${
+        className={`bg-white rounded-xl shadow-md border-2 transition-all duration-200 ${
           isSelected
-            ? "border-green-500 bg-green-50"
-            : "border-gray-200 hover:border-gray-300"
+            ? "border-blue-500 bg-blue-50 shadow-lg"
+            : "border-blue-100 hover:border-blue-300 hover:shadow-lg"
         }`}
       >
-        <div className="p-3 sm:p-4">
+        <div className="p-4 sm:p-5">
           <div className="flex items-start justify-between mb-3">
-            <div className="flex items-start space-x-2 sm:space-x-3 flex-1 min-w-0">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
               <div
-                className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${getDepartmentColor(
-                  service.category
-                )}`}
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
+                  isSelected
+                    ? "bg-blue-600 text-white"
+                    : "bg-blue-100 text-blue-600"
+                }`}
               >
                 {service.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 text-sm sm:text-base md:text-lg mb-1 line-clamp-2">
+                <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-1.5 line-clamp-2">
                   {service.name}
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-600 mb-2 line-clamp-2">
                   {service.shortDescription}
                 </p>
-                <div className="flex flex-col xs:flex-row xs:items-center xs:space-x-4 space-y-1 xs:space-y-0 text-xs sm:text-sm text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 gap-1.5 text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 text-gray-600">
+                    <Clock className="w-4 h-4 flex-shrink-0 text-blue-600" />
                     <span className="truncate">{service.duration}</span>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                    <span className="font-semibold text-green-600">
+                  <div className="flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4 flex-shrink-0 text-blue-600" />
+                    <span className="font-bold text-blue-600">
                       ₦{service.price.toLocaleString()}
                     </span>
                   </div>
@@ -494,34 +467,34 @@ const NursingProcedures: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-1 sm:space-x-2 ml-2 flex-shrink-0">
+            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
               <button
                 onClick={() =>
                   setExpandedService(
                     isExpanded ? null : service.procedure_id || null
                   )
                 }
-                className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 {isExpanded ? (
-                  <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ChevronUp className="w-5 h-5" />
                 ) : (
-                  <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ChevronDown className="w-5 h-5" />
                 )}
               </button>
 
               <button
                 onClick={() => handleServiceSelect(service)}
-                className={`px-2 py-1.5 sm:px-3 sm:py-2 md:px-4 rounded-lg font-medium transition-colors text-xs sm:text-sm ${
+                className={`px-4 py-2 rounded-lg font-bold transition-all text-sm shadow-sm ${
                   isSelected
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md"
+                    : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                 }`}
               >
                 {isSelected ? (
-                  <div className="flex items-center space-x-1">
-                    <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Selected</span>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Selected</span>
                   </div>
                 ) : (
                   "Select"
@@ -530,27 +503,27 @@ const NursingProcedures: React.FC = () => {
             </div>
           </div>
 
-          {/* Expanded Details */}
           {isExpanded && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="mb-4">
-                <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
+            <div className="mt-4 pt-4 border-t-2 border-blue-100">
+              <div className="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <p className="text-gray-700 text-sm leading-relaxed">
                   {service.description}
                 </p>
               </div>
 
-              <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2 text-xs sm:text-sm">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                  <h4 className="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
                     What's Included:
                   </h4>
-                  <ul className="space-y-1">
+                  <ul className="space-y-2">
                     {service.features.map((feature, index) => (
                       <li
                         key={index}
-                        className="flex items-start space-x-2 text-xs sm:text-sm text-gray-600"
+                        className="flex items-start gap-2 text-sm text-gray-700"
                       >
-                        <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" />
+                        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -558,17 +531,18 @@ const NursingProcedures: React.FC = () => {
                 </div>
 
                 {service.requirements && service.requirements.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2 text-xs sm:text-sm">
+                  <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                    <h4 className="font-bold text-gray-900 mb-3 text-sm flex items-center gap-2">
+                      <Info className="w-4 h-4 text-blue-600" />
                       Requirements:
                     </h4>
-                    <ul className="space-y-1">
+                    <ul className="space-y-2">
                       {service.requirements.map((requirement, index) => (
                         <li
                           key={index}
-                          className="flex items-start space-x-2 text-xs sm:text-sm text-gray-600"
+                          className="flex items-start gap-2 text-sm text-gray-700"
                         >
-                          <Info className="w-3 h-3 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
                           <span>{requirement}</span>
                         </li>
                       ))}
@@ -579,38 +553,37 @@ const NursingProcedures: React.FC = () => {
             </div>
           )}
 
-          {/* Days Controls (only show if selected) */}
           {isSelected && selectedService && (
-            <div className="mt-4 pt-4 border-t border-green-200 bg-green-25">
+            <div className="mt-4 pt-4 border-t-2 border-blue-200 bg-blue-50 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">
                     Number of Days
                   </label>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
+                  <div className="flex items-center gap-3">
                     <button
                       onClick={() => updateServiceDays(service.id, false)}
-                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                      className="w-8 h-8 rounded-full bg-blue-200 hover:bg-blue-300 flex items-center justify-center transition-colors shadow-sm"
                     >
-                      <Minus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <Minus className="w-4 h-4 text-blue-700" />
                     </button>
-                    <span className="font-semibold text-gray-900 min-w-[1.5rem] sm:min-w-[2rem] text-center text-sm sm:text-base">
+                    <span className="font-bold text-gray-900 min-w-[2rem] text-center text-lg">
                       {selectedService.days}
                     </span>
                     <button
                       onClick={() => updateServiceDays(service.id, true)}
-                      className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center"
+                      className="w-8 h-8 rounded-full bg-blue-200 hover:bg-blue-300 flex items-center justify-center transition-colors shadow-sm"
                     >
-                      <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <Plus className="w-4 h-4 text-blue-700" />
                     </button>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-xs sm:text-sm text-gray-600">
-                    Total:{" "}
+                  <span className="text-sm text-gray-600 block mb-1">
+                    Total:
                   </span>
-                  <span className="text-sm sm:text-lg font-semibold text-green-600">
+                  <span className="text-xl font-bold text-blue-600">
                     ₦{selectedService.totalAmount.toLocaleString()}
                   </span>
                 </div>
@@ -622,34 +595,38 @@ const NursingProcedures: React.FC = () => {
     );
   };
 
-  // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading nursing procedures...</p>
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 font-semibold">
+            Loading nursing procedures...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto px-2 py-4 sm:py-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 ">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex items-center mb-4">
+        <div className="mb-6">
+          <div className="flex items-start sm:items-center gap-3 mb-4">
             <button
               onClick={() => window.history.back()}
-              className="mr-2 sm:mr-4 p-1.5 sm:p-2 text-gray-600 hover:text-gray-800 transition-colors rounded-lg hover:bg-white"
+              className="mt-1 sm:mt-0 p-2 text-blue-600 hover:text-blue-700 transition-colors rounded-lg hover:bg-blue-50"
             >
               <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-                Nursing Procedures
-              </h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+                  Nursing Procedures
+                </h1>
+              </div>
               <p className="text-sm sm:text-base text-gray-600">
                 Choose from our comprehensive nursing services (
                 {nursingProcedures.length} available)
@@ -661,19 +638,18 @@ const NursingProcedures: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Services List */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Location Card */}
             {renderLocationCard()}
 
             {/* Search Bar */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 sm:p-4">
+            <div className="bg-white rounded-xl shadow-md border-2 border-blue-100 p-4">
               <div className="relative">
-                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <Search className="w-5 h-5 text-blue-400 absolute left-4 top-1/2 transform -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Search nursing procedures..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full pl-11 pr-4 py-3 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
               </div>
             </div>
@@ -683,14 +659,14 @@ const NursingProcedures: React.FC = () => {
               {filteredServices.length > 0 ? (
                 filteredServices.map(renderServiceCard)
               ) : (
-                <div className="bg-white rounded-lg p-6 sm:p-8 text-center">
-                  <div className="text-gray-400 mb-4">
-                    <Search className="w-8 h-8 sm:w-12 sm:h-12 mx-auto" />
+                <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 p-12 text-center shadow-sm">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+                    <Search className="w-10 h-10 text-blue-400" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
                     No nursing procedures found
                   </h3>
-                  <p className="text-sm sm:text-base text-gray-600">
+                  <p className="text-sm text-gray-600">
                     Try adjusting your search terms
                   </p>
                 </div>
@@ -701,36 +677,38 @@ const NursingProcedures: React.FC = () => {
           {/* Summary Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-4">
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
-                  <ShoppingCart className="w-5 h-5" />
+              <div className="bg-white rounded-xl shadow-md border-2 border-blue-100 p-5 sm:p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <ShoppingCart className="w-5 h-5 text-blue-600" />
                   <span>Service Summary</span>
                 </h3>
 
                 {selectedServices.length > 0 ? (
                   <>
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-3 mb-6">
                       {selectedServices.map((selected) => (
                         <div
                           key={selected.service.id}
-                          className="border border-gray-200 rounded-lg p-3"
+                          className="border-2 border-blue-100 bg-blue-50 rounded-lg p-3 shadow-sm"
                         >
                           <div className="flex items-start justify-between mb-2">
-                            <h4 className="font-medium text-gray-900 text-sm">
+                            <h4 className="font-bold text-gray-900 text-sm flex-1">
                               {selected.service.name}
                             </h4>
                             <button
                               onClick={() =>
                                 handleServiceSelect(selected.service)
                               }
-                              className="text-red-500 hover:text-red-700"
+                              className="text-red-500 hover:text-red-700 ml-2"
                             >
-                              <XCircle className="w-4 h-4" />
+                              <XCircle className="w-5 h-5" />
                             </button>
                           </div>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div>Days: {selected.days}</div>
-                            <div className="font-semibold text-green-600">
+                          <div className="text-xs text-gray-700 space-y-1">
+                            <div className="font-semibold">
+                              Days: {selected.days}
+                            </div>
+                            <div className="font-bold text-blue-600 text-sm">
                               ₦{selected.totalAmount.toLocaleString()}
                             </div>
                           </div>
@@ -738,33 +716,37 @@ const NursingProcedures: React.FC = () => {
                       ))}
                     </div>
 
-                    <div className="border-t border-gray-200 pt-4 mb-6">
-                      <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <div className="border-t-2 border-blue-100 pt-4 mb-6">
+                      <div className="flex justify-between text-sm font-semibold text-gray-700 mb-3 bg-blue-50 p-3 rounded-lg">
                         <span>Total Services:</span>
-                        <span>{getTotalServices()}</span>
-                      </div>
-                      <div className="flex justify-between text-lg font-semibold text-gray-900">
-                        <span>Total Amount:</span>
-                        <span className="text-green-600">
-                          ₦{getTotalAmount().toLocaleString()}
+                        <span className="text-blue-600">
+                          {getTotalServices()}
                         </span>
+                      </div>
+                      <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-xl text-white shadow-md">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold">Total Amount:</span>
+                          <span className="text-2xl font-bold">
+                            ₦{getTotalAmount().toLocaleString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     <button
                       onClick={handleProceed}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3.5 px-4 rounded-xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
-                      <span>Proceed</span>
-                      <ArrowLeft className="w-4 h-4 rotate-180" />
+                      <span>Proceed to Booking</span>
+                      <ArrowLeft className="w-5 h-5 rotate-180" />
                     </button>
                   </>
                 ) : (
-                  <div className="text-center py-8">
-                    <div className="text-gray-400 mb-4">
-                      <ShoppingCart className="w-12 h-12 mx-auto" />
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center">
+                      <ShoppingCart className="w-10 h-10 text-blue-400" />
                     </div>
-                    <h4 className="font-semibold text-gray-900 mb-2">
+                    <h4 className="font-bold text-gray-900 mb-2">
                       No services selected
                     </h4>
                     <p className="text-gray-600 text-sm">

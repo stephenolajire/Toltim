@@ -19,18 +19,23 @@ const queryKeys = {
   useNurseVerificationStat: "useNurseVerificationStat",
   useNurseProcedures: "useNurseProcedures",
   useNurseProfile: "useNurseProfile",
-  useNurseActiveBooking:"useNurseActiveBooking",
-  useInBedProcedures:"useInBedProcedures",
-  useNearByCHW:"useNearByCHW",
-  useCHWVerification:"useCHWVerification",
-  useCHWProcedures:"useCHWProcedures",
-  useHistory:"useHistory",
-  useCareGiverBooking:"useCareGiverBooking",
-  usePatientProfile:"usePatientProfile",
-  useBedSide:"useBedSide",
-  useUser:"useUser",
-  useWallet:"useWallet",
-  useWalletTransactions:"useWalletTransactions",
+  useNurseActiveBooking: "useNurseActiveBooking",
+  useInBedProcedures: "useInBedProcedures",
+  useNearByCHW: "useNearByCHW",
+  useCHWVerification: "useCHWVerification",
+  useCHWProcedures: "useCHWProcedures",
+  useHistory: "useHistory",
+  useCareGiverBooking: "useCareGiverBooking",
+  usePatientProfile: "usePatientProfile",
+  useBedSide: "useBedSide",
+  useUser: "useUser",
+  useWallet: "useWallet",
+  useWalletTransactions: "useWalletTransactions",
+  usePatientStats: "usePatientStats",
+  useFinancialSummary:"useFinancialSummary",
+  useUserVerified:"useUserVerified",
+  useUserUnVerified:"useUserUnverified"
+  
 };
 
 export const GlobalContext = createContext<Context | undefined>(undefined);
@@ -201,7 +206,6 @@ export const useNurseProcedures = () => {
   });
 };
 
-
 export const useCHWProcedures = () => {
   return useQuery({
     queryKey: [queryKeys.useCHWProcedures],
@@ -215,7 +219,6 @@ export const useCHWProcedures = () => {
     staleTime: 20 * 60 * 1000,
   });
 };
-
 
 export const useNurseProfile = (userRole: string) => {
   return useQuery({
@@ -231,7 +234,7 @@ export const useNurseProfile = (userRole: string) => {
 
       throw new Error("Invalid user role or missing userId");
     },
-    enabled: userRole === "nurse" || (userRole === "chw"),
+    enabled: userRole === "nurse" || userRole === "chw",
     retry: 1,
     staleTime: 20 * 60 * 1000,
     gcTime: 20 * 60 * 1000,
@@ -296,26 +299,25 @@ export const useCareGiverBooking = () => {
   });
 };
 
-
 export const usePatientProfile = () => {
-  return useQuery ({
+  return useQuery({
     queryKey: [queryKeys.usePatientProfile],
     queryFn: async () => {
-      const response = await api.get("user/profile")
-      return response.data
-    }
-  })
-}
+      const response = await api.get("user/profile");
+      return response.data;
+    },
+  });
+};
 
 export const useBedSide = () => {
-  return useQuery ({
+  return useQuery({
     queryKey: [queryKeys.useBedSide],
     queryFn: async () => {
       const response = await api.get("inpatient-caregiver/bookings/");
-      return response.data
-    }
-  })
-}
+      return response.data;
+    },
+  });
+};
 
 export const useUser = (role: string) => {
   return useQuery({
@@ -326,6 +328,33 @@ export const useUser = (role: string) => {
     },
   });
 };
+
+export const useUserVerified = (role: string) => {
+  return useQuery({
+    queryKey: [queryKeys.useUserVerified],
+    queryFn: async () => {
+      const response = await api.get(
+        `/user/role-filter/?role=${role}&verified=true`
+      );
+      return response.data;
+    },
+  });
+};
+
+export const useUserUnVerified = (role: string) => {
+  return useQuery({
+    queryKey: [queryKeys.useUserUnVerified],
+    queryFn: async () => {
+      const response = await api.get(
+        `/user/role-filter/?role=${role}&verified=false`
+      );
+      return response.data;
+    },
+  });
+};
+
+
+
 
 export const useWallet = () => {
   return useQuery({
@@ -347,4 +376,24 @@ export const useWalletTransactions = () => {
   });
 };
 
+export const usePatientStats = () => {
+  return useQuery({
+    queryKey: [queryKeys.usePatientStats],
+    queryFn: async () => {
+      const response = await api.get("history/booking-stats/");
+      return response.data;
+    },
+  });
+};
+
+
+export const useFinancialSummary = () => {
+  return useQuery({
+    queryKey: [queryKeys.useFinancialSummary],
+    queryFn: async () => {
+      const response = await api.get("wallet/financial-summary/");
+      return response.data;
+    },
+  });
+};
 

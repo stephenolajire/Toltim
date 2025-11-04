@@ -25,7 +25,7 @@ const PatientAppointmentHistoryCard = ({ appointment }: { appointment: any }) =>
       case "accepted":
         return "✓";
       case "pending":
-        return "⏳";
+        return "";
       case "rejected":
         return "✗";
       case "completed":
@@ -65,8 +65,8 @@ const appointmentDate: Date = new Date(appointment.date);
     <>
       <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-3">
+        <div className="flex items-start justify-between  mb-4">
+          <div className="flex md:items-center flex-col md:flex-col space-x-3">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-semibold">
               {appointment.doctor.avatar}
             </div>
@@ -80,7 +80,7 @@ const appointmentDate: Date = new Date(appointment.date);
             </div>
           </div>
           <div
-            className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+            className={`px-3 py-1 rounded-full mt-2 md:mt-0 text-sm font-medium border ${getStatusColor(
               appointment.status
             )}`}
           >

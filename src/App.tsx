@@ -14,8 +14,6 @@ import AppointmentReceipt from "./patient/PatientReceipts";
 import CaregiverBooking from "./patient/CareGiver";
 import InPatientCaregiverService from "./patient/InPatient";
 import PatientAppointmentHistory from "./patient/PatientAppointmentHistory";
-import HistoryLayout from "./patient/HistoryLayout";
-import PatientTransactionHistory from "./patient/PatientTransactionHistory";
 
 // admin dashboard
 import AdminLayout from "./admin/AdminLayout";
@@ -183,13 +181,7 @@ const App: React.FC = () => {
               <Route path="caregiver" element={<CaregiverBooking />} />
 
               {/* Patient History */}
-              <Route path="history" element={<HistoryLayout />}>
-                <Route index element={<PatientAppointmentHistory />} />
-                <Route
-                  path="transaction"
-                  element={<PatientTransactionHistory />}
-                />
-              </Route>
+              <Route path="history" element={<PatientAppointmentHistory />} />
 
               {/* Patient Profile */}
               <Route path="profile" element={<PatientProfile />} />

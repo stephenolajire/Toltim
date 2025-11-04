@@ -149,7 +149,7 @@ const Booking: React.FC<BookingProps> = ({
           </div>
           <div className="flex flex-col sm:flex-row sm:justify-between text-lg space-y-1 sm:space-y-0 pt-2 border-t border-gray-200">
             <span className="font-semibold">Total Amount:</span>
-            <span className="font-semibold text-green-600">
+            <span className="font-semibold text-blue-600">
               ₦{calculateTotalCost().toLocaleString()}
             </span>
           </div>
@@ -166,9 +166,9 @@ const Booking: React.FC<BookingProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               onClick={() => onBookingForSelfChange(true)}
-              className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-center"
+              className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-center"
             >
-              <User className="w-8 h-8 text-green-600 mx-auto mb-2" />
+              <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
               <h4 className="font-semibold text-gray-900">Myself</h4>
               <p className="text-sm text-gray-600 mt-1">
                 Book this appointment for yourself
@@ -177,9 +177,9 @@ const Booking: React.FC<BookingProps> = ({
 
             <button
               onClick={() => onBookingForSelfChange(false)}
-              className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-center"
+              className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-center"
             >
-              <Users className="w-8 h-8 text-green-600 mx-auto mb-2" />
+              <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
               <h4 className="font-semibold text-gray-900">Someone Else</h4>
               <p className="text-sm text-gray-600 mt-1">
                 Book for a family member or friend
@@ -210,7 +210,7 @@ const Booking: React.FC<BookingProps> = ({
               }
               rows={3}
               placeholder="Enter the full address where the service should be provided..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-none"
             />
             <p className="text-xs text-gray-500 mt-1">
               Include street address, city, state, and any specific directions
@@ -238,7 +238,7 @@ const Booking: React.FC<BookingProps> = ({
                 onChange={(e) =>
                   updateBookingDetails({ firstName: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
 
@@ -252,7 +252,7 @@ const Booking: React.FC<BookingProps> = ({
                 onChange={(e) =>
                   updateBookingDetails({ lastName: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
 
@@ -266,7 +266,7 @@ const Booking: React.FC<BookingProps> = ({
                 onChange={(e) =>
                   updateBookingDetails({ email: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
 
@@ -280,7 +280,7 @@ const Booking: React.FC<BookingProps> = ({
                 onChange={(e) =>
                   updateBookingDetails({ phone: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               />
             </div>
 
@@ -295,7 +295,7 @@ const Booking: React.FC<BookingProps> = ({
                 }
                 rows={3}
                 placeholder="Enter the full address where the service should be provided..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base resize-none"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-none"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Include street address, city, state, and any specific directions
@@ -312,7 +312,7 @@ const Booking: React.FC<BookingProps> = ({
                 onChange={(e) =>
                   updateBookingDetails({ relationship: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Select relationship</option>
                 <option value="parent">Parent</option>
@@ -342,7 +342,7 @@ const Booking: React.FC<BookingProps> = ({
           <button
             onClick={onSubmit}
             disabled={loading || !isFormValid()}
-            className="px-8 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
           >
             {loading ? (
               <>

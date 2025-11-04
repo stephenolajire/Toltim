@@ -5,7 +5,7 @@ import api from "./api";
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  allowedRoles?: string[]; 
+  allowedRoles?: string[];
 }
 
 interface DecodedToken {

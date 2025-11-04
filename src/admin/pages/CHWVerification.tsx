@@ -206,12 +206,9 @@ const PendingCHWVerifications: React.FC = () => {
   // Mutation for approving CHW
   const approveMutation = useMutation({
     mutationFn: async (chwId: string) => {
-      const response = await api.patch(
-        `user/chw/verification/${chwId}/`,
-        {
-          status: "approved",
-        }
-      );
+      const response = await api.patch(`user/chw/verification/${chwId}/`, {
+        status: "approved",
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -227,12 +224,9 @@ const PendingCHWVerifications: React.FC = () => {
   // Mutation for rejecting CHW
   const rejectMutation = useMutation({
     mutationFn: async (chwId: string) => {
-      const response = await api.patch(
-        `user/chw/verification/${chwId}/`,
-        {
-          status: "rejected",
-        }
-      );
+      const response = await api.patch(`user/chw/verification/${chwId}/`, {
+        status: "rejected",
+      });
       return response.data;
     },
     onSuccess: () => {

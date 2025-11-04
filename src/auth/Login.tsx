@@ -1,5 +1,13 @@
 import React from "react";
-import { Heart, Loader, AlertCircle, CheckCircle, Eye, EyeOff, Shield} from "lucide-react";
+import {
+  Heart,
+  Loader,
+  AlertCircle,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Shield,
+} from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useFormik } from "formik";
 import loginSchema from "./LoginSchema";
@@ -103,7 +111,10 @@ const Login: React.FC = () => {
             {/* Animated Rings on Top */}
             <div className="w-full flex items-center justify-center mb-8">
               <div className="relative w-full max-w-80 h-80">
-                <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 320 320">
+                <svg
+                  className="absolute inset-0 w-full h-full animate-spin-slow"
+                  viewBox="0 0 320 320"
+                >
                   <circle
                     cx="160"
                     cy="160"
@@ -115,7 +126,10 @@ const Login: React.FC = () => {
                     opacity="0.3"
                   />
                 </svg>
-                <svg className="absolute inset-0 w-full h-full animate-spin-reverse" viewBox="0 0 320 320">
+                <svg
+                  className="absolute inset-0 w-full h-full animate-spin-reverse"
+                  viewBox="0 0 320 320"
+                >
                   <circle
                     cx="160"
                     cy="160"
@@ -127,7 +141,10 @@ const Login: React.FC = () => {
                     opacity="0.4"
                   />
                 </svg>
-                <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 320 320">
+                <svg
+                  className="absolute inset-0 w-full h-full animate-spin-slow"
+                  viewBox="0 0 320 320"
+                >
                   <circle
                     cx="160"
                     cy="160"
@@ -152,7 +169,9 @@ const Login: React.FC = () => {
             {/* Content Below */}
             <div className="space-y-6 w-full">
               <div className="text-center">
-                <h2 className="text-h3 text-white mb-3">Welcome Back to Toltimed</h2>
+                <h2 className="text-h3 text-white mb-3">
+                  Welcome Back to Toltimed
+                </h2>
                 <p className="text-body-base text-white opacity-90">
                   Access your healthcare dashboard and manage your appointments
                 </p>
@@ -163,25 +182,33 @@ const Login: React.FC = () => {
                   <div className="w-full max-w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <CheckCircle className="w-full max-w-4 h-4 text-primary-600" />
                   </div>
-                  <span className="text-body-base text-white">Manage your appointments and bookings</span>
+                  <span className="text-body-base text-white">
+                    Manage your appointments and bookings
+                  </span>
                 </div>
                 <div className="flex items-start gap-3 w-full">
                   <div className="w-full max-w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <CheckCircle className="w-full max-w-4 h-4 text-primary-600" />
                   </div>
-                  <span className="text-body-base text-white">Connect with healthcare professionals</span>
+                  <span className="text-body-base text-white">
+                    Connect with healthcare professionals
+                  </span>
                 </div>
                 <div className="flex items-start gap-3 w-full">
                   <div className="w-full max-w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <CheckCircle className="w-full max-w-4 h-4 text-primary-600" />
                   </div>
-                  <span className="text-body-base text-white">Access your health records securely</span>
+                  <span className="text-body-base text-white">
+                    Access your health records securely
+                  </span>
                 </div>
                 <div className="flex items-start gap-3 w-full">
                   <div className="w-full max-w-6 h-6 bg-white rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <CheckCircle className="w-full max-w-4 h-4 text-primary-600" />
                   </div>
-                  <span className="text-body-base text-white">Track your healthcare journey</span>
+                  <span className="text-body-base text-white">
+                    Track your healthcare journey
+                  </span>
                 </div>
               </div>
 
@@ -198,15 +225,21 @@ const Login: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="text-h4 font-bold text-white">500+</div>
-                    <div className="text-body-xs text-white opacity-80">Professionals</div>
+                    <div className="text-body-xs text-white opacity-80">
+                      Professionals
+                    </div>
                   </div>
                   <div>
                     <div className="text-h4 font-bold text-white">10K+</div>
-                    <div className="text-body-xs text-white opacity-80">Patients</div>
+                    <div className="text-body-xs text-white opacity-80">
+                      Patients
+                    </div>
                   </div>
                   <div>
                     <div className="text-h4 font-bold text-white">4.9★</div>
-                    <div className="text-body-xs text-white opacity-80">Rating</div>
+                    <div className="text-body-xs text-white opacity-80">
+                      Rating
+                    </div>
                   </div>
                 </div>
               </div>
@@ -255,7 +288,10 @@ const Login: React.FC = () => {
               )}
 
               <div className="w-full">
-                <label htmlFor="email" className="block text-body-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-body-sm font-medium text-gray-700 mb-1"
+                >
                   Email address
                 </label>
                 <input
@@ -266,16 +302,23 @@ const Login: React.FC = () => {
                   value={values.email}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`input-field ${errors.email && touched.email ? "input-error" : ""}`}
+                  className={`input-field ${
+                    errors.email && touched.email ? "input-error" : ""
+                  }`}
                   placeholder="your@email.com"
                 />
                 {errors.email && touched.email && (
-                  <p className="mt-1 text-body-xs text-red-600">{errors.email}</p>
+                  <p className="mt-1 text-body-xs text-red-600">
+                    {errors.email}
+                  </p>
                 )}
               </div>
 
               <div className="relative w-full">
-                <label htmlFor="password" className="block text-body-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="password"
+                  className="block text-body-sm font-medium text-gray-700 mb-1"
+                >
                   Password
                 </label>
                 <input
@@ -286,7 +329,9 @@ const Login: React.FC = () => {
                   value={values.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  className={`input-field ${errors.password && touched.password ? "input-error" : ""}`}
+                  className={`input-field ${
+                    errors.password && touched.password ? "input-error" : ""
+                  }`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -301,7 +346,9 @@ const Login: React.FC = () => {
                   )}
                 </button>
                 {errors.password && touched.password && (
-                  <p className="mt-1 text-body-xs text-red-600">{errors.password}</p>
+                  <p className="mt-1 text-body-xs text-red-600">
+                    {errors.password}
+                  </p>
                 )}
               </div>
 
@@ -313,7 +360,10 @@ const Login: React.FC = () => {
                     type="checkbox"
                     className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-body-sm text-gray-700">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-body-sm text-gray-700"
+                  >
                     Remember me
                   </label>
                 </div>
@@ -351,7 +401,10 @@ const Login: React.FC = () => {
             <div className="text-center w-full mt-6">
               <p className="text-body-sm text-gray-600">
                 Don't have an account?{" "}
-                <Link to="/register" className="font-medium text-primary-600 hover:text-primary-700">
+                <Link
+                  to="/register"
+                  className="font-medium text-primary-600 hover:text-primary-700"
+                >
                   Sign up here
                 </Link>
               </p>
@@ -361,11 +414,17 @@ const Login: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-gray-200">
               <p className="text-body-xs text-gray-500 text-center">
                 By signing in, you agree to our{" "}
-                <Link to="/terms" className="text-primary-600 hover:text-primary-700">
+                <Link
+                  to="/terms"
+                  className="text-primary-600 hover:text-primary-700"
+                >
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link to="/privacy" className="text-primary-600 hover:text-primary-700">
+                <Link
+                  to="/privacy"
+                  className="text-primary-600 hover:text-primary-700"
+                >
                   Privacy Policy
                 </Link>
               </p>

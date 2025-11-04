@@ -17,16 +17,15 @@ const CHWLayout: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
-  const userRole = localStorage.getItem("userType")
+  const userRole = localStorage.getItem("userType");
 
-  const {data:wallet, isLoading, error} = useWallet() 
+  const { data: wallet, isLoading, error } = useWallet();
 
   const handleKycClick = () => {
     if (kyc === "pending") {
-      if(userRole == 'nurse') {
+      if (userRole == "nurse") {
         navigate("/kyc-nurse");
-      }
-      else if (userRole == 'chw') {
+      } else if (userRole == "chw") {
         navigate("/kyc-chw");
       }
     } else if (kyc === "submitted") {
@@ -34,19 +33,19 @@ const CHWLayout: React.FC = () => {
     }
   };
 
-  if(isLoading) {
-    return <Loading/>
+  if (isLoading) {
+    return <Loading />;
   }
 
   if (error) {
-    return <Error/>
+    return <Error />;
   }
 
   if (!wallet) {
-    return <Loading/>
+    return <Loading />;
   }
 
-  console.log(wallet)
+  console.log(wallet);
 
   const renderKycNotification = () => {
     if (kyc === "pending") {
@@ -65,9 +64,9 @@ const CHWLayout: React.FC = () => {
       return (
         <div
           onClick={handleKycClick}
-          className="bg-blue-100 border border-blue-400 text-blue-800 px-4 py-3 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors duration-200 animate-pulse flex items-center space-x-2"
+          className="bg-purple-100 border border-purple-400 text-purple-800 px-4 py-3 rounded-lg cursor-pointer hover:bg-purple-200 transition-colors duration-200 animate-pulse flex items-center space-x-2"
         >
-          <Clock size={20} className="text-blue-600" />
+          <Clock size={20} className="text-purple-600" />
           <span className="font-medium">
             KYC verification in progress - Click to check status
           </span>
@@ -84,22 +83,22 @@ const CHWLayout: React.FC = () => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {isOpen && <Sidebar close={toggleMenu} />}
+        {isOpen && <Sidebar close={toggleMenu} open={isOpen} />}
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:block md:w-[250px] flex-shrink-0">
-        <Sidebar close={toggleMenu} />
+      <div className="hidden md:block md:w-[250px] flex-shrink-0 fixed">
+        <Sidebar close={toggleMenu} open={isOpen} />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 ml-[250px]">
         <div className="px-4 md:px-10">
           <div className="flex justify-between py-3">
             <div className="flex space-x-3 text-black font-bold items-center">
               <span>
                 <Home />
-              </span> 
+              </span>
               <span className="text-lg md:text-xl">CHW Dashboard</span>
             </div>
 
@@ -126,7 +125,7 @@ const CHWLayout: React.FC = () => {
             <div className="mt-4 mb-4">{renderKycNotification()}</div>
           )}
 
-          <WalletBalance/>
+          <WalletBalance />
           <Outlet />
         </div>
       </div>

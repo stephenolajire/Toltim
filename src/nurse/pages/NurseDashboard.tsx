@@ -13,9 +13,7 @@ import api from "../../constant/api";
 import BookingDetailsModal from "../components/BookingDetailsModal";
 // import BedsideBookingDetailsModal from "../../components/BedSideModal";
 import { type Booking } from "../../types/bookingdata";
-
-
-
+import { toast } from "react-toastify";
 
 interface ApiResponse {
   count: number;
@@ -33,6 +31,9 @@ const NurseDashboard: React.FC = () => {
     new Set()
   );
 
+  const [rejectingRequests, setRejectingRequests] = React.useState<Set<number>>(
+    new Set()
+  );
 
   const queryClient = useQueryClient();
 
@@ -79,7 +80,10 @@ const NurseDashboard: React.FC = () => {
   };
 
   const formatPrice = (total_amount_display: string | number) => {
-    const numPrice = typeof total_amount_display === "string" ? parseFloat(total_amount_display) : total_amount_display;
+    const numPrice =
+      typeof total_amount_display === "string"
+        ? parseFloat(total_amount_display)
+        : total_amount_display;
     return `₦${numPrice.toLocaleString()}`;
   };
 
@@ -166,6 +170,41 @@ const NurseDashboard: React.FC = () => {
       alert(`Error: ${errorMessage}`);
     } finally {
       setAcceptingRequests((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(bookingId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleRejectRequest = async (bookingId: any) => {
+    if (!confirm("Are you sure you want to reject this request?")) {
+      return;
+    }
+
+    setRejectingRequests((prev) => new Set(prev).add(bookingId));
+
+    try {
+      await api.post(`inpatient-caregiver/bookings/${bookingId}/set_status/`, {
+        status: "rejected",
+      });
+
+      // Refetch the data to update the UI
+      queryClient.invalidateQueries({
+        queryKey: ["nurse-bookings"],
+      });
+
+      toast.success("Request rejected successfully!");
+    } catch (error: any) {
+      console.error("Failed to reject request:", error);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        "Failed to reject request";
+      toast.error(`Error: ${errorMessage}`);
+    } finally {
+      setRejectingRequests((prev) => {
         const newSet = new Set(prev);
         newSet.delete(bookingId);
         return newSet;
@@ -382,20 +421,36 @@ const NurseDashboard: React.FC = () => {
                         Request Accepted
                       </button>
                     ) : (
-                      <button
-                        onClick={() => handleAcceptRequest(booking.id)}
-                        disabled={acceptingRequests.has(booking.id)}
-                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
-                      >
-                        {acceptingRequests.has(booking.id) ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Accepting...
-                          </>
-                        ) : (
-                          "Accept Request"
-                        )}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleAcceptRequest(booking.id)}
+                          disabled={acceptingRequests.has(booking.id)}
+                          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                          {acceptingRequests.has(booking.id) ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Accepting...
+                            </>
+                          ) : (
+                            "Accept Request"
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleRejectRequest(booking.id)}
+                          disabled={rejectingRequests.has(booking.id)}
+                          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                        >
+                          {acceptingRequests.has(booking.id) ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Accepting...
+                            </>
+                          ) : (
+                            "Reject Request"
+                          )}
+                        </button>
+                      </>
                     )}
 
                     <button

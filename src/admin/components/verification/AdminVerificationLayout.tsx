@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 import { useNurseVerificationStat } from "../../../constant/GlobalContext";
 
 const AdminVerificationLayout: React.FC = () => {
-  const {data:statData, isLoading} = useNurseVerificationStat()
+  const { data: statData, isLoading } = useNurseVerificationStat();
 
   if (isLoading) {
     return (

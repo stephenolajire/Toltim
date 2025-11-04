@@ -83,7 +83,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
       return transformProcedureData(data.results);
     }
 
-    return []
+    return [];
   };
 
   const procedureData = getProcedureData();
@@ -92,7 +92,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
   const handleViewProcedureDetails = (procedureId: string) => {
     // Find the corresponding API procedure by procedure_id
     const apiProcedure = data?.results?.find(
-      (p:any) => p.procedure_id === procedureId
+      (p: any) => p.procedure_id === procedureId
     );
     if (apiProcedure) {
       setSelectedProcedureId(apiProcedure.id);
@@ -104,7 +104,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
   const handleEditProcedure = (procedureId: string) => {
     // Find the corresponding API procedure by procedure_id
     const apiProcedure = data?.results?.find(
-      (p:any) => p.procedure_id === procedureId
+      (p: any) => p.procedure_id === procedureId
     );
     if (apiProcedure) {
       setSelectedProcedureId(apiProcedure.id);
@@ -116,8 +116,9 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
   const getSelectedProcedure = (): APIProcedure | null => {
     if (!data?.results || !selectedProcedureId) return null;
     return (
-      data.results.find((procedure:any) => procedure.id === selectedProcedureId) ||
-      null
+      data.results.find(
+        (procedure: any) => procedure.id === selectedProcedureId
+      ) || null
     );
   };
 
@@ -173,7 +174,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
       <div className="flex flex-col md:flex-row md:space-y-0 items-center justify-between w-full mb-8">
         <div className="py-5">
           <h1 className="font-bold text-black md:text-4xl text-3xl capitalize">
-             Nursing Procedures
+            Nursing Procedures
           </h1>
           <p className="text-gray-500 mt-1">
             Manage nursing procedures, pricing and schedules

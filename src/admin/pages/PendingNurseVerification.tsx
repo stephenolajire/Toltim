@@ -12,7 +12,11 @@ import {
   Image,
   ExternalLink,
 } from "lucide-react";
-import { useNurseApproval, useNurseRejection, useNurseVerification} from "../../constant/GlobalContext";
+import {
+  useNurseApproval,
+  useNurseRejection,
+  useNurseVerification,
+} from "../../constant/GlobalContext";
 import { toast } from "react-toastify";
 
 // Type definitions based on actual API response
@@ -257,8 +261,8 @@ const PendingNurseVerifications: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
   const { data: apiData, isLoading } = useNurseVerification();
-  const {mutate: updateKYC, isSuccess:update} = useNurseApproval()
-  const {mutate: rejectKYC, isSuccess} = useNurseRejection()
+  const { mutate: updateKYC, isSuccess: update } = useNurseApproval();
+  const { mutate: rejectKYC, isSuccess } = useNurseRejection();
 
   // Extract nurses array from API response
   const nurses: Nurse[] = apiData?.results || [];
@@ -333,18 +337,14 @@ const PendingNurseVerifications: React.FC = () => {
   };
 
   const handleVerify = (nurseId: string): void => {
-    updateKYC(nurseId)
-    update && (
-      toast.success("KYC has been approved")
-    )
+    updateKYC(nurseId);
+    update && toast.success("KYC has been approved");
   };
 
   const handleReject = (nurseId: string): void => {
     // useNurseRejection(nurseId)
-    rejectKYC(nurseId)
-    isSuccess && (
-      toast.success("KYC has been rejected")
-    )
+    rejectKYC(nurseId);
+    isSuccess && toast.success("KYC has been rejected");
   };
 
   const closeModal = () => {

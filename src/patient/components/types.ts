@@ -8,6 +8,14 @@ export interface Service {
   category: string;
 }
 
+export interface Review {
+  id: string;
+  patientName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
 export interface Practitioner {
   user_id: string;
   full_name: string;
@@ -34,6 +42,7 @@ export interface Practitioner {
   availability: string[];
   bio: string;
   profile_picture:string;
+  latest_reviews: Review[]
 }
 
 export interface BookingDetails {

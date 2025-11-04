@@ -24,7 +24,7 @@ const CaregiverBooking: React.FC = () => {
     error,
     refetch,
   } = useCareGiverBooking();
-  console.log(CareBookings)
+  console.log(CareBookings);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState("");
   const [actionLoading, setActionLoading] = React.useState<string | null>(null);

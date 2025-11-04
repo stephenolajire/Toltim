@@ -1,5 +1,5 @@
 import React from "react";
-import {TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { useWalletTransactions } from "../../constant/GlobalContext";
 import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
@@ -14,8 +14,11 @@ interface Transaction {
 }
 
 const WalletEarnings: React.FC = () => {
-
-  const {data:walletTransactions, isLoading, error} = useWalletTransactions()
+  const {
+    data: walletTransactions,
+    isLoading,
+    error,
+  } = useWalletTransactions();
 
   const transactions: Transaction[] = [
     {
@@ -43,8 +46,6 @@ const WalletEarnings: React.FC = () => {
     },
   ];
 
-
-
   const formatCurrency = (amount: number): string => {
     return `₦${Math.abs(amount).toLocaleString()}`;
   };
@@ -54,23 +55,22 @@ const WalletEarnings: React.FC = () => {
   //   // Handle withdrawal request
   // };
 
-  if(isLoading) {
-    return <Loading/>
+  if (isLoading) {
+    return <Loading />;
   }
 
   if (error) {
-    return <Error/>
+    return <Error />;
   }
 
   if (!walletTransactions) {
-    return <Loading/>
+    return <Loading />;
   }
 
-  console.log(walletTransactions)
+  console.log(walletTransactions);
 
   return (
     <div className="bg-white rounded-lg pb-10">
-      
       {/* Recent Transactions */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">

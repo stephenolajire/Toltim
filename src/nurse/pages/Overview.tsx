@@ -1,197 +1,40 @@
 import React, { useState } from "react";
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   Legend,
-//   ResponsiveContainer,
-//   LineChart,
-//   Line,
-//   PieChart,
-//   Pie,
-//   Cell,
-// } from "recharts";
 import {
   CheckCircle,
   XCircle,
   Calendar,
-  DollarSign,
+  // DollarSign,
   Heart,
   Syringe,
   TrendingUp,
   Award,
   Activity,
 } from "lucide-react";
+import { usePatientStats } from "../../constant/GlobalContext";
+import Loading from "../../components/common/Loading";
+import Error from "../../components/Error";
 
 const NurseOverviewDashboard = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const {data, isLoading, isError} = usePatientStats()
 
-  // Sample data - Replace with actual API data from nurse bookings
-  const bookingSummary = {
-    procedures: {
-      accepted: 45,
-      rejected: 8,
-      completed: 38,
-      notCompleted: 7,
-      totalEarned: 1250000,
-    },
-    caregiving: {
-      accepted: 32,
-      rejected: 5,
-      completed: 28,
-      notCompleted: 4,
-      totalEarned: 980000,
-    },
-  };
+   const bookingSummary = {
+     procedures: {
+       accepted: data?.procedures?.approved || 0,
+       rejected: data?.procedures?.rejected || 0,
+       completed: data?.procedures?.completed || 0,
+       notCompleted: data?.procedures?.pending || 0,
+       totalEarned: 0, // Add if available in API
+     },
+     caregiving: {
+       accepted: data?.caregiving?.approved || 0,
+       rejected: data?.caregiving?.rejected || 0,
+       completed: data?.caregiving?.completed || 0,
+       notCompleted: data?.caregiving?.pending || 0,
+       totalEarned: 0, // Add if available in API
+     },
+   };
 
-  // Monthly earnings data
-  // const monthlyEarningsData = [
-  //   { month: "Jan", procedures: 95000, caregiving: 70000 },
-  //   { month: "Feb", procedures: 102000, caregiving: 75000 },
-  //   { month: "Mar", procedures: 98000, caregiving: 80000 },
-  //   { month: "Apr", procedures: 110000, caregiving: 82000 },
-  //   { month: "May", procedures: 105000, caregiving: 85000 },
-  //   { month: "Jun", procedures: 115000, caregiving: 88000 },
-  //   { month: "Jul", procedures: 108000, caregiving: 78000 },
-  //   { month: "Aug", procedures: 120000, caregiving: 90000 },
-  //   { month: "Sep", procedures: 112000, caregiving: 85000 },
-  //   { month: "Oct", periods: 125000, caregiving: 92000 },
-  //   { month: "Nov", procedures: 118000, caregiving: 87000 },
-  //   { month: "Dec", procedures: 122000, caregiving: 88000 },
-  // ];
-
-  // Acceptance rate data
-  // const acceptanceRateData = [
-  //   { month: "Jan", procedures: 82, caregiving: 85 },
-  //   { month: "Feb", procedures: 85, caregiving: 87 },
-  //   { month: "Mar", procedures: 83, caregiving: 86 },
-  //   { month: "Apr", procedures: 86, caregiving: 88 },
-  //   { month: "May", procedures: 88, caregiving: 90 },
-  //   { month: "Jun", procedures: 87, caregiving: 89 },
-  //   { month: "Jul", procedures: 89, caregiving: 91 },
-  //   { month: "Aug", procedures: 90, caregiving: 92 },
-  //   { month: "Sep", procedures: 88, caregiving: 90 },
-  //   { month: "Oct", procedures: 91, caregiving: 93 },
-  //   { month: "Nov", procedures: 89, caregiving: 91 },
-  //   { month: "Dec", procedures: 92, caregiving: 94 },
-  // ];
-
-  // Monthly booking counts
-  // const monthlyBookingsData = [
-  //   {
-  //     month: "Jan",
-  //     proceduresAccepted: 3,
-  //     proceduresRejected: 1,
-  //     caregivingAccepted: 2,
-  //     caregivingRejected: 0,
-  //   },
-  //   {
-  //     month: "Feb",
-  //     proceduresAccepted: 4,
-  //     proceduresRejected: 1,
-  //     caregivingAccepted: 3,
-  //     caregivingRejected: 1,
-  //   },
-  //   {
-  //     month: "Mar",
-  //     proceduresAccepted: 3,
-  //     proceduresRejected: 0,
-  //     caregivingAccepted: 2,
-  //     caregivingRejected: 0,
-  //   },
-  //   {
-  //     month: "Apr",
-  //     proceduresAccepted: 5,
-  //     proceduresRejected: 1,
-  //     caregivingAccepted: 3,
-  //     caregivingRejected: 0,
-  //   },
-  //   {
-  //     month: "May",
-  //     proceduresAccepted: 4,
-  //     proceduresRejected: 0,
-  //     caregivingAccepted: 2,
-  //     caregivingRejected: 1,
-  //   },
-  //   {
-  //     month: "Jun",
-  //     proceduresAccepted: 5,
-  //     proceduresRejected: 1,
-  //     caregivingAccepted: 4,
-  //     caregivingRejected: 0,
-  //   },
-  //   {
-  //     month: "Jul",
-  //     proceduresAccepted: 3,
-  //     proceduresRejected: 1,
-  //     caregivingAccepted: 2,
-  //     caregivingRejected: 1,
-  //   },
-  //   {
-  //     month: "Aug",
-  //     proceduresAccepted: 4,
-  //     proceduresRejected: 0,
-  //     caregivingAccepted: 3,
-  //     caregivingRejected: 0,
-  //   },
-  //   {
-  //     month: "Sep",
-  //     proceduresAccepted: 3,
-  //     proceduresRejected: 1,
-  //     caregivingAccepted: 2,
-  //     caregivingRejected: 0,
-  //   },
-  //   {
-  //     month: "Oct",
-  //     proceduresAccepted: 5,
-  //     proceduresRejected: 0,
-  //     caregivingAccepted: 4,
-  //     caregivingRejected: 1,
-  //   },
-  //   {
-  //     month: "Nov",
-  //     proceduresAccepted: 3,
-  //     proceduresRejected: 1,
-  //     caregivingAccepted: 2,
-  //     caregivingRejected: 1,
-  //   },
-  //   {
-  //     month: "Dec",
-  //     proceduresAccepted: 3,
-  //     proceduresRejected: 0,
-  //     caregivingAccepted: 3,
-  //     caregivingRejected: 0,
-  //   },
-  // ];
-
-  // Completion status for pie chart
-  // const completionStatusData = [
-  //   {
-  //     name: "Completed",
-  //     value:
-  //       bookingSummary.procedures.completed +
-  //       bookingSummary.caregiving.completed,
-  //     color: "#10b981",
-  //   },
-  //   {
-  //     name: "Not Completed",
-  //     value:
-  //       bookingSummary.procedures.notCompleted +
-  //       bookingSummary.caregiving.notCompleted,
-  //     color: "#f59e0b",
-  //   },
-  //   {
-  //     name: "Rejected",
-  //     value:
-  //       bookingSummary.procedures.rejected + bookingSummary.caregiving.rejected,
-  //     color: "#ef4444",
-  //   },
-  // ];
-
-  // Calculate totals
   const totalAccepted =
     bookingSummary.procedures.accepted + bookingSummary.caregiving.accepted;
   const totalRejected =
@@ -260,6 +103,16 @@ const NurseOverviewDashboard = () => {
     </div>
   );
 
+  if (isLoading) {
+    return <Loading/>
+  }
+
+  if (isError) {
+    return <Error/>
+  }
+
+  console.log(data)
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="w-full mx-auto">
@@ -291,7 +144,7 @@ const NurseOverviewDashboard = () => {
         </div>
 
         {/* Summary Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <StatCard
             title="Total Requests"
             value={totalRequests}
@@ -324,7 +177,7 @@ const NurseOverviewDashboard = () => {
             trend="up"
             trendValue="+10%"
           />
-          <StatCard
+          {/* <StatCard
             title="Total Earned"
             value={formatCurrency(totalEarned)}
             subtitle={`${formatCurrency(totalEarned / 12)}/month avg`}
@@ -332,7 +185,7 @@ const NurseOverviewDashboard = () => {
             color="bg-amber-500"
             trend="up"
             trendValue="+18%"
-          />
+          /> */}
         </div>
 
         {/* Service Type Breakdown Cards */}
@@ -433,212 +286,6 @@ const NurseOverviewDashboard = () => {
             </div>
           </div>
         </div>
-
-        {/* Charts Row 1 */}
-        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Monthly Earnings
-              </h2>
-              <p className="text-sm text-gray-600">
-                Your earnings across all services
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyEarningsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}K`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                  formatter={(value) => [
-                    `₦${Number(value).toLocaleString()}`,
-                    "",
-                  ]}
-                />
-                <Legend wrapperStyle={{ fontSize: "12px" }} />
-                <Bar
-                  dataKey="procedures"
-                  fill="#10b981"
-                  name="Procedures"
-                  radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                  dataKey="caregiving"
-                  fill="#8b5cf6"
-                  name="Caregiving"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-        
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Service Completion
-              </h2>
-              <p className="text-sm text-gray-600">
-                Distribution of booking outcomes
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={completionStatusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) =>
-                    percent !== undefined
-                      ? `${name} ${(percent * 100).toFixed(0)}%`
-                      : name
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {completionStatusData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
-              {completionStatusData.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="text-gray-700">{item.name}</span>
-                  </div>
-                  <span className="font-medium text-gray-900">
-                    {item.value} bookings
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div> */}
-
-        {/* Charts Row 2 */}
-        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Acceptance Rate Trend
-              </h2>
-              <p className="text-sm text-gray-600">
-                Monthly acceptance rate percentage
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={acceptanceRateData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                  formatter={(value) => [`${value}%`, ""]}
-                />
-                <Legend wrapperStyle={{ fontSize: "12px" }} />
-                <Line
-                  type="monotone"
-                  dataKey="procedures"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ fill: "#10b981", r: 4 }}
-                  name="Procedures"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="caregiving"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  dot={{ fill: "#8b5cf6", r: 4 }}
-                  name="Caregiving"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Monthly Booking Activity
-              </h2>
-              <p className="text-sm text-gray-600">
-                Accepted vs rejected bookings
-              </p>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyBookingsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: "12px" }} />
-                <Bar
-                  dataKey="proceduresAccepted"
-                  fill="#10b981"
-                  name="Procedures (Accepted)"
-                  radius={[4, 4, 0, 0]}
-                  stackId="procedures"
-                />
-                <Bar
-                  dataKey="proceduresRejected"
-                  fill="#ef4444"
-                  name="Procedures (Rejected)"
-                  radius={[4, 4, 0, 0]}
-                  stackId="procedures"
-                />
-                <Bar
-                  dataKey="caregivingAccepted"
-                  fill="#8b5cf6"
-                  name="Caregiving (Accepted)"
-                  radius={[4, 4, 0, 0]}
-                  stackId="caregiving"
-                />
-                <Bar
-                  dataKey="caregivingRejected"
-                  fill="#f59e0b"
-                  name="Caregiving (Rejected)"
-                  radius={[4, 4, 0, 0]}
-                  stackId="caregiving"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div> */}
 
         {/* Summary Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -752,49 +399,6 @@ const NurseOverviewDashboard = () => {
           </div>
         </div>
 
-        {/* Performance Metrics */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-sm border border-green-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-green-900">
-                Acceptance Rate
-              </h3>
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            </div>
-            <p className="text-3xl font-bold text-green-700">
-              {acceptanceRate}%
-            </p>
-            <p className="text-xs text-green-600 mt-1">
-              Of all booking requests
-            </p>
-          </div>
-
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-sm border border-blue-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-blue-900">
-                Completion Rate
-              </h3>
-              <Award className="w-5 h-5 text-blue-600" />
-            </div>
-            <p className="text-3xl font-bold text-blue-700">
-              {completionRate}%
-            </p>
-            <p className="text-xs text-blue-600 mt-1">Of accepted bookings</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl shadow-sm border border-amber-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-amber-900">
-                Average Monthly Earning
-              </h3>
-              <DollarSign className="w-5 h-5 text-amber-600" />
-            </div>
-            <p className="text-3xl font-bold text-amber-700">
-              {formatCurrency(totalEarned / 12)}
-            </p>
-            <p className="text-xs text-amber-600 mt-1">Per month this year</p>
-          </div>
-        </div> */}
       </div>
     </div>
   );

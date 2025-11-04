@@ -1,0 +1,365 @@
+@import "tailwindcss";
+
+/* Patient Dashboard Theme - Blue Color System */
+@layer theme {
+  .patient-theme {
+    /* Primary Color System - Blue for Patient Dashboard */
+    --color-primary-50: #eff6ff;
+    --color-primary-100: #dbeafe;
+    --color-primary-200: #bfdbfe;
+    --color-primary-300: #93c5fd;
+    --color-primary-400: #60a5fa;
+    --color-primary-500: #3b82f6;
+    --color-primary-600: #2563eb;
+    --color-primary-700: #1d4ed8;
+    --color-primary-800: #1e40af;
+    --color-primary-900: #1e3a8a;
+    --color-primary-950: #172554;
+  }
+}
+
+@layer utilities {
+  /* Patient Theme Primary Color Utilities */
+  .patient-theme .bg-primary {
+    background-color: var(--color-primary-500);
+  }
+
+  .patient-theme .bg-primary-50 {
+    background-color: var(--color-primary-50);
+  }
+
+  .patient-theme .bg-primary-100 {
+    background-color: var(--color-primary-100);
+  }
+
+  .patient-theme .bg-primary-200 {
+    background-color: var(--color-primary-200);
+  }
+
+  .patient-theme .bg-primary-300 {
+    background-color: var(--color-primary-300);
+  }
+
+  .patient-theme .bg-primary-400 {
+    background-color: var(--color-primary-400);
+  }
+
+  .patient-theme .bg-primary-500 {
+    background-color: var(--color-primary-500);
+  }
+
+  .patient-theme .bg-primary-600 {
+    background-color: var(--color-primary-600);
+  }
+
+  .patient-theme .bg-primary-700 {
+    background-color: var(--color-primary-700);
+  }
+
+  .patient-theme .bg-primary-800 {
+    background-color: var(--color-primary-800);
+  }
+
+  .patient-theme .bg-primary-900 {
+    background-color: var(--color-primary-900);
+  }
+
+  .patient-theme .text-primary {
+    color: var(--color-primary-500);
+  }
+
+  .patient-theme .text-primary-50 {
+    color: var(--color-primary-50);
+  }
+
+  .patient-theme .text-primary-100 {
+    color: var(--color-primary-100);
+  }
+
+  .patient-theme .text-primary-200 {
+    color: var(--color-primary-200);
+  }
+
+  .patient-theme .text-primary-300 {
+    color: var(--color-primary-300);
+  }
+
+  .patient-theme .text-primary-400 {
+    color: var(--color-primary-400);
+  }
+
+  .patient-theme .text-primary-500 {
+    color: var(--color-primary-500);
+  }
+
+  .patient-theme .text-primary-600 {
+    color: var(--color-primary-600);
+  }
+
+  .patient-theme .text-primary-700 {
+    color: var(--color-primary-700);
+  }
+
+  .patient-theme .text-primary-800 {
+    color: var(--color-primary-800);
+  }
+
+  .patient-theme .text-primary-900 {
+    color: var(--color-primary-900);
+  }
+
+  .patient-theme .border-primary {
+    border-color: var(--color-primary-500);
+  }
+
+  .patient-theme .border-primary-100 {
+    border-color: var(--color-primary-100);
+  }
+
+  .patient-theme .border-primary-200 {
+    border-color: var(--color-primary-200);
+  }
+
+  .patient-theme .border-primary-300 {
+    border-color: var(--color-primary-300);
+  }
+
+  .patient-theme .border-primary-400 {
+    border-color: var(--color-primary-400);
+  }
+
+  .patient-theme .border-primary-500 {
+    border-color: var(--color-primary-500);
+  }
+
+  .patient-theme .border-primary-600 {
+    border-color: var(--color-primary-600);
+  }
+
+  .patient-theme .border-primary-700 {
+    border-color: var(--color-primary-700);
+  }
+
+  .patient-theme .ring-primary {
+    --tw-ring-color: var(--color-primary-500);
+  }
+
+  .patient-theme .ring-primary-100 {
+    --tw-ring-color: var(--color-primary-100);
+  }
+
+  .patient-theme .ring-primary-200 {
+    --tw-ring-color: var(--color-primary-200);
+  }
+
+  .patient-theme .ring-primary-300 {
+    --tw-ring-color: var(--color-primary-300);
+  }
+
+  .patient-theme .ring-primary-500 {
+    --tw-ring-color: var(--color-primary-500);
+  }
+
+  .patient-theme .ring-primary-600 {
+    --tw-ring-color: var(--color-primary-600);
+  }
+
+  /* Gradient Utilities */
+  .patient-theme .from-primary {
+    --tw-gradient-from: var(--color-primary-500);
+  }
+
+  .patient-theme .to-primary {
+    --tw-gradient-to: var(--color-primary-500);
+  }
+
+  .patient-theme .via-primary {
+    --tw-gradient-via: var(--color-primary-500);
+  }
+}
+
+@layer components {
+  /* Patient Theme Button Components */
+  .patient-theme .btn-primary {
+    background-color: var(--color-primary-500);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+
+  .patient-theme .btn-primary:hover {
+    background-color: var(--color-primary-600);
+  }
+
+  .patient-theme .btn-primary:active {
+    background-color: var(--color-primary-700);
+  }
+
+  .patient-theme .btn-primary:disabled {
+    background-color: var(--color-primary-300);
+    cursor: not-allowed;
+  }
+
+  .patient-theme .btn-secondary {
+    background-color: white;
+    color: var(--color-primary-500);
+    border: 2px solid var(--color-primary-500);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .patient-theme .btn-secondary:hover {
+    background-color: var(--color-primary-50);
+  }
+
+  .patient-theme .btn-outline {
+    background-color: transparent;
+    color: var(--color-primary-500);
+    border: 1px solid var(--color-primary-500);
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .patient-theme .btn-outline:hover {
+    background-color: var(--color-primary-50);
+  }
+
+  /* Patient Theme Card Component */
+  .patient-theme .card-primary {
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600));
+    border-radius: 1rem;
+    padding: 1.5rem;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+  }
+
+  .patient-theme .card-primary-light {
+    background-color: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 1rem;
+    padding: 1.5rem;
+  }
+
+  /* Patient Theme Badge */
+  .patient-theme .badge-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    background-color: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  /* Patient Theme Input Styles */
+  .patient-theme .input-field {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .patient-theme .input-field:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  /* Patient Theme Alert */
+  .patient-theme .alert-primary {
+    background-color: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    color: var(--color-primary-800);
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+
+  /* Patient Theme Progress Bar */
+  .patient-theme .progress-bar {
+    background-color: var(--color-primary-200);
+    border-radius: 9999px;
+    height: 0.5rem;
+    overflow: hidden;
+  }
+
+  .patient-theme .progress-fill {
+    background-color: var(--color-primary-500);
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  /* Patient Theme Tab */
+  .patient-theme .tab-active {
+    background-color: var(--color-primary-500);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+  }
+
+  .patient-theme .tab-inactive {
+    background-color: transparent;
+    color: var(--color-primary-600);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .patient-theme .tab-inactive:hover {
+    background-color: var(--color-primary-50);
+  }
+
+  /* Patient Theme Stat Card */
+  .patient-theme .stat-card {
+    background-color: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+  }
+
+  .patient-theme .stat-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .patient-theme .stat-icon {
+    width: 3rem;
+    height: 3rem;
+    background-color: var(--color-primary-100);
+    color: var(--color-primary-600);
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Patient Theme Navigation */
+  .patient-theme .nav-link-active {
+    color: var(--color-primary-600);
+    background-color: var(--color-primary-50);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+  }
+
+  .patient-theme .nav-link {
+    color: #6b7280;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+  }
+
+  .patient-theme .nav-link:hover {
+    color: var(--color-primary-600);
+    background-color: var(--color-primary-50);
+  }
+}
