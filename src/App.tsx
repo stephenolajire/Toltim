@@ -214,8 +214,8 @@ const App: React.FC = () => {
               <Route path="id-card" element={<IDCard />} />
               <Route path="kyc-status" element={<KycStatus />} />
               <Route path="caregiver" element={<CareGiving />} />
+              <Route path="profile" element={<NurseProfile />} />
             </Route>
-            <Route path="/nurse/profile" element={<NurseProfile />} />
 
             {/* CHW DASHBOARD - Protected Routes */}
             <Route

@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import {
-  MapPin,
+  // MapPin,
   CheckCircle,
   Edit2,
   Languages,
@@ -12,6 +12,8 @@ import { useNurseProfile } from "../../constant/GlobalContext";
 import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
 import EditProfile from "./components/EditNurseProfile";
+import LocationDisplay from "../../components/LocationDisplay";
+import { coordinatesToPostGIS } from "../../utils/coordinateToPostGis";
 
 export default function NurseProfile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -24,6 +26,8 @@ export default function NurseProfile() {
     isLoading,
     error,
   } = useNurseProfile(userRole as string);
+
+  console.log(profileDataRaw)
 
   // Normalize the data structure
   const profileData = useMemo(() => {
@@ -76,6 +80,9 @@ export default function NurseProfile() {
     return profileData?.profile_picture || profileData?.profilePicture;
   };
 
+  const location = coordinatesToPostGIS(profileData?.latitude, profileData?.longitude)
+  // console.log(location)
+
   // Check if it's a nurse (has nurse-specific fields)
   const isNurse =
     "verified_nurse" in profileData || "profile_picture" in profileData;
@@ -84,11 +91,11 @@ export default function NurseProfile() {
   const isCHW = "years_of_experience" in profileData && !isNurse;
 
   return (
-    <div className="h-auto bg-green-200 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="h-auto bg-green-700 py-8 px-4 sm:px-6 lg:px-8">
       <div className="w-full mx-auto">
         {/* Header Card */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-          <div className="h-32 bg-gradient-to-r from-green-500 to-green-600"></div>
+          <div className="h-32 bg-gradient-to-r from-green-700 to-green-700"></div>
           <div className="px-6 pb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-end -mt-16 mb-4">
               <div className="flex-shrink-0">
@@ -100,7 +107,7 @@ export default function NurseProfile() {
                   />
                 ) : (
                   <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-green-500 flex items-center justify-center">
-                    <span className="text-4xl font-bold text-white">
+                    <span className="lg:text-4xl text-2xl font-bold text-white">
                       {getInitials(profileData?.full_name || "")}
                     </span>
                   </div>
@@ -110,11 +117,11 @@ export default function NurseProfile() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h1 className="text-3xl font-bold text-gray-900">
+                      <h1 className="lg:text-3xl text-2xl font-bold text-gray-900">
                         {profileData?.full_name}
                       </h1>
                       {profileData?.verified_nurse && (
-                        <CheckCircle className="w-6 h-6 text-green-500" />
+                        <CheckCircle className="w-6 h-6 text-green-700" />
                       )}
                     </div>
                     <p className="text-lg text-gray-600 mt-1">
@@ -127,7 +134,7 @@ export default function NurseProfile() {
                   </div>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    className="mt-4 sm:mt-0 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit Profile
@@ -139,17 +146,10 @@ export default function NurseProfile() {
             {/* Location */}
             {(profileData?.latitude || profileData?.location) && (
               <div className="flex items-center gap-2 text-gray-600 mt-4">
-                <MapPin className="w-5 h-5 text-green-500" />
-                {profileData?.latitude ? (
-                  <span>
-                    Lat: {profileData.latitude.toFixed(6)}, Long:{" "}
-                    {profileData.longitude?.toFixed(6)}
-                  </span>
-                ) : (
-                  <span>
-                    {profileData?.location || "Location not specified"}
-                  </span>
-                )}
+                <LocationDisplay
+                  location={location}
+                  className="text-base flex items-center gap-2"
+                  />
               </div>
             )}
 

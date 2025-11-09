@@ -24,14 +24,14 @@ const NurseOverviewDashboard = () => {
        rejected: data?.procedures?.rejected || 0,
        completed: data?.procedures?.completed || 0,
        notCompleted: data?.procedures?.pending || 0,
-       totalEarned: 0, // Add if available in API
+      //  totalEarned: 0,
      },
      caregiving: {
        accepted: data?.caregiving?.approved || 0,
        rejected: data?.caregiving?.rejected || 0,
        completed: data?.caregiving?.completed || 0,
        notCompleted: data?.caregiving?.pending || 0,
-       totalEarned: 0, // Add if available in API
+      //  totalEarned: 0, 
      },
    };
 
@@ -44,19 +44,19 @@ const NurseOverviewDashboard = () => {
   const totalNotCompleted =
     bookingSummary.procedures.notCompleted +
     bookingSummary.caregiving.notCompleted;
-  const totalEarned =
-    bookingSummary.procedures.totalEarned +
-    bookingSummary.caregiving.totalEarned;
+  // const totalEarned =
+  //   bookingSummary.procedures.totalEarned +
+  //   bookingSummary.caregiving.totalEarned;
   const totalRequests = totalAccepted + totalRejected;
   const acceptanceRate = ((totalAccepted / totalRequests) * 100).toFixed(1);
   const completionRate = ((totalCompleted / totalAccepted) * 100).toFixed(1);
 
-  const formatCurrency = (value: any) => {
-    if (value >= 1000000) {
-      return `₦${(value / 1000000).toFixed(1)}M`;
-    }
-    return `₦${(value / 1000).toFixed(0)}K`;
-  };
+  // const formatCurrency = (value: any) => {
+  //   if (value >= 1000000) {
+  //     return `₦${(value / 1000000).toFixed(1)}M`;
+  //   }
+  //   return `₦${(value / 1000).toFixed(0)}K`;
+  // };
 
   interface StatCardProps {
     title: string;
@@ -118,9 +118,9 @@ const NurseOverviewDashboard = () => {
       <div className="w-full mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex lg:flex-row flex-col items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="lg:text-3xl text-2xl font-bold text-gray-900 mb-2">
                 My Performance Overview
               </h1>
               <p className="text-gray-600">
@@ -228,11 +228,11 @@ const NurseOverviewDashboard = () => {
             </div>
             <div className="pt-4 border-t border-gray-200">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">
+                {/* <span className="text-sm font-medium text-gray-700">
                   Total Earned:
-                </span>
+                </span> */}
                 <span className="text-xl font-bold text-gray-900">
-                  {formatCurrency(bookingSummary.procedures.totalEarned)}
+                  {/* {formatCurrency(bookingSummary.procedures.totalEarned)} */}
                 </span>
               </div>
             </div>
@@ -276,11 +276,11 @@ const NurseOverviewDashboard = () => {
             </div>
             <div className="pt-4 border-t border-gray-200">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">
+                {/* <span className="text-sm font-medium text-gray-700">
                   Total Earned:
-                </span>
+                </span> */}
                 <span className="text-xl font-bold text-gray-900">
-                  {formatCurrency(bookingSummary.caregiving.totalEarned)}
+                  {/* {formatCurrency(bookingSummary.caregiving.totalEarned)} */}
                 </span>
               </div>
             </div>
@@ -346,7 +346,7 @@ const NurseOverviewDashboard = () => {
                       bookingSummary.procedures.rejected}
                   </td>
                   <td className="py-3 px-4 text-sm text-right text-gray-900 font-semibold">
-                    ₦{bookingSummary.procedures.totalEarned.toLocaleString()}
+                    {/* ₦{bookingSummary.procedures.totalEarned.toLocaleString()} */}
                   </td>
                 </tr>
                 <tr className="border-b border-gray-100 hover:bg-gray-50">
@@ -370,7 +370,7 @@ const NurseOverviewDashboard = () => {
                       bookingSummary.caregiving.rejected}
                   </td>
                   <td className="py-3 px-4 text-sm text-right text-gray-900 font-semibold">
-                    ₦{bookingSummary.caregiving.totalEarned.toLocaleString()}
+                    {/* ₦{bookingSummary.caregiving.totalEarned.toLocaleString()} */}
                   </td>
                 </tr>
                 <tr className="bg-gray-50 font-semibold">
@@ -391,7 +391,7 @@ const NurseOverviewDashboard = () => {
                     {totalRequests}
                   </td>
                   <td className="py-3 px-4 text-sm text-right text-gray-900">
-                    ₦{totalEarned.toLocaleString()}
+                    {/* ₦{totalEarned.toLocaleString()} */}
                   </td>
                 </tr>
               </tbody>

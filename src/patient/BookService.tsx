@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useNurseProcedures } from "../constant/GlobalContext";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 // API Response Types
 interface APIInclusionItem {
@@ -308,12 +309,12 @@ const NursingProcedures: React.FC = () => {
 
   const handleProceed = () => {
     if (selectedServices.length === 0) {
-      alert("Please select at least one nursing procedure before proceeding.");
+      toast.error("Please select at least one nursing procedure before proceeding.");
       return;
     }
 
     if (!location) {
-      alert(
+      toast.error(
         "Location is required for booking. Please allow location access or retry getting your location."
       );
       return;
@@ -353,7 +354,7 @@ const NursingProcedures: React.FC = () => {
       navigate("/patient/matching");
     } catch (error) {
       console.error("Error storing services data:", error);
-      alert("There was an error saving your selection. Please try again.");
+      toast.error("There was an error saving your selection. Please try again.");
     }
   };
 

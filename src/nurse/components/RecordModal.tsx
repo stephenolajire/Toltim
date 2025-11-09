@@ -17,6 +17,9 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
   bookingData,
   bookingId,
 }) => {
+
+  const bookingid = bookingId
+
   const [formData, setFormData] = useState({
     bloodPressure: "",
     temperature: "",
@@ -28,6 +31,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
     medicationsAdministered: "",
     nextStepsRecommendations: "",
     sessionRating: 0,
+    bookingId: bookingid,
   });
 
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -81,6 +85,9 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
     if (formData.sessionRating)
       formDataToSend.append("rating", formData.sessionRating.toString());
 
+    if (formData.bookingId)
+      formDataToSend.append("booking_id", formData.bookingId.toString());
+
     // Add status and timestamp
     formDataToSend.append("status", status);
     if (status === "completed") {
@@ -105,7 +112,7 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
     try {
       const submissionData = prepareSubmissionData("completed");
       await api.post(
-        `services/nurse-procedure-bookings/${bookingId}/session-report/`,
+        `services/procedure-booking-report/`,
         submissionData,
         {
           headers: {
@@ -123,28 +130,28 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
     }
   };
 
-  const handleSaveDraft = async () => {
-    setIsSubmitting(true);
-    try {
-      const draftData = prepareSubmissionData("draft");
-      await api.post(
-        `services/nurse-procedure-bookings/${bookingId}/session-report/`,
-        draftData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      console.log("Treatment report saved as draft");
-      onClose();
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast.error("Failed to save draft. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // const handleSaveDraft = async () => {
+  //   setIsSubmitting(true);
+  //   try {
+  //     const draftData = prepareSubmissionData("draft");
+  //     await api.post(
+  //       `services/nurse-procedure-bookings/${bookingId}/session-report/`,
+  //       draftData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       }
+  //     );
+  //     console.log("Treatment report saved as draft");
+  //     onClose();
+  //   } catch (error) {
+  //     console.error("Error saving draft:", error);
+  //     toast.error("Failed to save draft. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   if (!isOpen) return null;
 
@@ -399,16 +406,16 @@ const RecordTreatmentModal: React.FC<RecordTreatmentModalProps> = ({
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3">
-            <button
+            {/* <button
               onClick={handleSaveDraft}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save as Draft"}
-            </button>
+            </button> */}
             <button
               onClick={handleSubmit}
-              className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center w-full md:w-auto justify-center gap-2 px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting || !formData.treatmentNotes.trim()}
             >
               <Send className="w-4 h-4" />

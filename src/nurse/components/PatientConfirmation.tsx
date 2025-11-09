@@ -314,7 +314,7 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-white -mt-8 p-1 border rounded-xl transition-colors bg-red-500"
             disabled={isLoading}
           >
             <X className="w-5 h-5" />
@@ -362,7 +362,7 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
                   onChange={(e) => handleInputChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  className="w-12 h-12 text-center text-xl font-semibold border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
+                  className="w-8 h-8 lg:w-12 lg:h-12 text-center text-xl font-semibold border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
                   placeholder="0"
                   disabled={isLoading}
                 />
@@ -386,7 +386,7 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex flex-col md:flex-row gap-3">
             <button
               onClick={handleClose}
               className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-md text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

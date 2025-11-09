@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { Calendar, MapPin, User, Home, Clock, Eye } from "lucide-react";
 import AppointmentDetailsModal from "./AppointmentDetailsModal";
+import RatingModal from "./components/Rating";
 
 const PatientAppointmentHistoryCard = ({ appointment }: { appointment: any }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+
+  console.log("Appointment:", appointment)
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -59,6 +64,10 @@ const appointmentDate: Date = new Date(appointment.date);
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const openReview = () => {
+    setIsReviewOpen(!isReviewOpen);
   };
 
   return (
@@ -153,6 +162,17 @@ const appointmentDate: Date = new Date(appointment.date);
           </button>
         </div>
 
+        <div>
+          {appointment.metadata.days_left == 0 && appointment.metadata.status =="started" && (
+            <button
+              onClick={openReview}
+              className="flex items-center justify-center mt-2 bg-blue-500 py-3 w-full space-x-2 text-white hover:text-blue-800 text-base text-center font-medium transition-colors"
+            >
+              Review Session
+            </button>
+          )}
+        </div>
+
         {/* Rejection Reason */}
         {appointment.status === "rejected" && appointment.rejectionReason && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -169,6 +189,12 @@ const appointmentDate: Date = new Date(appointment.date);
         appointment={appointment}
         isOpen={isModalOpen}
         onClose={closeModal}
+      />
+
+      <RatingModal
+        nurseProfileId={appointment}
+        isOpen={isReviewOpen}
+        onClose={openReview}
       />
     </>
   );

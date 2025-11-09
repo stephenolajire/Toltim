@@ -13,6 +13,7 @@ import {
   Activity,
 } from "lucide-react";
 import type { CaregiverBookingData } from "../../types/bookingdata";
+import LocationDisplay from "../../components/LocationDisplay";
 
 interface CaregiverBookingDetailsModalProps {
   isOpen: boolean;
@@ -241,7 +242,9 @@ const CaregiverBookingModal: React.FC<CaregiverBookingDetailsModalProps> = ({
                       Care Location:
                     </span>
                     <span className="text-sm font-medium text-gray-900">
-                      {booking.care_location}
+                      <LocationDisplay
+                        location={booking.care_location} 
+                      />
                     </span>
                   </div>
                   <div>

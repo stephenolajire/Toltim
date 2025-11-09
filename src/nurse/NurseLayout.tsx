@@ -3,20 +3,35 @@ import Sidebar from "./components/Sidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Bell, Home, Menu, X, AlertCircle, Clock } from "lucide-react";
 import WalletBalance from "../components/Wallet";
+import { useNurseProfile } from "../constant/GlobalContext";
+import Loading from "../components/common/Loading";
+import Error from "../components/Error";
 
 const NurseLayout: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const kyc = localStorage.getItem("kyc");
   const navigate = useNavigate();
+  const userRole = localStorage.getItem("userType")
+
+  const {data:profileData, isError, isLoading} = useNurseProfile(userRole as string)
+
+  const kyc = profileData?.results[0].verified_nurse
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
   };
 
-  const userRole = localStorage.getItem("userType")
+
+  if (isLoading){
+    return <Loading/>
+  }
+
+  if (isError){
+    return <Error/>
+  }
+
 
   const handleKycClick = () => {
-    if (kyc === "pending") {
+    if (kyc == false) {
       if(userRole == 'nurse') {
         navigate("/kyc-nurse");
       }
@@ -29,7 +44,7 @@ const NurseLayout: React.FC = () => {
   };
 
   const renderKycNotification = () => {
-    if (kyc === "pending") {
+    if (kyc === false) {
       return (
         <div
           onClick={handleKycClick}

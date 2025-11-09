@@ -1,19 +1,21 @@
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  MapPin,
+  // MapPin,
   Clock,
   FileText,
   User,
   Calendar,
   CheckCircle,
   AlertCircle,
+  XCircle,
 } from "lucide-react";
 import api from "../../constant/api";
 import BookingDetailsModal from "../components/BookingDetailsModal";
 // import BedsideBookingDetailsModal from "../../components/BedSideModal";
 import { type Booking } from "../../types/bookingdata";
 import { toast } from "react-toastify";
+import LocationDisplay from "../../components/LocationDisplay";
 
 interface ApiResponse {
   count: number;
@@ -73,6 +75,8 @@ const NurseDashboard: React.FC = () => {
         return <CheckCircle className="w-4 h-4" />;
       case "assigned":
         return <Clock className="w-4 h-4" />;
+      case "rejected":
+        return <XCircle className="w-4 h-4" />;
       case "pending":
       default:
         return <AlertCircle className="w-4 h-4" />;
@@ -99,17 +103,17 @@ const NurseDashboard: React.FC = () => {
     }
   };
 
-  const formatTime = (timeString: string) => {
-    try {
-      return new Date(timeString).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      return "Invalid time";
-    }
-  };
+  // const formatTime = (timeString: string) => {
+  //   try {
+  //     return new Date(timeString).toLocaleTimeString("en-US", {
+  //       hour: "2-digit",
+  //       minute: "2-digit",
+  //       hour12: true,
+  //     });
+  //   } catch {
+  //     return "Invalid time";
+  //   }
+  // };
 
   const getTimeAgo = (dateString: string) => {
     try {
@@ -159,7 +163,7 @@ const NurseDashboard: React.FC = () => {
         queryKey: ["nurse-bookings"],
       });
 
-      alert("Request accepted successfully!");
+      toast.success("Request accepted successfully!");
     } catch (error: any) {
       console.error("Failed to accept request:", error);
 
@@ -167,7 +171,7 @@ const NurseDashboard: React.FC = () => {
         error.response?.data?.message ||
         error.response?.data?.detail ||
         "Failed to accept request";
-      alert(`Error: ${errorMessage}`);
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setAcceptingRequests((prev) => {
         const newSet = new Set(prev);
@@ -185,9 +189,12 @@ const NurseDashboard: React.FC = () => {
     setRejectingRequests((prev) => new Set(prev).add(bookingId));
 
     try {
-      await api.post(`inpatient-caregiver/bookings/${bookingId}/set_status/`, {
-        status: "rejected",
-      });
+      await api.patch(
+        `services/nurse-procedure-bookings/${bookingId}/reject/`,
+        {
+          rejection_reason: "rejected",
+        }
+      );
 
       // Refetch the data to update the UI
       queryClient.invalidateQueries({
@@ -337,16 +344,16 @@ const NurseDashboard: React.FC = () => {
                   {/* Location and Time */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-xs text-gray-600">
-                      <MapPin className="h-3 w-3 flex-shrink-0" />
-                      <span className="truncate">
-                        {booking.service_location}
-                      </span>
+                      <LocationDisplay
+                        location={booking.service_location}
+                        className="flex items-center gap-1 text-sm text-gray-600 break-words"
+                      />
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-600">
                       <Calendar className="h-3 w-3 flex-shrink-0" />
                       <span>
                         {formatDate(booking.start_date)} at{" "}
-                        {formatTime(booking.time_of_day)}
+                        {booking.time_of_day}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-600">
@@ -412,13 +419,21 @@ const NurseDashboard: React.FC = () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-2">
-                    {booking.status !== "pending" ? (
+                    {["accepted", "started"].includes(booking.status) ? (
                       <button
                         disabled
                         className="w-full bg-green-100 text-green-800 px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         <CheckCircle className="w-4 h-4" />
                         Request Accepted
+                      </button>
+                    ) : booking.status == "rejected" ? (
+                      <button
+                        disabled
+                        className="w-full bg-red-100 text-red-800 px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Request Rejected
                       </button>
                     ) : (
                       <>
@@ -439,12 +454,12 @@ const NurseDashboard: React.FC = () => {
                         <button
                           onClick={() => handleRejectRequest(booking.id)}
                           disabled={rejectingRequests.has(booking.id)}
-                          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-green-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
+                          className="w-full bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors duration-200 flex items-center justify-center gap-2"
                         >
-                          {acceptingRequests.has(booking.id) ? (
+                          {rejectingRequests.has(booking.id) ? (
                             <>
                               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              Accepting...
+                              Rejecting...
                             </>
                           ) : (
                             "Reject Request"
