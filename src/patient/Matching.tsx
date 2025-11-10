@@ -130,40 +130,53 @@ const HealthPractitionersMatching: React.FC<
   }, []); // 👈 run only once
 
   // Fetch nearby health practitioners using TanStack Query
-  const {
-    data: practitioners = [],
-    isLoading: loading,
-    error,
-  } = useQuery({
-    queryKey: [
-      "nearbyPractitioners",
-      coordinates.latitude,
-      coordinates.longitude,
-    ],
-    queryFn: async () => {
-      const res = await api.get(
-        `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
-      );
-      console.log("NURSES NEARBY RESPONSE:", res.data);
-      return res.data;
-    },
-    enabled:
-      !!selectedService &&
-      coordinates.latitude !== null &&
-      coordinates.longitude !== null,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
+ const {
+   data: practitioners = [],
+   isLoading: loading,
+   error,
+ } = useQuery({
+   queryKey: [
+     "nearbyPractitioners",
+     coordinates.latitude,
+     coordinates.longitude,
+   ],
+   queryFn: async () => {
+     const res = await api.get(
+       `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
+     );
+     console.log("NURSES NEARBY RESPONSE:", res.data);
+     
+     return res.data.results || []; 
+   },
+   enabled:
+     !!selectedService &&
+     coordinates.latitude !== null &&
+     coordinates.longitude !== null,
+   staleTime: 5 * 60 * 1000,
+   gcTime: 10 * 60 * 1000,
+   retry: 3,
+   retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+ });
 
   const filteredPractitioners = practitioners.filter((practitioner: any) => {
-    const name = practitioner?.name?.toLowerCase() || "";
-    const specialization = practitioner?.specialization?.toLowerCase() || "";
-    return (
-      name.includes(searchTerm.toLowerCase()) ||
-      specialization.includes(searchTerm.toLowerCase())
-    );
+    const name = practitioner?.full_name?.toLowerCase() || ""; // ✅ Changed from 'name' to 'full_name'
+    const searchLower = searchTerm.toLowerCase();
+
+    // Handle specialization as an array
+    const specializationMatch = Array.isArray(practitioner?.specialization)
+      ? practitioner.specialization.some((spec: string) =>
+          spec.toLowerCase().includes(searchLower)
+        )
+      : false;
+
+    // Also search in services array
+    const servicesMatch = Array.isArray(practitioner?.services)
+      ? practitioner.services.some((service: string) =>
+          service.toLowerCase().includes(searchLower)
+        )
+      : false;
+
+    return name.includes(searchLower) || specializationMatch || servicesMatch;
   });
 
   const handlePractitionerSelect = (practitioner: Practitioner) => {

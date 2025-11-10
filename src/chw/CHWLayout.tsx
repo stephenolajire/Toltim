@@ -2,53 +2,52 @@ import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Bell, Home, Menu, X, AlertCircle, Clock } from "lucide-react";
-// import NurseStat from "./components/NurseStat";
-import { useWallet } from "../constant/GlobalContext";
+import WalletBalance from "../components/Wallet";
+import { useNurseProfile } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
 import Error from "../components/Error";
-import WalletBalance from "../components/Wallet";
 
 const CHWLayout: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const kyc = localStorage.getItem("kyc");
   const navigate = useNavigate();
+  const userRole = localStorage.getItem("userType");
+
+  const {
+    data: profileData,
+    isError,
+    isLoading,
+  } = useNurseProfile(userRole as string);
+
+  const kyc = profileData?.verified_chw
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
-  };
-
-  const userRole = localStorage.getItem("userType");
-
-  const { data: wallet, isLoading, error } = useWallet();
-
-  const handleKycClick = () => {
-    if (kyc === "pending") {
-      if (userRole == "nurse") {
-        navigate("/kyc-nurse");
-      } else if (userRole == "chw") {
-        navigate("/kyc-chw");
-      }
-    } else if (kyc === "submitted") {
-      navigate("/nurse/kyc-status");
-    }
   };
 
   if (isLoading) {
     return <Loading />;
   }
 
-  if (error) {
+  if (isError) {
     return <Error />;
   }
 
-  if (!wallet) {
-    return <Loading />;
-  }
+  console.log(profileData)
 
-  console.log(wallet);
+  const handleKycClick = () => {
+    if (kyc == false) {
+      if (userRole == "nurse") {
+        navigate("/kyc-nurse");
+      } else if (userRole == "chw") {
+        navigate("/kyc-chw");
+      }
+    } else if (kyc === "submitted") {
+      navigate("/chw/kyc-status");
+    }
+  };
 
   const renderKycNotification = () => {
-    if (kyc === "pending") {
+    if (kyc === false) {
       return (
         <div
           onClick={handleKycClick}
@@ -64,9 +63,9 @@ const CHWLayout: React.FC = () => {
       return (
         <div
           onClick={handleKycClick}
-          className="bg-purple-100 border border-purple-400 text-purple-800 px-4 py-3 rounded-lg cursor-pointer hover:bg-purple-200 transition-colors duration-200 animate-pulse flex items-center space-x-2"
+          className="bg-blue-100 border border-blue-400 text-blue-800 px-4 py-3 rounded-lg cursor-pointer hover:bg-blue-200 transition-colors duration-200 animate-pulse flex items-center space-x-2"
         >
-          <Clock size={20} className="text-purple-600" />
+          <Clock size={20} className="text-blue-600" />
           <span className="font-medium">
             KYC verification in progress - Click to check status
           </span>
@@ -83,16 +82,16 @@ const CHWLayout: React.FC = () => {
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {isOpen && <Sidebar close={toggleMenu} open={isOpen} />}
+        {isOpen && <Sidebar close={toggleMenu} />}
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:block md:w-[250px] flex-shrink-0 fixed">
-        <Sidebar close={toggleMenu} open={isOpen} />
+      <div className="hidden md:block md:w-[250px] flex-shrink-0">
+        <Sidebar close={toggleMenu} />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 ml-[250px]">
+      <div className="flex-1 min-w-0">
         <div className="px-4 md:px-10">
           <div className="flex justify-between py-3">
             <div className="flex space-x-3 text-black font-bold items-center">

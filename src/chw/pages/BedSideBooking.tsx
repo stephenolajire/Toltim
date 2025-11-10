@@ -295,12 +295,12 @@ const BedsideDashboard: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">
           Bedside Care Requests
         </h1>
-        <div
+        {/* <div
           onClick={() => window.history.back()}
           className="text-sm text-gray-500 border-gray-500 border-1 rounded-2xl px-10 py-2"
         >
           Back
-        </div>
+        </div> */}
       </div>
 
       <div className="w-full mx-auto">
