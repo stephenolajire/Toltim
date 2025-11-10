@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import {
-  // MapPin,
   CheckCircle,
   Edit2,
   Languages,
@@ -15,6 +14,17 @@ import EditProfile from "./components/EditNurseProfile";
 import LocationDisplay from "../../components/LocationDisplay";
 import { coordinatesToPostGIS } from "../../utils/coordinateToPostGis";
 
+// Mock availability data only
+const mockAvailability = [
+  "Monday: 9:00 AM - 5:00 PM",
+  "Tuesday: 9:00 AM - 5:00 PM",
+  "Wednesday: 9:00 AM - 5:00 PM",
+  "Thursday: 9:00 AM - 5:00 PM",
+  "Friday: 9:00 AM - 5:00 PM",
+  "Saturday: 10:00 AM - 2:00 PM",
+  "Sunday: Closed",
+];
+
 export default function NurseProfile() {
   const [isEditing, setIsEditing] = useState(false);
 
@@ -27,7 +37,7 @@ export default function NurseProfile() {
     error,
   } = useNurseProfile(userRole as string);
 
-  console.log(profileDataRaw)
+  console.log(profileDataRaw);
 
   // Normalize the data structure
   const profileData = useMemo(() => {
@@ -80,8 +90,10 @@ export default function NurseProfile() {
     return profileData?.profile_picture || profileData?.profilePicture;
   };
 
-  const location = coordinatesToPostGIS(profileData?.latitude, profileData?.longitude)
-  // console.log(location)
+  const location = coordinatesToPostGIS(
+    profileData?.latitude,
+    profileData?.longitude
+  );
 
   // Check if it's a nurse (has nurse-specific fields)
   const isNurse =
@@ -89,6 +101,9 @@ export default function NurseProfile() {
 
   // Check if it's a CHW (has CHW-specific fields)
   const isCHW = "years_of_experience" in profileData && !isNurse;
+
+  // Use mock availability instead of API data
+  const availability = mockAvailability;
 
   return (
     <div className="h-auto bg-green-700 py-8 px-4 sm:px-6 lg:px-8">
@@ -149,7 +164,7 @@ export default function NurseProfile() {
                 <LocationDisplay
                   location={location}
                   className="text-base flex items-center gap-2"
-                  />
+                />
               </div>
             )}
 
@@ -225,28 +240,22 @@ export default function NurseProfile() {
             </div>
           )}
 
-          {/* Availability */}
-          {(profileData?.availability?.length > 0 || isNurse) && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Clock className="w-5 h-5 text-green-500" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Availability
-                </h3>
-              </div>
-              {profileData?.availability?.length > 0 ? (
-                <ul className="space-y-2">
-                  {profileData.availability.map((slot: any, idx: any) => (
-                    <li key={idx} className="text-gray-700">
-                      {slot}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500 text-sm">No availability set</p>
-              )}
+          {/* Availability - Using Mock Data */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock className="w-5 h-5 text-green-500" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Availability
+              </h3>
             </div>
-          )}
+            <ul className="space-y-2">
+              {availability.map((slot: string, idx: number) => (
+                <li key={idx} className="text-gray-700">
+                  {slot}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Availability Status (for CHW) */}

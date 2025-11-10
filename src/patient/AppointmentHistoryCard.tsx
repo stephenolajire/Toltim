@@ -192,7 +192,7 @@ const appointmentDate: Date = new Date(appointment.date);
       />
 
       <RatingModal
-        nurseProfileId={appointment}
+        nurseProfileId={appointment.metadata.assigned_profile_id}
         isOpen={isReviewOpen}
         onClose={openReview}
       />

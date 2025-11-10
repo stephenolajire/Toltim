@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { X, Star, Send } from "lucide-react";
+import api from "../../constant/api";
+import { toast } from "react-toastify";
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -49,24 +51,24 @@ const RatingModal: React.FC<RatingModalProps> = ({
       comment: comment,
     };
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Submitting rating:", payload);
-
-      setIsSubmitting(false);
-      setSubmitStatus({
-        type: "success",
-        message: "Thank you! Your rating has been submitted successfully.",
-      });
-
-      // Reset form after 2 seconds and close modal
-      setTimeout(() => {
-        setRating(0);
-        setComment("");
-        setSubmitStatus({ type: null, message: "" });
+    try {
+        const response = await api.post("user/nurse-review/", payload);
+        if (response.status == 201) {
+            setIsSubmitting(false)
+            toast.success("Review has been submitted succesfully")
+            onClose()
+            setComment("")
+            setRating(0)
+        }
+    } catch (error) {
+        console.log(error)
+        toast.error("Something went wrong pls try again")
         onClose();
-      }, 2000);
-    }, 1500);
+        setComment("");
+        setRating(0);
+    }
+
+    
   };
 
   const handleClose = (): void => {

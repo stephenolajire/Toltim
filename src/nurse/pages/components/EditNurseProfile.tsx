@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, MapPin, Loader2, Camera, Upload } from "lucide-react";
+import { X, MapPin, Loader2, Camera, Upload, Plus, Trash2 } from "lucide-react";
 import api from "../../../constant/api";
 
 interface ProfileData {
@@ -25,6 +25,22 @@ interface EditProfileProps {
   onClose: () => void;
 }
 
+interface TimeSlot {
+  day: string;
+  startTime: string;
+  endTime: string;
+}
+
+const DAYS_OF_WEEK = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 export default function EditProfile({
   profileData,
   onClose,
@@ -42,6 +58,67 @@ export default function EditProfile({
   const isCHW = userRole === "chw";
   const isNurse = userRole === "nurse";
 
+  // Convert time string (e.g., "9:00 AM") to 24-hour format (e.g., "09:00")
+  const convertTo24Hour = (time: string): string => {
+    const match = time.match(/(\d+):?(\d*)?\s*(AM|PM)/i);
+    if (!match) return "09:00"; // default
+
+    let hours = parseInt(match[1]);
+    const minutes = match[2] || "00";
+    const period = match[3].toUpperCase();
+
+    if (period === "PM" && hours !== 12) {
+      hours += 12;
+    } else if (period === "AM" && hours === 12) {
+      hours = 0;
+    }
+
+    return `${hours.toString().padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+  };
+
+  // Convert 24-hour format (e.g., "09:00") to 12-hour format (e.g., "9:00 AM")
+  const convertTo12Hour = (time: string): string => {
+    const [hours, minutes] = time.split(":");
+    let hour = parseInt(hours);
+    const period = hour >= 12 ? "PM" : "AM";
+
+    if (hour === 0) {
+      hour = 12;
+    } else if (hour > 12) {
+      hour -= 12;
+    }
+
+    return `${hour}:${minutes} ${period}`;
+  };
+
+  // Parse existing availability into time slots
+  const parseAvailability = (availability: any[]): TimeSlot[] => {
+    if (!availability || availability.length === 0) return [];
+
+    return availability
+      .map((slot: any) => {
+        if (typeof slot === "string") {
+          // Parse "Monday 9AM-5PM" format
+          const match = slot.match(
+            /^(\w+)\s+(\d+(?::\d+)?(?:AM|PM))-(\d+(?::\d+)?(?:AM|PM))$/i
+          );
+          if (match) {
+            return {
+              day: match[1],
+              startTime: convertTo24Hour(match[2]),
+              endTime: convertTo24Hour(match[3]),
+            };
+          }
+        }
+        return slot;
+      })
+      .filter(Boolean);
+  };
+
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(
+    parseAvailability(profileData.availability || [])
+  );
+
   // Initialize form data based on role
   const [formData, setFormData] = useState(
     isCHW
@@ -55,7 +132,6 @@ export default function EditProfile({
           specialization: profileData.specialization || "",
           biography: profileData.biography || "",
           services: profileData.services?.join(", ") || "",
-          availability: profileData.availability?.join(", ") || "",
           languages: profileData.languages?.join(", ") || "",
           latitude: profileData.latitude || 0,
           longitude: profileData.longitude || 0,
@@ -64,7 +140,6 @@ export default function EditProfile({
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: FormData | any) => {
-      // Different endpoints and data formats based on role
       if (isCHW) {
         const response = await api.patch(
           `/user/chw-profile/${profileData.id}/`,
@@ -121,11 +196,7 @@ export default function EditProfile({
     getUserLocation();
   }, []);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
+  const handleInputChange = (e:any) => {
     const { name, value, type } = e.target;
 
     if (type === "checkbox") {
@@ -150,13 +221,11 @@ export default function EditProfile({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate file type
       if (!file.type.startsWith("image/")) {
         alert("Please select a valid image file");
         return;
       }
 
-      // Validate file size (e.g., max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         alert("Image size should be less than 5MB");
         return;
@@ -164,7 +233,6 @@ export default function EditProfile({
 
       setSelectedImage(file);
 
-      // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -173,9 +241,37 @@ export default function EditProfile({
     }
   };
 
+  const addTimeSlot = () => {
+    setTimeSlots([
+      ...timeSlots,
+      { day: "Monday", startTime: "09:00", endTime: "17:00" },
+    ]);
+  };
+
+  const removeTimeSlot = (index: number) => {
+    setTimeSlots(timeSlots.filter((_, i) => i !== index));
+  };
+
+  const updateTimeSlot = (
+    index: number,
+    field: keyof TimeSlot,
+    value: string
+  ) => {
+    const updated = [...timeSlots];
+    updated[index][field] = value;
+    setTimeSlots(updated);
+  };
+
+  const formatAvailabilityForSubmission = (): string[] => {
+    return timeSlots.map((slot) => {
+      const startTime12 = convertTo12Hour(slot.startTime);
+      const endTime12 = convertTo12Hour(slot.endTime);
+      return `${slot.day} ${startTime12}-${endTime12}`;
+    });
+  };
+
   const handleSubmit = () => {
     if (isCHW) {
-      // CHW format - send as JSON
       const chwData = {
         years_of_experience: formData.years_of_experience,
         latitude: formData.latitude,
@@ -184,25 +280,22 @@ export default function EditProfile({
       };
       updateProfileMutation.mutate(chwData);
     } else {
-      // Nurse format - send as FormData
       const formDataToSend = new FormData();
 
       formDataToSend.append("specialization", formData.specialization || "");
       formDataToSend.append("biography", formData.biography || "");
 
-      // Convert comma-separated strings to JSON arrays
       const servicesArray = (formData.services || "")
         .split(",")
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
-      const availabilityArray = (formData.availability || "")
-        .split(",")
-        .map((a) => a.trim())
-        .filter((a) => a.length > 0);
       const languagesArray = (formData.languages || "")
         .split(",")
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
+
+      // Format availability from time slots
+      const availabilityArray = formatAvailabilityForSubmission();
 
       formDataToSend.append("services", JSON.stringify(servicesArray));
       formDataToSend.append("availability", JSON.stringify(availabilityArray));
@@ -210,7 +303,6 @@ export default function EditProfile({
       formDataToSend.append("latitude", (formData.latitude || 0).toString());
       formDataToSend.append("longitude", (formData.longitude || 0).toString());
 
-      // Append image file if selected
       if (selectedImage) {
         formDataToSend.append("profile_picture", selectedImage);
       }
@@ -233,17 +325,14 @@ export default function EditProfile({
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Nurse-specific fields */}
+        <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
           {isNurse && (
             <>
-              {/* Profile Picture Upload */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Profile Picture
                 </label>
-                <div className="flex items-center gap-4">
-                  {/* Image Preview */}
+                <div className="flex items-center flex-col md:flex-row gap-4">
                   <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-300">
                     {imagePreview ? (
                       <img
@@ -258,7 +347,6 @@ export default function EditProfile({
                     )}
                   </div>
 
-                  {/* Upload Button */}
                   <div>
                     <label
                       htmlFor="profile-picture-input"
@@ -344,22 +432,107 @@ export default function EditProfile({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Availability (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  name="availability"
-                  value={formData.availability}
-                  onChange={handleInputChange}
-                  placeholder="Monday 9AM-5PM, Tuesday 9AM-5PM"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                />
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Availability Schedule
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addTimeSlot}
+                    className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Day
+                  </button>
+                </div>
+
+                {timeSlots.length === 0 ? (
+                  <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <p className="text-gray-500 text-sm">
+                      No availability added yet
+                    </p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Click "Add Day" to set your schedule
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {timeSlots.map((slot, index) => (
+                      <div
+                        key={index}
+                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <select
+                            value={slot.day}
+                            onChange={(e) =>
+                              updateTimeSlot(index, "day", e.target.value)
+                            }
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none font-medium"
+                          >
+                            {DAYS_OF_WEEK.map((day) => (
+                              <option key={day} value={day}>
+                                {day}
+                              </option>
+                            ))}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => removeTimeSlot(index)}
+                            className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-col md:flex-row">
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              From
+                            </label>
+                            <input
+                              type="time"
+                              value={slot.startTime}
+                              onChange={(e) =>
+                                updateTimeSlot(
+                                  index,
+                                  "startTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                            />
+                          </div>
+
+                          <span className="text-gray-400 mt-5 hidden md:flex">—</span>
+
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-600 mb-1">
+                              To
+                            </label>
+                            <input
+                              type="time"
+                              value={slot.endTime}
+                              onChange={(e) =>
+                                updateTimeSlot(index, "endTime", e.target.value)
+                              }
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-gray-500 mt-2">
+                          Times will be converted to 12-hour format (AM/PM) when saved
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </>
           )}
 
-          {/* CHW-specific fields */}
           {isCHW && (
             <>
               <div>
@@ -397,7 +570,6 @@ export default function EditProfile({
             </>
           )}
 
-          {/* Location fields (common for both) */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -450,32 +622,32 @@ export default function EditProfile({
               <p className="text-red-500 text-sm mt-2">{locationError}</p>
             )}
           </div>
+        </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={updateProfileMutation.isPending}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={updateProfileMutation.isPending}
-              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
-            >
-              {updateProfileMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </button>
-          </div>
+        <div className="flex flex-col md:flex-row justify-end gap-3 p-6 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={updateProfileMutation.isPending}
+            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={updateProfileMutation.isPending}
+            className="px-6 py-2 justify-center  bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+          >
+            {updateProfileMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </button>
         </div>
       </div>
     </div>

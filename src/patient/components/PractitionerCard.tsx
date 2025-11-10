@@ -21,29 +21,7 @@ const PractitionerCard: React.FC<PractitionerCardProps> = ({
   const [isReviewsOpen, setIsReviewsOpen] = useState(false);
 
   // Sample reviews - replace with actual reviews from practitioner.reviews
-  const reviews: Review[] = practitioner.latest_reviews || [
-    {
-      id: "1",
-      patientName: "Sarah Johnson",
-      rating: 5,
-      comment: "Excellent care and very professional. Highly recommended!",
-      date: "2 weeks ago",
-    },
-    {
-      id: "2",
-      patientName: "Michael Chen",
-      rating: 4,
-      comment: "Great experience, very knowledgeable and caring.",
-      date: "1 month ago",
-    },
-    {
-      id: "3",
-      patientName: "Emily Davis",
-      rating: 5,
-      comment: "Outstanding service! Made me feel comfortable throughout.",
-      date: "2 months ago",
-    },
-  ];
+  const reviews: Review[] = practitioner.latest_reviews 
 
   const renderStars = (rating: number) => {
     return (
@@ -165,7 +143,7 @@ const PractitionerCard: React.FC<PractitionerCardProps> = ({
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">
-                          {review.patientName}
+                          {review.reviewer_name}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           {renderStars(review.rating)}

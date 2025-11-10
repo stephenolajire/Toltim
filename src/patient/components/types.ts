@@ -10,7 +10,7 @@ export interface Service {
 
 export interface Review {
   id: string;
-  patientName: string;
+  reviewer_name: string;
   rating: number;
   comment: string;
   date: string;
