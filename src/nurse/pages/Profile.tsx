@@ -70,12 +70,30 @@ export default function NurseProfile() {
     );
   }
 
-  const formatSpecialization = (spec: string) => {
-    return spec
-      ?.split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+  const formatSpecialization = (spec: any) => {
+    // Handle array format
+    if (Array.isArray(spec)) {
+      if (spec.length === 0) return null;
+      return spec
+        .map((s) => 
+          s.split("-")
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ")
+        )
+        .join(", ");
+    }
+    
+    // Handle string format
+    if (typeof spec === 'string') {
+      return spec
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
+    
+    return null;
   };
+
 
   const getInitials = (name: string) => {
     return name
