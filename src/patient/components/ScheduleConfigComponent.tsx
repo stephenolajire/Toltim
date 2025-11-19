@@ -8,6 +8,41 @@ import {
 } from "lucide-react";
 import type { Service, Practitioner, ScheduleConfig } from "./types";
 
+const formatSpecialization = (specialization: any): string => {
+  if (!specialization) return "General Practice";
+
+  if (Array.isArray(specialization)) {
+    return (
+      specialization
+        .map((spec) => {
+          if (typeof spec === "object" && spec !== null && spec.name) {
+            return spec.name;
+          }
+          if (typeof spec === "string") {
+            return spec;
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .join(", ") || "General Practice"
+    );
+  }
+
+  if (
+    typeof specialization === "object" &&
+    specialization !== null &&
+    specialization.name
+  ) {
+    return specialization.name;
+  }
+
+  if (typeof specialization === "string") {
+    return specialization;
+  }
+
+  return "General Practice";
+};
+
 interface ScheduleConfigProps {
   selectedPractitioner: Practitioner;
   selectedService: Service;
@@ -79,22 +114,29 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
           <img
-            src={selectedPractitioner.profileImage}
-            alt={selectedPractitioner.name}
+            src={
+              selectedPractitioner.profile_picture ||
+              selectedPractitioner.profileImage ||
+              "https://via.placeholder.com/64"
+            }
+            alt={selectedPractitioner.full_name || selectedPractitioner.name}
             className="w-12 h-12 rounded-full object-cover self-center sm:self-start flex-shrink-0"
           />
           <div className="flex-1 min-w-0 text-center sm:text-left">
             <h3 className="font-semibold text-gray-900 truncate">
-              {selectedPractitioner.name}
+              {selectedPractitioner.full_name || selectedPractitioner.name}
             </h3>
-            <p className="text-blue-600">{selectedPractitioner.title}</p>
+            <p className="text-blue-600">
+              {formatSpecialization(selectedPractitioner.specialization) ||
+                selectedPractitioner.title}
+            </p>
             <p className="text-sm text-gray-600">
-              {selectedService.name} - {selectedService.duration}
+              {selectedService.name} - {selectedService.duration || "As needed"}
             </p>
           </div>
           <div className="text-center sm:text-right flex-shrink-0">
             <p className="font-semibold text-blue-600">
-              ₦{selectedService.price.toLocaleString()}/session
+              ₦{selectedService.price?.toLocaleString() || "N/A"}/session
             </p>
             <p className="text-sm text-gray-600">
               Total: {scheduleConfig.totalDays} days

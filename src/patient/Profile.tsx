@@ -181,9 +181,9 @@ const PatientProfile: React.FC = () => {
   return (
     <div className="patient-theme mx-auto bg-gradient-to-br from-gray-50 to-gray-100/50 min-h-screen pb-8">
       {/* Header Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-sm">
                 <Heart className="w-6 h-6 text-white" fill="white" />
@@ -208,7 +208,7 @@ const PatientProfile: React.FC = () => {
           </div>
 
           {/* Profile Picture Section */}
-          <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
+          {/* <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
             <div className="relative">
               <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-50 rounded-2xl flex items-center justify-center ring-4 ring-primary-100 ring-offset-2 shadow-sm">
                 <User className="w-12 h-12 text-primary-600" />
@@ -221,9 +221,7 @@ const PatientProfile: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900">
                 {profileData.first_name} {profileData.last_name}
               </h2>
-              <p className="text-gray-600 font-medium mt-1">
-                Patient ID: PAT-2024-001
-              </p>
+              
               <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-emerald-50 rounded-full w-fit">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
                 <span className="text-sm font-semibold text-emerald-700">
@@ -231,10 +229,10 @@ const PatientProfile: React.FC = () => {
                 </span>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-gradient-to-br from-primary-50 to-primary-100/50 p-4 rounded-xl border border-primary-200">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center shadow-sm">
@@ -289,7 +287,7 @@ const PatientProfile: React.FC = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Tabs */}
@@ -314,7 +312,7 @@ const PatientProfile: React.FC = () => {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white rounded-xl mt-5 shadow-sm border border-gray-100">
         <div className="p-6">
           {activeTab === "personal" && (
             <div>

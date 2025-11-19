@@ -159,17 +159,25 @@ const HealthPractitionersMatching: React.FC<
  });
 
   const filteredPractitioners = practitioners.filter((practitioner: any) => {
-    const name = practitioner?.full_name?.toLowerCase() || ""; // ✅ Changed from 'name' to 'full_name'
+    const name = practitioner?.full_name?.toLowerCase() || "";
     const searchLower = searchTerm.toLowerCase();
 
-    // Handle specialization as an array
+    // Handle specialization as an array of objects with {id, name}
     const specializationMatch = Array.isArray(practitioner?.specialization)
-      ? practitioner.specialization.some((spec: string) =>
-          spec.toLowerCase().includes(searchLower)
-        )
+      ? practitioner.specialization.some((spec: any) => {
+          // Check if spec is an object with a name property
+          if (typeof spec === "object" && spec !== null && spec.name) {
+            return spec.name.toLowerCase().includes(searchLower);
+          }
+          // Fallback for string format (if API changes)
+          if (typeof spec === "string") {
+            return spec.toLowerCase().includes(searchLower);
+          }
+          return false;
+        })
       : false;
 
-    // Also search in services array
+    // Search in services array (these are strings)
     const servicesMatch = Array.isArray(practitioner?.services)
       ? practitioner.services.some((service: string) =>
           service.toLowerCase().includes(searchLower)
@@ -178,7 +186,6 @@ const HealthPractitionersMatching: React.FC<
 
     return name.includes(searchLower) || specializationMatch || servicesMatch;
   });
-
   const handlePractitionerSelect = (practitioner: Practitioner) => {
     setSelectedPractitioner(practitioner);
     console.log(selectedPractitioner)

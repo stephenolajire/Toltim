@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, MapPin, Loader2, Camera, Upload, Plus, Trash2 } from "lucide-react";
+import { X, MapPin, Loader2, Camera, Upload } from "lucide-react";
 import api from "../../../constant/api";
+import { useSpecialization } from "../../../constant/GlobalContext";
+import { toast } from "react-toastify";
 
 interface ProfileData {
   id: number | string;
   full_name?: string;
   biography?: string;
-  specialization?: string;
+  specialization?: number | number[];
   verified_nurse?: boolean;
   profile_picture?: string | null;
   latitude?: number;
@@ -18,17 +20,18 @@ interface ProfileData {
   years_of_experience?: number;
   available?: boolean;
   location?: string;
+  user_id?: string;
+  active?: string;
+}
+
+interface Specialization {
+  id: number;
+  name: string;
 }
 
 interface EditProfileProps {
   profileData: ProfileData;
   onClose: () => void;
-}
-
-interface TimeSlot {
-  day: string;
-  startTime: string;
-  endTime: string;
 }
 
 const DAYS_OF_WEEK = [
@@ -53,15 +56,22 @@ export default function EditProfile({
   );
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
+  // Fetch specializations from the API
+  const { data: specializationsData, isLoading: isLoadingSpecializations } =
+    useSpecialization();
+  const specializations: Specialization[] = specializationsData?.results || [];
+
   // Get user role
   const userRole = localStorage.getItem("userType") || "nurse";
   const isCHW = userRole === "chw";
   const isNurse = userRole === "nurse";
 
-  // Convert time string (e.g., "9:00 AM") to 24-hour format (e.g., "09:00")
+  // Convert time string (e.g., "9:00 AM" or "9AM") to 24-hour format (e.g., "09:00")
   const convertTo24Hour = (time: string): string => {
+    if (!time || typeof time !== "string") return "09:00";
+
     const match = time.match(/(\d+):?(\d*)?\s*(AM|PM)/i);
-    if (!match) return "09:00"; // default
+    if (!match) return "09:00";
 
     let hours = parseInt(match[1]);
     const minutes = match[2] || "00";
@@ -91,33 +101,64 @@ export default function EditProfile({
     return `${hour}:${minutes} ${period}`;
   };
 
-  // Parse existing availability into time slots
-  const parseAvailability = (availability: any[]): TimeSlot[] => {
-    if (!availability || availability.length === 0) return [];
+  // Parse existing availability to get the first time slot (assuming uniform schedule)
+  const parseAvailability = (
+    availability: any[]
+  ): { startTime: string; endTime: string } => {
+    if (!availability || availability.length === 0) {
+      return { startTime: "09:00", endTime: "17:00" };
+    }
 
-    return availability
-      .map((slot: any) => {
-        if (typeof slot === "string") {
-          // Parse "Monday 9AM-5PM" format
-          const match = slot.match(
-            /^(\w+)\s+(\d+(?::\d+)?(?:AM|PM))-(\d+(?::\d+)?(?:AM|PM))$/i
-          );
-          if (match) {
-            return {
-              day: match[1],
-              startTime: convertTo24Hour(match[2]),
-              endTime: convertTo24Hour(match[3]),
-            };
-          }
-        }
-        return slot;
-      })
-      .filter(Boolean);
+    const firstSlot = availability[0];
+    if (!firstSlot || typeof firstSlot !== "string") {
+      return { startTime: "09:00", endTime: "17:00" };
+    }
+
+    // Try to parse "Monday 9AM-5PM" or "Monday: 9:00 AM - 5:00 PM" format
+    const withDayMatch = firstSlot.match(
+      /^(\w+)[:\s]+(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i
+    );
+
+    if (withDayMatch) {
+      return {
+        startTime: convertTo24Hour(withDayMatch[2]),
+        endTime: convertTo24Hour(withDayMatch[3]),
+      };
+    }
+
+    // Try to parse "10am-11am" format (without day)
+    const withoutDayMatch = firstSlot.match(
+      /^(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i
+    );
+
+    if (withoutDayMatch) {
+      return {
+        startTime: convertTo24Hour(withoutDayMatch[1]),
+        endTime: convertTo24Hour(withoutDayMatch[2]),
+      };
+    }
+
+    return { startTime: "09:00", endTime: "17:00" };
   };
 
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>(
+  const [weeklySchedule, setWeeklySchedule] = useState(
     parseAvailability(profileData.availability || [])
   );
+
+  // Get initial specialization values as array of IDs
+  const getInitialSpecializations = (): number[] => {
+    const spec = profileData.specialization;
+    if (!spec) return [];
+    if (Array.isArray(spec)) {
+      // Filter to ensure only numbers, not objects
+      return spec
+        .map((item) => (typeof item === "number" ? item : (item as any)?.id))
+        .filter((id): id is number => typeof id === "number");
+    }
+    return [typeof spec === "number" ? spec : (spec as any)?.id].filter(
+      Boolean
+    );
+  };
 
   // Initialize form data based on role
   const [formData, setFormData] = useState(
@@ -129,7 +170,7 @@ export default function EditProfile({
           available: profileData.available ?? true,
         }
       : {
-          specialization: profileData.specialization || "",
+          specialization: getInitialSpecializations(),
           biography: profileData.biography || "",
           services: profileData.services?.join(", ") || "",
           languages: profileData.languages?.join(", ") || "",
@@ -140,6 +181,7 @@ export default function EditProfile({
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: FormData | any) => {
+      console.log("Sent data:", formData);
       if (isCHW) {
         const response = await api.patch(
           `/user/chw-profile/${profileData.id}/`,
@@ -147,21 +189,25 @@ export default function EditProfile({
         );
         return response.data;
       } else {
-        const response = await api.patch("/user/nurse/profile/", data, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        const response = await api.put(
+          `/user/nurse/profile/${profileData.user_id}`,
+          data,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
         return response.data;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["nurseProfile"] });
+      queryClient.invalidateQueries({ queryKey: ["useNurseProfile"] });
       onClose();
     },
     onError: (error: any) => {
       console.error("Error updating profile:", error);
-      alert("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again.");
     },
   });
 
@@ -196,7 +242,7 @@ export default function EditProfile({
     getUserLocation();
   }, []);
 
-  const handleInputChange = (e:any) => {
+  const handleInputChange = (e: any) => {
     const { name, value, type } = e.target;
 
     if (type === "checkbox") {
@@ -218,16 +264,32 @@ export default function EditProfile({
     }
   };
 
+  // Handle specialization checkbox changes
+  const handleSpecializationChange = (id: number) => {
+    setFormData((prev: any) => {
+      const currentSpecs = prev.specialization as number[];
+      const isSelected = currentSpecs.includes(id);
+      console.log(id);
+
+      return {
+        ...prev,
+        specialization: isSelected
+          ? currentSpecs.filter((specId) => specId !== id)
+          : [...currentSpecs, id],
+      };
+    });
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
-        alert("Please select a valid image file");
+        toast.error("Please select a valid image file");
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should be less than 5MB");
+        toast.error("Image size should be less than 5MB");
         return;
       }
 
@@ -241,33 +303,22 @@ export default function EditProfile({
     }
   };
 
-  const addTimeSlot = () => {
-    setTimeSlots([
-      ...timeSlots,
-      { day: "Monday", startTime: "09:00", endTime: "17:00" },
-    ]);
-  };
-
-  const removeTimeSlot = (index: number) => {
-    setTimeSlots(timeSlots.filter((_, i) => i !== index));
-  };
-
-  const updateTimeSlot = (
-    index: number,
-    field: keyof TimeSlot,
+  const handleScheduleChange = (
+    field: "startTime" | "endTime",
     value: string
   ) => {
-    const updated = [...timeSlots];
-    updated[index][field] = value;
-    setTimeSlots(updated);
+    setWeeklySchedule((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const formatAvailabilityForSubmission = (): string[] => {
-    return timeSlots.map((slot) => {
-      const startTime12 = convertTo12Hour(slot.startTime);
-      const endTime12 = convertTo12Hour(slot.endTime);
-      return `${slot.day} ${startTime12}-${endTime12}`;
-    });
+    const startTime12 = convertTo12Hour(weeklySchedule.startTime);
+    const endTime12 = convertTo12Hour(weeklySchedule.endTime);
+
+    // Create availability for all days with the same time
+    return DAYS_OF_WEEK.map((day) => `${day} ${startTime12}-${endTime12}`);
   };
 
   const handleSubmit = () => {
@@ -282,7 +333,10 @@ export default function EditProfile({
     } else {
       const formDataToSend = new FormData();
 
-      formDataToSend.append("specialization", formData.specialization || "");
+      // Send specialization as JSON array
+      (formData.specialization || []).forEach((specId) => {
+        formDataToSend.append("specialization", specId.toString());
+      });
       formDataToSend.append("biography", formData.biography || "");
 
       const servicesArray = (formData.services || "")
@@ -294,7 +348,7 @@ export default function EditProfile({
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
 
-      // Format availability from time slots
+      // Format availability from weekly schedule (applies to all days)
       const availabilityArray = formatAvailabilityForSubmission();
 
       formDataToSend.append("services", JSON.stringify(servicesArray));
@@ -370,23 +424,68 @@ export default function EditProfile({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Specialization
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Specialization (Select one or more)
                 </label>
-                <select
-                  name="specialization"
-                  value={formData.specialization}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                >
-                  <option value="critical-care">Critical Care</option>
-                  <option value="pediatric">Pediatric</option>
-                  <option value="geriatric">Geriatric</option>
-                  <option value="emergency">Emergency</option>
-                  <option value="oncology">Oncology</option>
-                  <option value="mental-health">Mental Health</option>
-                  <option value="general">General</option>
-                </select>
+                {isLoadingSpecializations ? (
+                  <div className="flex items-center justify-center py-8 border border-gray-300 rounded-lg">
+                    <Loader2 className="w-6 h-6 animate-spin text-green-500" />
+                    <span className="ml-2 text-gray-600">
+                      Loading specializations...
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-2 border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
+                      {specializations.map((option) => (
+                        <label
+                          key={option.id}
+                          className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer transition-colors"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={(
+                              formData.specialization as number[]
+                            ).includes(option.id)}
+                            onChange={() =>
+                              handleSpecializationChange(option.id)
+                            }
+                            className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                          />
+                          <span className="text-sm text-gray-700">
+                            {option.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                    {(formData.specialization as number[]).length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(formData.specialization as number[]).map((specId) => {
+                          const option = specializations.find(
+                            (opt) => opt.id === specId
+                          );
+                          return option ? (
+                            <span
+                              key={specId}
+                              className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                            >
+                              {option.name}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleSpecializationChange(specId)
+                                }
+                                className="hover:text-green-900"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div>
@@ -432,103 +531,60 @@ export default function EditProfile({
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Availability Schedule
-                  </label>
-                  <button
-                    type="button"
-                    onClick={addTimeSlot}
-                    className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Day
-                  </button>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Weekly Availability (Monday - Sunday)
+                </label>
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Set your working hours for the entire week (applies to all
+                    days)
+                  </p>
+
+                  <div className="flex items-center gap-4 flex-col md:flex-row">
+                    <div className="flex-1 w-full">
+                      <label className="block text-xs text-gray-600 mb-1">
+                        From
+                      </label>
+                      <input
+                        type="time"
+                        value={weeklySchedule.startTime}
+                        onChange={(e) =>
+                          handleScheduleChange("startTime", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                      />
+                    </div>
+
+                    <span className="text-gray-400 mt-5 hidden md:flex">—</span>
+
+                    <div className="flex-1 w-full">
+                      <label className="block text-xs text-gray-600 mb-1">
+                        To
+                      </label>
+                      <input
+                        type="time"
+                        value={weeklySchedule.endTime}
+                        onChange={(e) =>
+                          handleScheduleChange("endTime", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <p className="text-xs text-green-800 font-medium mb-1">
+                      Preview Schedule:
+                    </p>
+                    <p className="text-xs text-green-700">
+                      {convertTo12Hour(weeklySchedule.startTime)} -{" "}
+                      {convertTo12Hour(weeklySchedule.endTime)}
+                    </p>
+                    <p className="text-xs text-green-600 mt-1">
+                      (Applied to all days: Monday - Sunday)
+                    </p>
+                  </div>
                 </div>
-
-                {timeSlots.length === 0 ? (
-                  <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                    <p className="text-gray-500 text-sm">
-                      No availability added yet
-                    </p>
-                    <p className="text-gray-400 text-xs mt-1">
-                      Click "Add Day" to set your schedule
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {timeSlots.map((slot, index) => (
-                      <div
-                        key={index}
-                        className="p-4 bg-gray-50 rounded-lg border border-gray-200"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <select
-                            value={slot.day}
-                            onChange={(e) =>
-                              updateTimeSlot(index, "day", e.target.value)
-                            }
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none font-medium"
-                          >
-                            {DAYS_OF_WEEK.map((day) => (
-                              <option key={day} value={day}>
-                                {day}
-                              </option>
-                            ))}
-                          </select>
-
-                          <button
-                            type="button"
-                            onClick={() => removeTimeSlot(index)}
-                            className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-col md:flex-row">
-                          <div className="flex-1">
-                            <label className="block text-xs text-gray-600 mb-1">
-                              From
-                            </label>
-                            <input
-                              type="time"
-                              value={slot.startTime}
-                              onChange={(e) =>
-                                updateTimeSlot(
-                                  index,
-                                  "startTime",
-                                  e.target.value
-                                )
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                            />
-                          </div>
-
-                          <span className="text-gray-400 mt-5 hidden md:flex">—</span>
-
-                          <div className="flex-1">
-                            <label className="block text-xs text-gray-600 mb-1">
-                              To
-                            </label>
-                            <input
-                              type="time"
-                              value={slot.endTime}
-                              onChange={(e) =>
-                                updateTimeSlot(index, "endTime", e.target.value)
-                              }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                            />
-                          </div>
-                        </div>
-
-                        <p className="text-xs text-gray-500 mt-2">
-                          Times will be converted to 12-hour format (AM/PM) when saved
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </>
           )}
@@ -637,7 +693,7 @@ export default function EditProfile({
             type="button"
             onClick={handleSubmit}
             disabled={updateProfileMutation.isPending}
-            className="px-6 py-2 justify-center  bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-6 py-2 justify-center bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {updateProfileMutation.isPending ? (
               <>

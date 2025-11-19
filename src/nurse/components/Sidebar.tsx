@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
             {adminLinks.map((nav) => (
               <NavLink
                 className={({ isActive }) =>
-                  isActive ? "text-green-500 font-bold" : "text-gray-500"
+                  isActive ? "text-green-500 font-bold capitalize" : "text-gray-500 capitalize"
                 }
                 key={nav.name}
                 to={nav.href}

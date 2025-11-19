@@ -3,6 +3,41 @@ import React from "react";
 import { ArrowLeft, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import type { Service, Practitioner, ScheduleConfig } from "./types";
 
+const formatSpecialization = (specialization: any): string => {
+  if (!specialization) return "General Practice";
+
+  if (Array.isArray(specialization)) {
+    return (
+      specialization
+        .map((spec) => {
+          if (typeof spec === "object" && spec !== null && spec.name) {
+            return spec.name;
+          }
+          if (typeof spec === "string") {
+            return spec;
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .join(", ") || "General Practice"
+    );
+  }
+
+  if (
+    typeof specialization === "object" &&
+    specialization !== null &&
+    specialization.name
+  ) {
+    return specialization.name;
+  }
+
+  if (typeof specialization === "string") {
+    return specialization;
+  }
+
+  return "General Practice";
+};
+
 interface TimeSelectionProps {
   selectedPractitioner: Practitioner;
   selectedService: Service;
@@ -193,10 +228,10 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
               {selectedPractitioner.full_name}
             </h3>
             <p className="text-blue-600">
-              {selectedPractitioner.specialization}
+              {formatSpecialization(selectedPractitioner.specialization)}
             </p>
             <p className="text-sm text-gray-600">
-              {selectedService.name} - {selectedService.duration}
+              {selectedService.name} - {selectedService.duration || "As needed"}
             </p>
             <p className="text-sm text-blue-600 mt-1">
               {getScheduleDescription()}
@@ -204,7 +239,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
           </div>
           <div className="text-center sm:text-right flex-shrink-0">
             <p className="font-semibold text-blue-600">
-              ₦{selectedService.price.toLocaleString()}/session
+              ₦{selectedService.price?.toLocaleString() || "N/A"}/session
             </p>
             <p className="text-lg font-bold text-blue-600">
               Total: ₦{calculateTotalCost().toLocaleString()}

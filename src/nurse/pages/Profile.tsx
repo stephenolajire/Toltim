@@ -6,27 +6,21 @@ import {
   Briefcase,
   Clock,
   Award,
+  MapPin,
 } from "lucide-react";
 import { useNurseProfile } from "../../constant/GlobalContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "../../constant/api";
 import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
 import EditProfile from "./components/EditNurseProfile";
 import LocationDisplay from "../../components/LocationDisplay";
 import { coordinatesToPostGIS } from "../../utils/coordinateToPostGis";
-
-// Mock availability data only
-const mockAvailability = [
-  "Monday: 9:00 AM - 5:00 PM",
-  "Tuesday: 9:00 AM - 5:00 PM",
-  "Wednesday: 9:00 AM - 5:00 PM",
-  "Thursday: 9:00 AM - 5:00 PM",
-  "Friday: 9:00 AM - 5:00 PM",
-  "Saturday: 10:00 AM - 2:00 PM",
-  "Sunday: Closed",
-];
+import { toast } from "react-toastify";
 
 export default function NurseProfile() {
   const [isEditing, setIsEditing] = useState(false);
+  const queryClient = useQueryClient();
 
   const userRole = localStorage.getItem("userType");
   console.log(userRole);
@@ -52,6 +46,21 @@ export default function NurseProfile() {
     return profileDataRaw;
   }, [profileDataRaw]);
 
+  // Toggle active status mutation
+  const toggleActiveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.patch("user/nurse/profile/toggle-active/");
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nurseProfile"] });
+    },
+    onError: (error: any) => {
+      console.error("Error toggling active status:", error);
+      toast.error("Failed to update status. Please try again.");
+    },
+  });
+
   if (isLoading) {
     return <Loading />;
   }
@@ -62,8 +71,8 @@ export default function NurseProfile() {
 
   if (!profileData) {
     return (
-      <div className="h-auto bg-green-200 py-8 px-4">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
+        <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-sm p-6 text-center">
           <p className="text-gray-500">No profile data available</p>
         </div>
       </div>
@@ -74,26 +83,43 @@ export default function NurseProfile() {
     // Handle array format
     if (Array.isArray(spec)) {
       if (spec.length === 0) return null;
+
       return spec
-        .map((s) => 
-          s.split("-")
-            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ")
-        )
+        .map((s) => {
+          // If it's an object with name property (new format)
+          if (typeof s === "object" && s !== null && s.name) {
+            return s.name;
+          }
+          // If it's a string (old format)
+          if (typeof s === "string") {
+            return s
+              .split("-")
+              .map(
+                (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
+              )
+              .join(" ");
+          }
+          return null;
+        })
+        .filter(Boolean)
         .join(", ");
     }
-    
+
     // Handle string format
-    if (typeof spec === 'string') {
+    if (typeof spec === "string") {
       return spec
         .split("-")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(" ");
     }
-    
+
+    // Handle single object format
+    if (typeof spec === "object" && spec !== null && spec.name) {
+      return spec.name;
+    }
+
     return null;
   };
-
 
   const getInitials = (name: string) => {
     return name
@@ -120,54 +146,153 @@ export default function NurseProfile() {
   // Check if it's a CHW (has CHW-specific fields)
   const isCHW = "years_of_experience" in profileData && !isNurse;
 
-  // Use mock availability instead of API data
-  const availability = mockAvailability;
+  // Format availability to ensure correct display format
+  const formatAvailability = (availability: any[]) => {
+    if (!availability || availability.length === 0) return [];
+
+    // If it's already in the correct format "Monday-Sunday 9:00 AM-5:00 PM"
+    return availability.map((slot) => {
+      if (typeof slot === "string") {
+        // Check if it's already in the correct format
+        if (slot.includes("Monday-Sunday") || slot.includes("-Sunday")) {
+          return slot;
+        }
+        // Otherwise return as is (for legacy formats)
+        return slot;
+      }
+      return slot;
+    });
+  };
+
+  // Use formatted availability
+  const availability = formatAvailability(
+    profileData?.availability && profileData.availability.length > 0
+      ? profileData.availability
+      : []
+  );
+
+  const isActive = profileData?.active;
 
   return (
-    <div className="h-auto bg-green-700 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="w-full mx-auto">
         {/* Header Card */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
-          <div className="h-32 bg-gradient-to-r from-green-700 to-green-700"></div>
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+          {/* Cover Background */}
+          <div className="h-40 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 relative">
+            {/* Active Status Toggle - Top Right */}
+            <div className="absolute top-4 right-4">
+              <button
+                onClick={() => toggleActiveMutation.mutate()}
+                disabled={toggleActiveMutation.isPending}
+                className={`
+                  relative inline-flex h-8 w-14 items-center rounded-full transition-colors
+                  ${
+                    isActive
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-gray-300 hover:bg-gray-400"
+                  }
+                  ${
+                    toggleActiveMutation.isPending
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }
+                  shadow-lg
+                `}
+                title={isActive ? "Active" : "Inactive"}
+              >
+                <span
+                  className={`
+                    inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md
+                    ${isActive ? "translate-x-7" : "translate-x-1"}
+                  `}
+                />
+              </button>
+            </div>
+          </div>
+
+          {/* Profile Content */}
           <div className="px-6 pb-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end -mt-16 mb-4">
-              <div className="flex-shrink-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end -mt-20 mb-6">
+              {/* Profile Picture */}
+              <div className="flex-shrink-0 relative">
                 {getProfilePicture() ? (
                   <img
                     src={getProfilePicture()}
                     alt={profileData?.full_name}
-                    className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover"
+                    className="w-36 h-36 rounded-full border-4 border-white shadow-xl object-cover"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg bg-green-500 flex items-center justify-center">
-                    <span className="lg:text-4xl text-2xl font-bold text-white">
+                  <div className="w-36 h-36 rounded-full border-4 border-white shadow-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                    <span className="text-4xl font-bold text-white">
                       {getInitials(profileData?.full_name || "")}
                     </span>
                   </div>
                 )}
+                {/* Active Indicator Badge */}
+                <div
+                  className={`absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-white ${
+                    isActive ? "bg-green-500" : "bg-gray-400"
+                  }`}
+                  title={isActive ? "Active" : "Inactive"}
+                />
               </div>
-              <div className="mt-4 sm:mt-0 sm:ml-6 flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h1 className="lg:text-3xl text-2xl font-bold text-gray-900">
+
+              {/* Name and Edit Button */}
+              <div className="mt-6 sm:mt-0 sm:ml-6 flex-1 w-full">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className="text-3xl font-bold text-gray-900">
                         {profileData?.full_name}
                       </h1>
                       {profileData?.verified_nurse && (
-                        <CheckCircle className="w-6 h-6 text-green-700" />
+                        <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full">
+                          <CheckCircle className="w-4 h-4 text-green-700" />
+                          <span className="text-xs font-medium text-green-700">
+                            Verified
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <p className="text-lg text-gray-600 mt-1">
+                    <p className="text-lg text-gray-600 mt-1 font-medium">
                       {profileData?.specialization
                         ? formatSpecialization(profileData.specialization)
                         : isCHW
                         ? "Community Health Worker"
                         : "Healthcare Professional"}
                     </p>
+
+                    {/* Location */}
+                    {(profileData?.latitude || profileData?.location) && (
+                      <div className="flex items-center gap-2 text-gray-500 mt-2">
+                        <MapPin className="w-4 h-4" />
+                        <LocationDisplay
+                          location={location}
+                          className="text-sm"
+                        />
+                      </div>
+                    )}
+
+                    {/* Years of Experience (for CHW) */}
+                    {isCHW &&
+                      profileData?.years_of_experience !== undefined && (
+                        <div className="flex items-center gap-2 text-gray-600 mt-2">
+                          <Award className="w-4 h-4 text-green-600" />
+                          <span className="text-sm">
+                            {profileData.years_of_experience}{" "}
+                            {profileData.years_of_experience === 1
+                              ? "year"
+                              : "years"}{" "}
+                            of experience
+                          </span>
+                        </div>
+                      )}
                   </div>
+
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="mt-4 sm:mt-0 flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium whitespace-nowrap"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit Profile
@@ -176,47 +301,51 @@ export default function NurseProfile() {
               </div>
             </div>
 
-            {/* Location */}
-            {(profileData?.latitude || profileData?.location) && (
-              <div className="flex items-center gap-2 text-gray-600 mt-4">
-                <LocationDisplay
-                  location={location}
-                  className="text-base flex items-center gap-2"
-                />
-              </div>
-            )}
-
-            {/* Years of Experience (for CHW) */}
-            {isCHW && profileData?.years_of_experience !== undefined && (
-              <div className="flex items-center gap-2 text-gray-600 mt-2">
-                <Award className="w-5 h-5 text-green-500" />
-                <span>
-                  {profileData.years_of_experience}{" "}
-                  {profileData.years_of_experience === 1 ? "year" : "years"} of
-                  experience
-                </span>
-              </div>
-            )}
+            {/* Status Badge */}
+            <div
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+                isActive
+                  ? "bg-green-50 border border-green-200"
+                  : "bg-gray-100 border border-gray-300"
+              }`}
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  isActive ? "bg-green-500" : "bg-gray-400"
+                } animate-pulse`}
+              />
+              <span
+                className={`text-sm font-medium ${
+                  isActive ? "text-green-700" : "text-gray-600"
+                }`}
+              >
+                {isActive ? "Active and Available" : "Currently Inactive"}
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Biography Section */}
         {profileData?.biography && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
-            <p className="text-gray-700 leading-relaxed break-words">
+          <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">
+              About Me
+            </h2>
+            <p className="text-gray-700 leading-relaxed">
               {profileData.biography}
             </p>
           </div>
         )}
 
-        {/* Additional Info Grid */}
+        {/* Information Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Languages */}
           {(profileData?.languages?.length > 0 || isNurse) && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Languages className="w-5 h-5 text-green-500" />
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <Languages className="w-5 h-5 text-green-600" />
+                </div>
                 <h3 className="text-lg font-semibold text-gray-900">
                   Languages
                 </h3>
@@ -224,22 +353,29 @@ export default function NurseProfile() {
               {profileData?.languages?.length > 0 ? (
                 <ul className="space-y-2">
                   {profileData.languages.map((lang: any, idx: any) => (
-                    <li key={idx} className="text-gray-700">
+                    <li
+                      key={idx}
+                      className="text-gray-700 pl-4 border-l-2 border-green-200"
+                    >
                       {lang}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 text-sm">No languages specified</p>
+                <p className="text-gray-400 text-sm italic">
+                  No languages specified
+                </p>
               )}
             </div>
           )}
 
           {/* Services */}
           {(profileData?.services?.length > 0 || isNurse) && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Briefcase className="w-5 h-5 text-green-500" />
+            <div className="bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <Briefcase className="w-5 h-5 text-green-600" />
+                </div>
                 <h3 className="text-lg font-semibold text-gray-900">
                   Services
                 </h3>
@@ -247,83 +383,105 @@ export default function NurseProfile() {
               {profileData?.services?.length > 0 ? (
                 <ul className="space-y-2">
                   {profileData.services.map((service: any, idx: any) => (
-                    <li key={idx} className="text-gray-700 capitalize">
+                    <li
+                      key={idx}
+                      className="text-gray-700 capitalize pl-4 border-l-2 border-green-200"
+                    >
                       {service}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 text-sm">No services listed</p>
+                <p className="text-gray-400 text-sm italic">
+                  No services listed
+                </p>
               )}
             </div>
           )}
 
-          {/* Availability - Using Mock Data */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-green-500" />
+          {/* Availability */}
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-green-600" />
+              </div>
               <h3 className="text-lg font-semibold text-gray-900">
                 Availability
               </h3>
             </div>
-            <ul className="space-y-2">
-              {availability.map((slot: string, idx: number) => (
-                <li key={idx} className="text-gray-700">
-                  {slot}
-                </li>
-              ))}
-            </ul>
+            {availability.length > 0 ? (
+              <ul className="space-y-2">
+                {availability.map((slot: string, idx: number) => (
+                  <li
+                    key={idx}
+                    className="text-gray-700 pl-4 border-l-2 border-green-200"
+                  >
+                    {slot}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-400 text-sm italic">
+                No availability set
+              </p>
+            )}
           </div>
         </div>
 
         {/* Availability Status (for CHW) */}
         {isCHW && profileData?.available !== undefined && (
           <div
-            className={`mt-6 ${
+            className={`mt-6 rounded-xl p-5 ${
               profileData.available
-                ? "bg-green-50 border-green-200"
-                : "bg-gray-50 border-gray-200"
-            } border rounded-lg p-4`}
+                ? "bg-green-50 border border-green-200"
+                : "bg-gray-50 border border-gray-200"
+            }`}
           >
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-3">
               <CheckCircle
-                className={`w-5 h-5 ${
-                  profileData.available ? "text-green-600" : "text-gray-600"
+                className={`w-6 h-6 mt-0.5 ${
+                  profileData.available ? "text-green-600" : "text-gray-400"
                 }`}
               />
-              <span
-                className={`${
-                  profileData.available ? "text-green-800" : "text-gray-800"
-                } font-medium`}
-              >
-                {profileData.available
-                  ? "Currently Available"
-                  : "Currently Unavailable"}
-              </span>
+              <div>
+                <h4
+                  className={`font-semibold ${
+                    profileData.available ? "text-green-900" : "text-gray-800"
+                  }`}
+                >
+                  {profileData.available
+                    ? "Currently Available"
+                    : "Currently Unavailable"}
+                </h4>
+                <p
+                  className={`text-sm mt-1 ${
+                    profileData.available ? "text-green-700" : "text-gray-600"
+                  }`}
+                >
+                  {profileData.available
+                    ? "This healthcare worker is available to accept new appointments."
+                    : "This healthcare worker is not currently accepting new appointments."}
+                </p>
+              </div>
             </div>
-            <p
-              className={`${
-                profileData.available ? "text-green-700" : "text-gray-700"
-              } text-sm mt-1`}
-            >
-              {profileData.available
-                ? "This healthcare worker is available to accept new appointments."
-                : "This healthcare worker is not currently accepting new appointments."}
-            </p>
           </div>
         )}
 
         {/* Verification Badge */}
         {profileData?.verified_nurse && (
-          <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <span className="text-green-800 font-medium">Verified Nurse</span>
+          <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-5">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="w-6 h-6 text-green-600 mt-0.5" />
+              <div>
+                <h4 className="text-green-900 font-semibold">
+                  Verified Healthcare Professional
+                </h4>
+                <p className="text-green-700 text-sm mt-1">
+                  This healthcare professional has been verified and meets all
+                  requirements.
+                </p>
+              </div>
             </div>
-            <p className="text-green-700 text-sm mt-1">
-              This healthcare professional has been verified and meets all
-              requirements.
-            </p>
           </div>
         )}
       </div>

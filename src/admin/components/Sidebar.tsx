@@ -56,6 +56,10 @@ const procedureSubLinks = [
     name: "in-bed procedure",
     href: "/admin/in-bed/procedures/",
   },
+  {
+    name: "specialization",
+    href: "/admin/specialization",
+  },
 ];
 
 const Sidebar: React.FC<SidebarProp> = ({ close }) => {

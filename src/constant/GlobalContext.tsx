@@ -34,7 +34,8 @@ const queryKeys = {
   usePatientStats: "usePatientStats",
   useFinancialSummary:"useFinancialSummary",
   useUserVerified:"useUserVerified",
-  useUserUnVerified:"useUserUnverified"
+  useUserUnVerified:"useUserUnverified",
+  useSpecialization:"useSpecialization",
   
 };
 
@@ -348,6 +349,16 @@ export const useUserUnVerified = (role: string) => {
       const response = await api.get(
         `/user/role-filter/?role=${role}&verified=false`
       );
+      return response.data;
+    },
+  });
+};
+
+export const useSpecialization = () => {
+  return useQuery({
+    queryKey: [queryKeys.useSpecialization],
+    queryFn: async () => {
+      const response = await api.get("user/specialties/");
       return response.data;
     },
   });

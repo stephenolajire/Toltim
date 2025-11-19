@@ -39,7 +39,7 @@ interface ProfileFormData {
   // Personal Information
   first_name: string;
   last_name: string;
-  email: string;
+  // email: string;
   phone_number: string;
   date_of_birth: string;
   gender: string;
@@ -73,9 +73,9 @@ const validationSchema = Yup.object({
     .max(50, "Last name must not exceed 50 characters")
     .required("Last name is required"),
 
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
+  // email: Yup.string()
+  //   .email("Invalid email address")
+  //   .required("email is required"),
 
   phone_number: Yup.string()
     .matches(/^\+?[\d\s\-\(\)]+$/, "Invalid phone number format")
@@ -151,52 +151,83 @@ const PROFILE_QUERY_KEY = ["user", "profile"];
 const fetchProfile = async (): Promise<ProfileFormData> => {
   try {
     const response = await api.get<ProfileFormData>("user/profile");
+    console.log(response);
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 404) {
-      // Return mock data if profile not found
-      return {
-        first_name: "John",
-        last_name: "Doe",
-        email: "john.doe@example.com",
-        phone_number: "+234...",
-        date_of_birth: "1990-01-01",
-        gender: "Male",
-        blood_type: "O+",
-        address: "123 Main St",
-        city: "Lagos",
-        state: "Lagos",
-        zipcode: "100001",
-        medical_information: {
-          known_allergies: "None",
-          current_medications: "None",
-          medical_history: "No significant history",
-          primary_physician: "Dr. Smith",
-        },
-        preferences: {
-          preferred_language: "en",
-          communication_preference: "email",
-          appointment_reminders: true,
-        },
-        emergency_contacts: [
-          {
-            name: "Jane Doe",
-            relationship: "spouse",
-            phone_number: "+234...",
-          },
-        ],
-      };
     }
     throw error;
   }
 };
 
 const updateProfile = async (
-  profileData: ProfileFormData
+  profileData: Partial<ProfileFormData>
 ): Promise<ProfileFormData> => {
-  const response = await api.put<ProfileFormData>("user/profile", profileData);
+  const response = await api.patch<ProfileFormData>(
+    "user/profile",
+    profileData
+  );
   console.log(response.data);
   return response.data;
+};
+
+// Add this helper function before the component (after the API functions section)
+const getChangedFields = (
+  original: ProfileFormData,
+  current: ProfileFormData
+): Partial<ProfileFormData> => {
+  const changes: any = {};
+
+  // Compare top-level fields
+  (Object.keys(current) as Array<keyof ProfileFormData>).forEach((key) => {
+    if (
+      key === "medical_information" ||
+      key === "preferences" ||
+      key === "emergency_contacts"
+    ) {
+      // Handle nested objects separately
+      return;
+    }
+
+    if (original[key] !== current[key]) {
+      changes[key] = current[key];
+    }
+  });
+
+  // Compare medical_information
+  const medicalChanges: any = {};
+  Object.keys(current.medical_information).forEach((key) => {
+    const k = key as keyof MedicalInformation;
+    if (original.medical_information[k] !== current.medical_information[k]) {
+      medicalChanges[k] = current.medical_information[k];
+    }
+  });
+  if (Object.keys(medicalChanges).length > 0) {
+    changes.medical_information = medicalChanges;
+  }
+
+  // Compare preferences
+  const preferencesChanges: any = {};
+  Object.keys(current.preferences).forEach((key) => {
+    const k = key as keyof Preferences;
+    if (original.preferences[k] !== current.preferences[k]) {
+      preferencesChanges[k] = current.preferences[k];
+    }
+  });
+  if (Object.keys(preferencesChanges).length > 0) {
+    changes.preferences = preferencesChanges;
+  }
+
+  // Compare emergency_contacts
+  const emergencyContactsChanged =
+    JSON.stringify(original.emergency_contacts) !==
+    JSON.stringify(current.emergency_contacts);
+
+  if (emergencyContactsChanged) {
+    changes.emergency_contacts = current.emergency_contacts;
+  }
+
+  return changes;
 };
 
 // Blood group options
@@ -239,7 +270,7 @@ const languageOptions = [
 
 // Communication preference options
 const communicationOptions = [
-  { value: "email", label: "Email" },
+  { value: "email", label: "email" },
   { value: "phone", label: "Phone" },
   { value: "sms", label: "SMS" },
   { value: "mail", label: "Mail" },
@@ -282,7 +313,7 @@ const EditUserProfile: React.FC = () => {
     initialValues: profileData || {
       first_name: "",
       last_name: "",
-      email: "",
+      // email: "",
       phone_number: "",
       date_of_birth: "",
       gender: "",
@@ -313,15 +344,28 @@ const EditUserProfile: React.FC = () => {
     enableReinitialize: true,
     validationSchema,
     onSubmit: (values) => {
-      const formattedData = {
-        ...values,
-        phone_number: formatPhoneNumber(values.phone_number),
-        emergency_contacts: values.emergency_contacts.map((contact) => ({
-          ...contact,
-          phone_number: formatPhoneNumber(contact.phone_number),
-        })),
-      };
-      updateProfileMutation.mutate(formattedData);
+      // Get only the changed fields
+      const changedFields = getChangedFields(profileData!, values);
+
+      // Format phone numbers in changed fields only
+      if (changedFields.phone_number) {
+        changedFields.phone_number = formatPhoneNumber(
+          changedFields.phone_number
+        );
+      }
+
+      if (changedFields.emergency_contacts) {
+        changedFields.emergency_contacts = changedFields.emergency_contacts.map(
+          (contact) => ({
+            ...contact,
+            phone_number: formatPhoneNumber(contact.phone_number),
+          })
+        );
+      }
+
+      // Only send the changed fields
+      console.log("Sending only changed fields:", changedFields);
+      updateProfileMutation.mutate(changedFields);
     },
   });
 
@@ -353,12 +397,11 @@ const EditUserProfile: React.FC = () => {
     return "+234" + cleaned;
   };
 
-
   if (isFetchingProfile) {
     return (
       <div className="mx-auto bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <Loader className="animate-spin h-8 w-8 text-green-600 mx-auto" />
+          <Loader className="animate-spin h-8 w-8 text-blue-600 mx-auto" />
           <p className="mt-2 text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -373,7 +416,7 @@ const EditUserProfile: React.FC = () => {
           <p className="mt-2 text-red-600">Failed to load profile data</p>
           <button
             onClick={handleGoBack}
-            className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Go Back
           </button>
@@ -395,7 +438,7 @@ const EditUserProfile: React.FC = () => {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="flex items-center">
-              <Heart className="w-8 h-8 text-green-600 mr-3" />
+              <Heart className="w-8 h-8 text-blue-600 mr-3" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                   Edit Profile
@@ -417,15 +460,40 @@ const EditUserProfile: React.FC = () => {
               <button
                 type="submit"
                 form="profile-form"
-                disabled={updateProfileMutation.isPending}
-                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={
+                  updateProfileMutation.isPending || formik.isSubmitting
+                }
+                onClick={() => {
+                  console.log("=== SAVE BUTTON CLICKED ===");
+                  console.log("Form is valid:", formik.isValid);
+                  console.log("Form errors:", formik.errors);
+                  console.log("Form is submitting:", formik.isSubmitting);
+                  console.log(
+                    "Mutation is pending:",
+                    updateProfileMutation.isPending
+                  );
+
+                  // If there are validation errors, show them
+                  if (Object.keys(formik.errors).length > 0) {
+                    console.error("Validation errors present:", formik.errors);
+                    toast.error(
+                      "Please fix validation errors before submitting"
+                    );
+                  }
+                }}
+                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {updateProfileMutation.isPending ? (
-                  <Loader className="w-4 h-4 mr-2 animate-spin" />
+                {updateProfileMutation.isPending || formik.isSubmitting ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
                 )}
-                Save Changes
               </button>
             </div>
           </div>
@@ -440,7 +508,7 @@ const EditUserProfile: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === tab.id
-                    ? "border-green-500 text-green-600"
+                    ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 }`}
               >
@@ -478,7 +546,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.first_name}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.first_name && formik.errors.first_name
                           ? "border-red-300"
                           : "border-gray-300"
@@ -505,7 +573,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.last_name}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.last_name && formik.errors.last_name
                           ? "border-red-300"
                           : "border-gray-300"
@@ -518,12 +586,12 @@ const EditUserProfile: React.FC = () => {
                     )}
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label
                       htmlFor="email"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Email Address *
+                      email Address *
                     </label>
                     <input
                       type="email"
@@ -532,18 +600,20 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.email}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
-                        formik.touched.email && formik.errors.email
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        formik.touched.email &&
+                        formik.errors.email
                           ? "border-red-300"
                           : "border-gray-300"
                       }`}
                     />
-                    {formik.touched.email && formik.errors.email && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {formik.errors.email}
-                      </p>
-                    )}
-                  </div>
+                    {formik.touched.email &&
+                      formik.errors.email && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formik.errors.email}
+                        </p>
+                      )}
+                  </div> */}
 
                   <div>
                     <label
@@ -559,7 +629,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.phone_number}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.phone_number &&
                         formik.errors.phone_number
                           ? "border-red-300"
@@ -588,7 +658,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.date_of_birth}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.date_of_birth &&
                         formik.errors.date_of_birth
                           ? "border-red-300"
@@ -616,7 +686,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.gender}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.gender && formik.errors.gender
                           ? "border-red-300"
                           : "border-gray-300"
@@ -649,7 +719,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.blood_type}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.blood_type && formik.errors.blood_type
                           ? "border-red-300"
                           : "border-gray-300"
@@ -690,7 +760,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.address}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.address && formik.errors.address
                           ? "border-red-300"
                           : "border-gray-300"
@@ -717,7 +787,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.city}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.city && formik.errors.city
                           ? "border-red-300"
                           : "border-gray-300"
@@ -744,7 +814,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.state}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.state && formik.errors.state
                           ? "border-red-300"
                           : "border-gray-300"
@@ -771,7 +841,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.zipcode}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.zipcode && formik.errors.zipcode
                           ? "border-red-300"
                           : "border-gray-300"
@@ -805,7 +875,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.emergency_contacts[0]?.name || ""}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 `}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 `}
                     />
                     {formik.touched.emergency_contacts?.[0]?.name &&
                       typeof formik.errors.emergency_contacts?.[0] ===
@@ -846,7 +916,7 @@ const EditUserProfile: React.FC = () => {
                       }}
                       onBlur={formik.handleBlur}
                       placeholder="+2341234567890"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500`}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                     />
                     {formik.touched.emergency_contacts?.[0]?.phone_number &&
                       typeof formik.errors.emergency_contacts?.[0] ===
@@ -879,7 +949,7 @@ const EditUserProfile: React.FC = () => {
                       }
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 `}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 `}
                     >
                       {relationshipOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -928,7 +998,7 @@ const EditUserProfile: React.FC = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       placeholder="List any known allergies (e.g., medications, foods, environmental)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     {formik.touched.medical_information?.known_allergies &&
                       formik.errors.medical_information?.known_allergies && (
@@ -955,7 +1025,7 @@ const EditUserProfile: React.FC = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       placeholder="List all current medications including dosage and frequency"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     {formik.touched.medical_information?.current_medications &&
                       formik.errors.medical_information
@@ -984,7 +1054,7 @@ const EditUserProfile: React.FC = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       placeholder="Describe any significant medical history, previous surgeries, chronic conditions, etc."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     {formik.touched.medical_information?.medical_history &&
                       formik.errors.medical_information?.medical_history && (
@@ -1012,7 +1082,7 @@ const EditUserProfile: React.FC = () => {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         placeholder="Dr. John Smith"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                       {formik.touched.medical_information?.primary_physician &&
                         formik.errors.medical_information
@@ -1051,7 +1121,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.preferences.preferred_language}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.preferences?.preferred_language &&
                         formik.errors.preferences?.preferred_language
                           ? "border-red-300"
@@ -1085,7 +1155,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.preferences.communication_preference}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         formik.touched.preferences?.communication_preference &&
                         formik.errors.preferences?.communication_preference
                           ? "border-red-300"
@@ -1116,7 +1186,7 @@ const EditUserProfile: React.FC = () => {
                           formik.values.preferences.appointment_reminders
                         }
                         onChange={formik.handleChange}
-                        className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                       <label
                         htmlFor="preferences.appointment_reminders"

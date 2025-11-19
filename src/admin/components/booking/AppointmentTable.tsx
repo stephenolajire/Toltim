@@ -1,5 +1,6 @@
 import React from "react";
-import { Clock, MapPin, User, Stethoscope, Eye, MoreVertical } from "lucide-react";
+import { Clock, User, Stethoscope, Eye, MoreVertical } from "lucide-react";
+import LocationDisplay from "../../../components/LocationDisplay";
 
 interface Appointment {
   id: string;
@@ -132,8 +133,8 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600 max-w-xs">
-                        <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                        <span className="truncate">{appointment.location}</span>
+                        <LocationDisplay
+                        location={appointment.location}/>
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">

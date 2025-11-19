@@ -14,6 +14,45 @@ interface PractitionerCardProps {
   onSelect: (practitioner: Practitioner) => void;
 }
 
+// Helper function to format specialization
+const formatSpecialization = (specialization: any): string => {
+  if (!specialization) return "General Practice";
+
+  // If it's an array of objects with {id, name}
+  if (Array.isArray(specialization)) {
+    return (
+      specialization
+        .map((spec) => {
+          if (typeof spec === "object" && spec !== null && spec.name) {
+            return spec.name;
+          }
+          if (typeof spec === "string") {
+            return spec;
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .join(", ") || "General Practice"
+    );
+  }
+
+  // If it's a single object with {id, name}
+  if (
+    typeof specialization === "object" &&
+    specialization !== null &&
+    specialization.name
+  ) {
+    return specialization.name;
+  }
+
+  // If it's a string
+  if (typeof specialization === "string") {
+    return specialization;
+  }
+
+  return "General Practice";
+};
+
 const PractitionerCard: React.FC<PractitionerCardProps> = ({
   practitioner,
   onSelect,
@@ -21,7 +60,7 @@ const PractitionerCard: React.FC<PractitionerCardProps> = ({
   const [isReviewsOpen, setIsReviewsOpen] = useState(false);
 
   // Sample reviews - replace with actual reviews from practitioner.reviews
-  const reviews: Review[] = practitioner.latest_reviews 
+  const reviews: Review[] = practitioner.latest_reviews;
 
   const renderStars = (rating: number) => {
     return (
@@ -66,7 +105,7 @@ const PractitionerCard: React.FC<PractitionerCardProps> = ({
                 {practitioner.full_name || practitioner.name}
               </h3>
               <p className="text-blue-600 font-medium text-sm">
-                {practitioner.specialization}
+                {formatSpecialization(practitioner.specialization)}
               </p>
 
               {/* Rating */}
