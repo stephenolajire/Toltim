@@ -1,13 +1,9 @@
 import {
   User,
   MapPin,
-  Calendar,
   Heart,
   Edit,
   AlertCircle,
-  Clock,
-  FileText,
-  Activity,
   Settings,
   Loader,
 } from "lucide-react";
