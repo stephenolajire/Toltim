@@ -4,33 +4,7 @@ import { Formik, Form, Field, FieldArray, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../constant/api";
-
-// API Response Types
-interface APIInclusionItem {
-  id: number;
-  item: string;
-}
-
-interface APIRequirementItem {
-  id: number;
-  item: string;
-}
-
-interface APIProcedure {
-  id: number;
-  procedure_id: string;
-  title: string;
-  description: string;
-  duration: string;
-  repeated_visits: boolean;
-  price: string;
-  icon_url: string | null;
-  status: "active" | "inactive";
-  inclusions: APIInclusionItem[];
-  requirements: APIRequirementItem[];
-  created_at: string;
-  updated_at: string;
-}
+import { useSpecialization } from "../../../constant/GlobalContext";
 
 interface InclusionItem {
   item: string;
@@ -47,6 +21,7 @@ interface FormValues {
   price: string;
   repeated_visits: boolean;
   status: "active" | "inactive";
+  specialities: number[];
   inclusions: InclusionItem[];
   requirements: RequirementItem[];
 }
@@ -54,7 +29,7 @@ interface FormValues {
 interface EditProcedureModalProps {
   isOpen: boolean;
   onClose: () => void;
-  procedure: APIProcedure | null;
+  procedure:any;
 }
 
 const validationSchema = Yup.object({
@@ -74,6 +49,10 @@ const validationSchema = Yup.object({
   status: Yup.string()
     .oneOf(["active", "inactive"])
     .required("Status is required"),
+  specialities: Yup.array()
+    .of(Yup.number())
+    .min(1, "At least one speciality is required")
+    .required("Specialities are required"),
   inclusions: Yup.array()
     .of(
       Yup.object({
@@ -126,6 +105,8 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
   procedure,
 }) => {
   const queryClient = useQueryClient();
+  const { data: specialityData, isLoading: isSpecialityLoading } =
+    useSpecialization();
 
   // Update procedure mutation
   const updateProcedureMutation = useMutation({
@@ -135,6 +116,7 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
       const payload = {
         title: updatedData.title,
         description: updatedData.description,
+        specialties: updatedData.specialities,
         duration: updatedData.duration,
         repeated_visits: updatedData.repeated_visits,
         price: updatedData.price,
@@ -150,9 +132,7 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
       return response.data;
     },
     onSuccess: (data) => {
-      // Invalidate and refetch the nursing procedures query
       queryClient.invalidateQueries({ queryKey: ["nurseProcedures"] });
-
       console.log("Procedure updated successfully:", data);
       alert("Procedure updated successfully!");
       onClose();
@@ -182,8 +162,9 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
     price: procedure.price,
     repeated_visits: procedure.repeated_visits,
     status: procedure.status,
-    inclusions: procedure.inclusions.map((inc) => ({ item: inc.item })),
-    requirements: procedure.requirements.map((req) => ({ item: req.item })),
+    specialities: procedure.specialties || [],
+    inclusions: procedure.inclusions.map((inc:any) => ({ item: inc.item })),
+    requirements: procedure.requirements.map((req:any) => ({ item: req.item })),
   };
 
   const handleSubmit = async (values: FormValues, { setSubmitting }: any) => {
@@ -212,7 +193,7 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
           {({ values, resetForm, isSubmitting }) => (
             <Form>
               {/* Modal Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
                     Edit Procedure
@@ -361,6 +342,93 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
                       className="text-red-500 text-sm mt-1"
                     />
                   </div>
+                </div>
+
+                {/* Specialities */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Specialities *
+                  </label>
+                  {isSpecialityLoading ? (
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Loading specialities...</span>
+                    </div>
+                  ) : (
+                    <Field name="specialities">
+                      {({ field, form }: any) => (
+                        <div className="space-y-2">
+                          <select
+                            multiple
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            style={{ minHeight: "120px" }}
+                            value={field.value}
+                            onChange={(e) => {
+                              const options = e.target.options;
+                              const selectedValues: number[] = [];
+                              for (let i = 0; i < options.length; i++) {
+                                if (options[i].selected) {
+                                  selectedValues.push(Number(options[i].value));
+                                }
+                              }
+                              form.setFieldValue(
+                                "specialities",
+                                selectedValues
+                              );
+                            }}
+                            onBlur={field.onBlur}
+                          >
+                            {specialityData?.results?.map((speciality: any) => (
+                              <option key={speciality.id} value={speciality.id}>
+                                {speciality.name}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-gray-500">
+                            Hold Ctrl (Windows) or Cmd (Mac) to select multiple
+                          </p>
+                          {field.value.length > 0 && (
+                            <div className="flex flex-wrap gap-2">
+                              {field.value.map((id: number) => {
+                                const speciality =
+                                  specialityData?.results?.find(
+                                    (s: any) => s.id === id
+                                  );
+                                return speciality ? (
+                                  <span
+                                    key={id}
+                                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs"
+                                  >
+                                    {speciality.name}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const newValues = field.value.filter(
+                                          (v: number) => v !== id
+                                        );
+                                        form.setFieldValue(
+                                          "specialities",
+                                          newValues
+                                        );
+                                      }}
+                                      className="hover:text-blue-900"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ) : null;
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Field>
+                  )}
+                  <ErrorMessage
+                    name="specialities"
+                    component="div"
+                    className="text-red-500 text-sm mt-1"
+                  />
                 </div>
 
                 {/* Inclusions */}

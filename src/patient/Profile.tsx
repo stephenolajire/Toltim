@@ -46,6 +46,7 @@ interface ProfileData {
   medical_information: MedicalInformation;
   preferences: Preferences;
   emergency_contacts: EmergencyContact[];
+  profile_picture: string;
 }
 
 type TabId = "personal" | "medical" | "preferences";
@@ -180,20 +181,9 @@ const PatientProfile: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-sm">
-                <Heart className="w-6 h-6 text-white" fill="white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Patient Profile
-                </h1>
-                <p className="text-gray-600 text-sm font-medium">
-                  View your personal and medical information
-                </p>
-              </div>
-            </div> */}
-            <div></div>
+            <div>
+              <img src={profileData.profile_picture} alt={`${profileData.first_name} ${profileData.last_name}`} className="w-24 h-24 rounded-full object-cover" />
+            </div>
             <button
               onClick={handleEditProfile}
               className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all font-medium shadow-sm hover:shadow-md"

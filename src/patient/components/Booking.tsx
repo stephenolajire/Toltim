@@ -35,7 +35,6 @@ const Booking: React.FC<BookingProps> = ({
 }) => {
   const calculateTotalCost = () => {
     let multiplier = 1;
-
     if (scheduleConfig.frequency === "daily") {
       multiplier = scheduleConfig.totalDays;
     } else if (scheduleConfig.frequency === "specific-days") {
@@ -46,13 +45,11 @@ const Booking: React.FC<BookingProps> = ({
     } else if (scheduleConfig.frequency === "weekly") {
       multiplier = Math.ceil(scheduleConfig.totalDays / 7);
     }
-
     return selectedService.price * multiplier;
   };
 
   const getScheduleDescription = () => {
     const { frequency, selectedDays, totalDays } = scheduleConfig;
-
     switch (frequency) {
       case "daily":
         return `Daily appointments for ${totalDays} days`;
@@ -103,53 +100,56 @@ const Booking: React.FC<BookingProps> = ({
   return (
     <div className="space-y-6">
       {/* Booking Summary */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-100 p-4 sm:p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
           Booking Summary
-        </h3>
-
-        <div className="space-y-3 text-sm sm:text-base">
-          <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+        </h2>
+        <div className="space-y-2 text-sm sm:text-base">
+          <div className="flex justify-between">
             <span className="text-gray-600">Service:</span>
-            <span className="font-medium break-words">
+            <span className="font-medium text-gray-900">
               {selectedService.name}
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+          <div className="flex justify-between">
             <span className="text-gray-600">Practitioner:</span>
-            <span className="font-medium break-words">
+            <span className="font-medium text-gray-900">
               {selectedPractitioner.name}
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+          <div className="flex justify-between">
             <span className="text-gray-600">Schedule:</span>
-            <span className="font-medium break-words">
+            <span className="font-medium text-gray-900">
               {getScheduleDescription()}
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+          <div className="flex justify-between">
             <span className="text-gray-600">Start Date:</span>
-            <span className="font-medium break-words">
+            <span className="font-medium text-gray-900">
               {formatDate(scheduleConfig.startDate)}
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+          <div className="flex justify-between">
             <span className="text-gray-600">Time:</span>
-            <span className="font-medium">{scheduleConfig.timeSlot}</span>
+            <span className="font-medium text-gray-900">
+              {scheduleConfig.timeSlot}
+            </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+          <div className="flex justify-between">
             <span className="text-gray-600">Duration:</span>
-            <span className="font-medium">{selectedService.duration}</span>
+            <span className="font-medium text-gray-900">
+              {selectedService.duration}
+            </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between space-y-1 sm:space-y-0">
+          <div className="flex justify-between pt-2 border-t border-blue-200">
             <span className="text-gray-600">Price per session:</span>
-            <span className="font-medium">
+            <span className="font-medium text-gray-900">
               ₦{selectedService.price.toLocaleString()}
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:justify-between text-lg space-y-1 sm:space-y-0 pt-2 border-t border-gray-200">
-            <span className="font-semibold">Total Amount:</span>
-            <span className="font-semibold text-blue-600">
+          <div className="flex justify-between pt-2 border-t border-blue-200">
+            <span className="text-gray-900 font-semibold">Total Amount:</span>
+            <span className="font-bold text-blue-600 text-lg">
               ₦{calculateTotalCost().toLocaleString()}
             </span>
           </div>
@@ -162,28 +162,28 @@ const Booking: React.FC<BookingProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Who is this appointment for?
           </h3>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               onClick={() => onBookingForSelfChange(true)}
               className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-center"
             >
-              <User className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h4 className="font-semibold text-gray-900">Myself</h4>
-              <p className="text-sm text-gray-600 mt-1">
+              <User className="w-12 h-12 mx-auto mb-3 text-blue-600" />
+              <div className="font-semibold text-gray-900 mb-1">Myself</div>
+              <div className="text-sm text-gray-600">
                 Book this appointment for yourself
-              </p>
+              </div>
             </button>
-
             <button
               onClick={() => onBookingForSelfChange(false)}
               className="p-4 sm:p-6 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-center"
             >
-              <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <h4 className="font-semibold text-gray-900">Someone Else</h4>
-              <p className="text-sm text-gray-600 mt-1">
+              <Users className="w-12 h-12 mx-auto mb-3 text-blue-600" />
+              <div className="font-semibold text-gray-900 mb-1">
+                Someone Else
+              </div>
+              <div className="text-sm text-gray-600">
                 Book for a family member or friend
-              </p>
+              </div>
             </button>
           </div>
         </div>
@@ -192,30 +192,51 @@ const Booking: React.FC<BookingProps> = ({
       {/* Service Address Form (for booking for self) */}
       {bookingForSelf === true && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Service Location
           </h3>
           <p className="text-sm text-gray-600 mb-4">
             Please provide the address where you'd like to receive the service.
           </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Service Address *
+              </label>
+              <textarea
+                value={bookingDetails.address}
+                onChange={(e) =>
+                  updateBookingDetails({ address: e.target.value })
+                }
+                rows={3}
+                placeholder="Enter the full address where the service should be provided..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Include street address, city, state, and any specific directions
+                if needed.
+              </p>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Service Address *
-            </label>
-            <textarea
-              value={bookingDetails.address || ""}
-              onChange={(e) =>
-                updateBookingDetails({ address: e.target.value })
-              }
-              rows={3}
-              placeholder="Enter the full address where the service should be provided..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-none"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Include street address, city, state, and any specific directions
-              if needed.
-            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Test Result 
+              </label>
+              <input
+                type="file"
+                required
+                accept="image/*"
+                onChange={(e) =>
+                  updateBookingDetails({
+                    testResult: e.target.files?.[0] || undefined,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload an image of test results if available (JPG, PNG, etc.)
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -226,7 +247,6 @@ const Booking: React.FC<BookingProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
             Patient Details
           </h3>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -305,6 +325,26 @@ const Booking: React.FC<BookingProps> = ({
 
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Test Result
+              </label>
+              <input
+                type="file"
+                required
+                accept="image/*"
+                onChange={(e) =>
+                  updateBookingDetails({
+                    testResult: e.target.files?.[0] || undefined,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Upload an image of test results if available (JPG, PNG, etc.)
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Relationship to Patient *
               </label>
               <select
@@ -338,7 +378,6 @@ const Booking: React.FC<BookingProps> = ({
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
           </button>
-
           <button
             onClick={onSubmit}
             disabled={loading || !isFormValid()}

@@ -408,3 +408,13 @@ export const useFinancialSummary = () => {
   });
 };
 
+
+export const useWorkerStats = (role: string) => {
+  return useQuery({
+    queryKey: ["useWorkerStats", role],
+    queryFn: async () => {
+      const response = await api.get('history/worker/booking-stats/');
+      return response.data;
+    }
+  });
+}

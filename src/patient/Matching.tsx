@@ -14,6 +14,7 @@ import type {
   ScheduleConfig,
   BookingDetails,
 } from "./components/types";
+import { toast } from "react-toastify";
 
 interface SelectedServiceFromStorage {
   service: Service;
@@ -55,6 +56,7 @@ const HealthPractitionersMatching: React.FC<
     phone: "",
     address: "",
     relationship: "",
+    testResult: null,
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [locationError, setLocationError] = useState("");
@@ -142,7 +144,7 @@ const HealthPractitionersMatching: React.FC<
    ],
    queryFn: async () => {
      const res = await api.get(
-       `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
+       `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}&specialization=${selectedService?.specialization}`
      );
      console.log("NURSES NEARBY RESPONSE:", res.data);
      
@@ -159,7 +161,7 @@ const HealthPractitionersMatching: React.FC<
  });
 
   const filteredPractitioners = practitioners.filter((practitioner: any) => {
-    const name = practitioner?.full_name?.toLowerCase() || "";
+    const name = practitioner?.full_name
     const searchLower = searchTerm.toLowerCase();
 
     // Handle specialization as an array of objects with {id, name}
@@ -210,42 +212,73 @@ const HealthPractitionersMatching: React.FC<
 
   const handleBookingSubmit = async () => {
     try {
-      // Prepare the booking data in the required format
-      const bookingData = {
-        nurse: selectedPractitioner?.user_id,
-        nurse_id: selectedPractitioner?.user_id,
-        scheduling_option: scheduleConfig.frequency,
-        start_date: scheduleConfig.startDate,
-        time_of_day: scheduleConfig.timeSlot,
-        selected_days: scheduleConfig.selectedDays.map(
-          (day) => day.charAt(0).toUpperCase() + day.slice(1) // Capitalize first letter
-        ),
-        is_for_self: bookingForSelf,
-        procedure_item: {
+      // Create FormData instance
+      const formData = new FormData();
+
+      // Add all fields to FormData
+      formData.append("nurse", selectedPractitioner?.user_id || "");
+      formData.append("nurse_id", selectedPractitioner?.user_id || "");
+      formData.append("scheduling_option", scheduleConfig.frequency);
+      formData.append("start_date", scheduleConfig.startDate);
+      formData.append("time_of_day", scheduleConfig.timeSlot);
+      formData.append("is_for_self", String(bookingForSelf));
+      formData.append("latitude", String(coordinates.latitude!));
+      formData.append("longitude", String(coordinates.longitude!));
+      formData.append("service_address", bookingDetails.address || "");
+
+      // Add test_result file if it exists
+      if (bookingDetails.testResult) {
+        formData.append("test_result", bookingDetails.testResult);
+      }
+
+      // Add procedure_item as JSON string
+      formData.append(
+        "procedure_item",
+        JSON.stringify({
           procedure_id: selectedService?.id || 0,
           num_days: scheduleConfig.totalDays,
-        },
-        patient_detail: bookingForSelf
-          ? null
-          : {
-              first_name: bookingDetails.firstName,
-              last_name: bookingDetails.lastName,
-              email: bookingDetails.email,
-              phone_number: bookingDetails.phone,
-              address: bookingDetails.address,
-              relationship_to_patient: bookingDetails.relationship,
-            },
-        latitude: coordinates.latitude!,
-        longitude: coordinates.longitude!,
-        service_address: bookingDetails.address || "", // Use patient address or empty string
-      };
+        })
+      );
 
-      console.log("Booking Data to be sent:", bookingData);
+      // Add selected_days as JSON string
+      const capitalizedDays = scheduleConfig.selectedDays.map(
+        (day) => day.charAt(0).toUpperCase() + day.slice(1)
+      );
+      formData.append("selected_days", JSON.stringify(capitalizedDays));
+
+
+      // Add patient_detail
+      if (bookingForSelf) {
+        formData.append("patient_detail", "null");
+      } else {
+        formData.append(
+          "patient_detail",
+          JSON.stringify({
+            first_name: bookingDetails.firstName,
+            last_name: bookingDetails.lastName,
+            email: bookingDetails.email,
+            phone_number: bookingDetails.phone,
+            address: bookingDetails.address,
+            relationship_to_patient: bookingDetails.relationship,
+          })
+        );
+      }
+
+      console.log("Booking Data to be sent (FormData):");
+      // Log FormData contents for debugging
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
 
       // Make the API call
       const response = await api.post(
         "services/nurse-procedure-bookings/",
-        bookingData
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
       console.log("Booking response:", response.data);
@@ -254,9 +287,8 @@ const HealthPractitionersMatching: React.FC<
       localStorage.removeItem("selectedServices");
       localStorage.removeItem("procedureDays");
 
-      alert("Appointment(s) booked successfully!");
-      // navigate("/patient/receipt", { state: { booking: response.data } });
-      navigate("/patient")
+      toast.success("Appointment(s) booked successfully!");
+      navigate("/patient");
     } catch (error: any) {
       console.error("Booking failed:", error);
 
@@ -266,11 +298,17 @@ const HealthPractitionersMatching: React.FC<
           error.response.data?.message ||
           error.response.data?.detail ||
           "Booking failed";
-        alert(`Booking failed: ${errorMessage}`);
+
+        // Log detailed errors if available
+        if (error.response.data?.errors) {
+          console.error("Validation errors:", error.response.data.errors);
+        }
+
+        toast.error(`Booking failed: ${errorMessage}`);
       } else if (error.request) {
-        alert("Network error. Please check your connection and try again.");
+        toast.error("Network error. Please check your connection and try again.");
       } else {
-        alert("Booking failed. Please try again.");
+        toast.error("Booking failed. Please try again.");
       }
     }
   };

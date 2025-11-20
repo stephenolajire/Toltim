@@ -21,6 +21,7 @@ interface APIProcedure {
   procedure_id: string;
   title: string;
   description: string;
+  specialties: [string];
   duration: string;
   repeated_visits: boolean;
   price: string;
@@ -38,6 +39,7 @@ interface Procedure {
   name: string;
   description: string;
   amount: string;
+  specialties?: [string];
   repeatRequired: boolean;
   status: "active" | "inactive";
   created: string;
@@ -65,6 +67,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
       name: procedure.title,
       description: procedure.description,
       amount: `₦${parseFloat(procedure.price).toLocaleString()}`,
+      specialities: procedure.specialties,
       repeatRequired: procedure.repeated_visits,
       status: procedure.status,
       created: new Date(procedure.created_at).toLocaleDateString("en-GB"), // Format: DD/MM/YYYY
@@ -87,6 +90,7 @@ const Procedures: React.FC<ProceduresProps> = ({ procedures = [] }) => {
   };
 
   const procedureData = getProcedureData();
+  console.log("Procedure Data:", procedureData);
 
   // Function to handle viewing procedure details
   const handleViewProcedureDetails = (procedureId: string) => {

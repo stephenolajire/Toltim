@@ -10,20 +10,22 @@ import {
   Award,
   Activity,
 } from "lucide-react";
-import { usePatientStats } from "../../constant/GlobalContext";
+import { useWorkerStats } from "../../constant/GlobalContext";
 import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
 
 const NurseOverviewDashboard = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const {data, isLoading, isError} = usePatientStats()
+  const {data, isLoading, isError} = useWorkerStats('nurse');
+
+  console.log("Worker Stats Data:", data);
 
    const bookingSummary = {
      procedures: {
-       accepted: data?.procedures?.approved || 0,
-       rejected: data?.procedures?.rejected || 0,
-       completed: data?.procedures?.completed || 0,
-       notCompleted: data?.procedures?.pending || 0,
+       accepted: data?.approved || 0,
+       rejected: data?.rejected || 0,
+       completed: data?.completed || 0,
+       notCompleted: data?.pending || 0,
       //  totalEarned: 0,
      },
      caregiving: {
@@ -319,9 +321,7 @@ const NurseOverviewDashboard = () => {
                   <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">
                     Total
                   </th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">
-                    Amount Earned
-                  </th>
+                
                 </tr>
               </thead>
               <tbody>
@@ -345,9 +345,7 @@ const NurseOverviewDashboard = () => {
                     {bookingSummary.procedures.accepted +
                       bookingSummary.procedures.rejected}
                   </td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 font-semibold">
-                    {/* ₦{bookingSummary.procedures.totalEarned.toLocaleString()} */}
-                  </td>
+              
                 </tr>
                 <tr className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="py-3 px-4 text-sm font-medium text-gray-900">
@@ -390,9 +388,7 @@ const NurseOverviewDashboard = () => {
                   <td className="py-3 px-4 text-sm text-center text-gray-900">
                     {totalRequests}
                   </td>
-                  <td className="py-3 px-4 text-sm text-right text-gray-900">
-                    {/* ₦{totalEarned.toLocaleString()} */}
-                  </td>
+                  
                 </tr>
               </tbody>
             </table>

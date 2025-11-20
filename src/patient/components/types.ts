@@ -6,6 +6,7 @@ export interface Service {
   price: number;
   duration: string;
   category: string;
+  specialization: string;
 }
 
 export interface Review {
@@ -52,6 +53,7 @@ export interface BookingDetails {
   phone: string;
   address: string;
   relationship: string;
+  testResult: File | null;
 }
 
 export interface ScheduleConfig {

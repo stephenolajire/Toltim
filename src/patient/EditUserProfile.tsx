@@ -7,13 +7,15 @@ import {
   Save,
   ArrowLeft,
   Loader,
+  Upload,
+  X,
 } from "lucide-react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import api from "../constant/api";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "react-toastify";
 
 interface MedicalInformation {
@@ -36,88 +38,63 @@ interface EmergencyContact {
 }
 
 interface ProfileFormData {
-  // Personal Information
   first_name: string;
   last_name: string;
-  // email: string;
   phone_number: string;
   date_of_birth: string;
   gender: string;
   blood_type: string;
-
-  // Contact Information
+  profile_picture?: string;
   address: string;
   city: string;
   state: string;
   zipcode: string;
-
-  // Medical Information
   medical_information: MedicalInformation;
-
-  // Preferences
   preferences: Preferences;
-
-  // Emergency Contacts
   emergency_contacts: EmergencyContact[];
 }
 
-// Validation Schema
 const validationSchema = Yup.object({
   first_name: Yup.string()
     .min(2, "First name must be at least 2 characters")
     .max(50, "First name must not exceed 50 characters")
     .required("First name is required"),
-
   last_name: Yup.string()
     .min(2, "Last name must be at least 2 characters")
     .max(50, "Last name must not exceed 50 characters")
     .required("Last name is required"),
-
-  // email: Yup.string()
-  //   .email("Invalid email address")
-  //   .required("email is required"),
-
   phone_number: Yup.string()
     .matches(/^\+?[\d\s\-\(\)]+$/, "Invalid phone number format")
     .min(10, "Phone number must be at least 10 digits")
     .required("Phone number is required"),
-
   date_of_birth: Yup.date()
     .max(new Date(), "Date of birth cannot be in the future")
     .required("Date of birth is required"),
-
   gender: Yup.string().required("Gender is required"),
-
   blood_type: Yup.string()
     .oneOf(
       ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
       "Invalid blood type"
     )
     .required("Blood type is required"),
-
   address: Yup.string()
     .min(5, "Address must be at least 5 characters")
     .required("Address is required"),
-
   city: Yup.string()
     .min(2, "City must be at least 2 characters")
     .required("City is required"),
-
   state: Yup.string()
     .min(2, "State must be at least 2 characters")
     .required("State is required"),
-
   zipcode: Yup.string()
     .matches(/^\d{5,6}$/, "ZIP code must be 5-6 digits")
     .required("ZIP code is required"),
-
   medical_information: Yup.object({
     known_allergies: Yup.string(),
     current_medications: Yup.string(),
     medical_history: Yup.string(),
     primary_physician: Yup.string(),
   }),
-
   preferences: Yup.object({
     preferred_language: Yup.string()
       .oneOf(["en", "es", "fr", "other"])
@@ -127,7 +104,6 @@ const validationSchema = Yup.object({
       .required("Communication preference is required"),
     appointment_reminders: Yup.boolean(),
   }),
-
   emergency_contacts: Yup.array().of(
     Yup.object({
       name: Yup.string()
@@ -144,48 +120,39 @@ const validationSchema = Yup.object({
   ),
 });
 
-// Query key constant
 const PROFILE_QUERY_KEY = ["user", "profile"];
 
-// API functions
 const fetchProfile = async (): Promise<ProfileFormData> => {
   try {
     const response = await api.get<ProfileFormData>("user/profile");
-    console.log(response);
     return response.data;
   } catch (error: any) {
-    if (error.response?.status === 404) {
-    }
     throw error;
   }
 };
 
-const updateProfile = async (
-  profileData: Partial<ProfileFormData>
-): Promise<ProfileFormData> => {
-  const response = await api.patch<ProfileFormData>(
-    "user/profile",
-    profileData
-  );
-  console.log(response.data);
+const updateProfile = async (formData: FormData): Promise<ProfileFormData> => {
+  const response = await api.patch<ProfileFormData>("user/profile", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
   return response.data;
 };
 
-// Add this helper function before the component (after the API functions section)
 const getChangedFields = (
   original: ProfileFormData,
   current: ProfileFormData
 ): Partial<ProfileFormData> => {
   const changes: any = {};
 
-  // Compare top-level fields
   (Object.keys(current) as Array<keyof ProfileFormData>).forEach((key) => {
     if (
       key === "medical_information" ||
       key === "preferences" ||
-      key === "emergency_contacts"
+      key === "emergency_contacts" ||
+      key === "profile_picture"
     ) {
-      // Handle nested objects separately
       return;
     }
 
@@ -194,7 +161,6 @@ const getChangedFields = (
     }
   });
 
-  // Compare medical_information
   const medicalChanges: any = {};
   Object.keys(current.medical_information).forEach((key) => {
     const k = key as keyof MedicalInformation;
@@ -206,7 +172,6 @@ const getChangedFields = (
     changes.medical_information = medicalChanges;
   }
 
-  // Compare preferences
   const preferencesChanges: any = {};
   Object.keys(current.preferences).forEach((key) => {
     const k = key as keyof Preferences;
@@ -218,7 +183,6 @@ const getChangedFields = (
     changes.preferences = preferencesChanges;
   }
 
-  // Compare emergency_contacts
   const emergencyContactsChanged =
     JSON.stringify(original.emergency_contacts) !==
     JSON.stringify(current.emergency_contacts);
@@ -230,7 +194,14 @@ const getChangedFields = (
   return changes;
 };
 
-// Blood group options
+const formatPhoneNumber = (phone: string): string => {
+  let cleaned = phone.replace(/[^\d+]/g, "");
+  if (cleaned.startsWith("+234")) return cleaned;
+  if (cleaned.startsWith("234")) return "+" + cleaned;
+  if (cleaned.startsWith("0")) return "+234" + cleaned.substring(1);
+  return "+234" + cleaned;
+};
+
 const bloodGroupOptions = [
   { value: "A+", label: "A+" },
   { value: "A-", label: "A-" },
@@ -242,7 +213,6 @@ const bloodGroupOptions = [
   { value: "O-", label: "O-" },
 ];
 
-// Relationship options
 const relationshipOptions = [
   { value: "spouse", label: "Spouse" },
   { value: "parent", label: "Parent" },
@@ -252,7 +222,6 @@ const relationshipOptions = [
   { value: "other", label: "Other" },
 ];
 
-// Gender options
 const genderOptions = [
   { value: "Male", label: "Male" },
   { value: "Female", label: "Female" },
@@ -260,7 +229,6 @@ const genderOptions = [
   { value: "Prefer not to say", label: "Prefer not to say" },
 ];
 
-// Language options
 const languageOptions = [
   { value: "en", label: "English" },
   { value: "es", label: "Spanish" },
@@ -268,9 +236,8 @@ const languageOptions = [
   { value: "other", label: "Other" },
 ];
 
-// Communication preference options
 const communicationOptions = [
-  { value: "email", label: "email" },
+  { value: "email", label: "Email" },
   { value: "phone", label: "Phone" },
   { value: "sms", label: "SMS" },
   { value: "mail", label: "Mail" },
@@ -282,8 +249,10 @@ const EditUserProfile: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "personal" | "medical" | "preferences"
   >("personal");
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Query to fetch profile data
   const {
     data: profileData,
     isLoading: isFetchingProfile,
@@ -296,7 +265,6 @@ const EditUserProfile: React.FC = () => {
     retry: 2,
   });
 
-  // Mutation to update profile
   const updateProfileMutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
@@ -306,6 +274,7 @@ const EditUserProfile: React.FC = () => {
     },
     onError: (error: any) => {
       console.error("Profile update failed:", error);
+      toast.error(error.response?.data?.message || "Failed to update profile");
     },
   });
 
@@ -313,11 +282,11 @@ const EditUserProfile: React.FC = () => {
     initialValues: profileData || {
       first_name: "",
       last_name: "",
-      // email: "",
       phone_number: "",
       date_of_birth: "",
       gender: "",
       blood_type: "",
+      profile_picture: "",
       address: "",
       city: "",
       state: "",
@@ -344,10 +313,8 @@ const EditUserProfile: React.FC = () => {
     enableReinitialize: true,
     validationSchema,
     onSubmit: (values) => {
-      // Get only the changed fields
       const changedFields = getChangedFields(profileData!, values);
 
-      // Format phone numbers in changed fields only
       if (changedFields.phone_number) {
         changedFields.phone_number = formatPhoneNumber(
           changedFields.phone_number
@@ -363,38 +330,68 @@ const EditUserProfile: React.FC = () => {
         );
       }
 
-      // Only send the changed fields
-      console.log("Sending only changed fields:", changedFields);
-      updateProfileMutation.mutate(changedFields);
+      const formData = new FormData();
+
+      // Add profile picture if changed
+      if (profileImage) {
+        formData.append("profile_picture", profileImage);
+      } else if (profileData?.profile_picture) {
+        // Send the old profile picture URL if not changed
+        formData.append("profile_picture_url", profileData.profile_picture);
+      }
+
+      // Add other changed fields
+      Object.keys(changedFields).forEach((key) => {
+        const value = changedFields[key as keyof typeof changedFields];
+        if (
+          key === "medical_information" ||
+          key === "preferences" ||
+          key === "emergency_contacts"
+        ) {
+          formData.append(key, JSON.stringify(value));
+        } else if (value !== undefined && value !== null) {
+          formData.append(key, String(value));
+        }
+      });
+
+      updateProfileMutation.mutate(formData);
     },
   });
 
-  const handleGoBack = () => {
-    navigate("/patient/profile");
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (e.g., max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should not exceed 5MB");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please select a valid image file");
+        return;
+      }
+
+      setProfileImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
-  // Add this helper function at the top of your file, after the imports
-  const formatPhoneNumber = (phone: string): string => {
-    // Remove any non-digit characters except '+'
-    let cleaned = phone.replace(/[^\d+]/g, "");
-
-    // Check if number already has +234
-    if (cleaned.startsWith("+234")) {
-      return cleaned;
+  const handleRemoveImage = () => {
+    setProfileImage(null);
+    setProfileImagePreview("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
+  };
 
-    // If starts with 234, add +
-    if (cleaned.startsWith("234")) {
-      return "+" + cleaned;
-    }
-
-    // If starts with 0, replace with +234
-    if (cleaned.startsWith("0")) {
-      return "+234" + cleaned.substring(1);
-    }
-
-    // Otherwise, add +234 prefix
-    return "+234" + cleaned;
+  const handleGoBack = () => {
+    navigate("/patient/profile");
   };
 
   if (isFetchingProfile) {
@@ -431,9 +428,11 @@ const EditUserProfile: React.FC = () => {
     { id: "preferences", name: "Preferences", icon: Settings },
   ];
 
+  const currentProfilePicture =
+    profileImagePreview || profileData?.profile_picture;
+
   return (
     <div className="mx-auto bg-gray-50 min-h-screen">
-      {/* Header */}
       <div className="bg-white rounded-lg shadow-sm mb-6">
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2">
@@ -448,7 +447,7 @@ const EditUserProfile: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="flex space-x-2 my-5 md:my-0 justify-center md:justify-end ">
+            <div className="flex space-x-2 my-5 md:my-0 justify-center md:justify-end">
               <button
                 type="button"
                 onClick={handleGoBack}
@@ -463,24 +462,6 @@ const EditUserProfile: React.FC = () => {
                 disabled={
                   updateProfileMutation.isPending || formik.isSubmitting
                 }
-                onClick={() => {
-                  console.log("=== SAVE BUTTON CLICKED ===");
-                  console.log("Form is valid:", formik.isValid);
-                  console.log("Form errors:", formik.errors);
-                  console.log("Form is submitting:", formik.isSubmitting);
-                  console.log(
-                    "Mutation is pending:",
-                    updateProfileMutation.isPending
-                  );
-
-                  // If there are validation errors, show them
-                  if (Object.keys(formik.errors).length > 0) {
-                    console.error("Validation errors present:", formik.errors);
-                    toast.error(
-                      "Please fix validation errors before submitting"
-                    );
-                  }
-                }}
                 className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {updateProfileMutation.isPending || formik.isSubmitting ? (
@@ -499,7 +480,6 @@ const EditUserProfile: React.FC = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="border-t border-gray-200">
           <nav className="flex space-x-8 px-6 overflow-x-scroll">
             {tabs.map((tab) => (
@@ -520,7 +500,6 @@ const EditUserProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Form Content */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className="p-6">
           <form id="profile-form" onSubmit={formik.handleSubmit}>
@@ -530,6 +509,57 @@ const EditUserProfile: React.FC = () => {
                   <User className="w-5 h-5 mr-2" />
                   Personal Information
                 </h3>
+
+                {/* Profile Picture Upload */}
+                <div className="mb-8">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Profile Picture
+                  </label>
+                  <div className="flex items-center space-x-6">
+                    <div className="relative">
+                      {currentProfilePicture ? (
+                        <div className="relative">
+                          <img
+                            src={currentProfilePicture}
+                            alt="Profile"
+                            className="w-24 h-24 rounded-full object-cover border-2 border-gray-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                          <User className="w-12 h-12 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="profile-picture-input"
+                      />
+                      <label
+                        htmlFor="profile-picture-input"
+                        className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Upload Photo
+                      </label>
+                      <p className="mt-2 text-xs text-gray-500">
+                        JPG, PNG or GIF. Max size 5MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
@@ -585,35 +615,6 @@ const EditUserProfile: React.FC = () => {
                       </p>
                     )}
                   </div>
-
-                  {/* <div>
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      email Address *
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formik.values.email}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        formik.touched.email &&
-                        formik.errors.email
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                    />
-                    {formik.touched.email &&
-                      formik.errors.email && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formik.errors.email}
-                        </p>
-                      )}
-                  </div> */}
 
                   <div>
                     <label
@@ -875,7 +876,7 @@ const EditUserProfile: React.FC = () => {
                       value={formik.values.emergency_contacts[0]?.name || ""}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 `}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     {formik.touched.emergency_contacts?.[0]?.name &&
                       typeof formik.errors.emergency_contacts?.[0] ===
@@ -906,17 +907,10 @@ const EditUserProfile: React.FC = () => {
                       value={
                         formik.values.emergency_contacts[0]?.phone_number || ""
                       }
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Allow user to type normally, format will be applied on submit
-                        formik.setFieldValue(
-                          "emergency_contacts[0].phone_number",
-                          value
-                        );
-                      }}
+                      onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       placeholder="+2341234567890"
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     {formik.touched.emergency_contacts?.[0]?.phone_number &&
                       typeof formik.errors.emergency_contacts?.[0] ===
@@ -949,7 +943,7 @@ const EditUserProfile: React.FC = () => {
                       }
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-3 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 `}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       {relationshipOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -1000,12 +994,6 @@ const EditUserProfile: React.FC = () => {
                       placeholder="List any known allergies (e.g., medications, foods, environmental)"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
-                    {formik.touched.medical_information?.known_allergies &&
-                      formik.errors.medical_information?.known_allergies && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formik.errors.medical_information.known_allergies}
-                        </p>
-                      )}
                   </div>
 
                   <div>
@@ -1027,16 +1015,6 @@ const EditUserProfile: React.FC = () => {
                       placeholder="List all current medications including dosage and frequency"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
-                    {formik.touched.medical_information?.current_medications &&
-                      formik.errors.medical_information
-                        ?.current_medications && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {
-                            formik.errors.medical_information
-                              .current_medications
-                          }
-                        </p>
-                      )}
                   </div>
 
                   <div>
@@ -1056,45 +1034,27 @@ const EditUserProfile: React.FC = () => {
                       placeholder="Describe any significant medical history, previous surgeries, chronic conditions, etc."
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
-                    {formik.touched.medical_information?.medical_history &&
-                      formik.errors.medical_information?.medical_history && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formik.errors.medical_information.medical_history}
-                        </p>
-                      )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label
-                        htmlFor="medical_information.primary_physician"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                      >
-                        Primary Physician
-                      </label>
-                      <input
-                        type="text"
-                        id="medical_information.primary_physician"
-                        name="medical_information.primary_physician"
-                        value={
-                          formik.values.medical_information.primary_physician
-                        }
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        placeholder="Dr. John Smith"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                      {formik.touched.medical_information?.primary_physician &&
-                        formik.errors.medical_information
-                          ?.primary_physician && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {
-                              formik.errors.medical_information
-                                .primary_physician
-                            }
-                          </p>
-                        )}
-                    </div>
+                  <div>
+                    <label
+                      htmlFor="medical_information.primary_physician"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Primary Physician
+                    </label>
+                    <input
+                      type="text"
+                      id="medical_information.primary_physician"
+                      name="medical_information.primary_physician"
+                      value={
+                        formik.values.medical_information.primary_physician
+                      }
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      placeholder="Dr. John Smith"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
                   </div>
                 </div>
               </div>
@@ -1134,12 +1094,6 @@ const EditUserProfile: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    {formik.touched.preferences?.preferred_language &&
-                      formik.errors.preferences?.preferred_language && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formik.errors.preferences.preferred_language}
-                        </p>
-                      )}
                   </div>
 
                   <div>
@@ -1168,12 +1122,6 @@ const EditUserProfile: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    {formik.touched.preferences?.communication_preference &&
-                      formik.errors.preferences?.communication_preference && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {formik.errors.preferences.communication_preference}
-                        </p>
-                      )}
                   </div>
 
                   <div className="md:col-span-2">
@@ -1204,7 +1152,6 @@ const EditUserProfile: React.FC = () => {
               </div>
             )}
 
-            {/* Error Display */}
             {updateProfileMutation.isError && (
               <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
                 <div className="flex">

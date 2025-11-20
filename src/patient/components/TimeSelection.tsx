@@ -55,8 +55,7 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
   onBack,
   onContinue,
 }) => {
-  const [timeValidationError, setTimeValidationError] =
-    React.useState<string>("");
+  const [timeValidationError, setTimeValidationError] = React.useState("");
 
   const calculateTotalCost = () => {
     let multiplier = 1;
@@ -93,8 +92,28 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
   };
 
   const convertTimeToMinutes = (time: string): number => {
-    const [hours, minutes] = time.split(":").map(Number);
-    return hours * 60 + (minutes || 0);
+    // Handle both 24-hour format (HH:mm) and 12-hour format (h:mm AM/PM)
+    const lowerTime = time.toLowerCase().trim();
+
+    // Check for AM/PM format
+    if (lowerTime.includes("am") || lowerTime.includes("pm")) {
+      const isPM = lowerTime.includes("pm");
+      const timeDigits = lowerTime.replace(/[ap]m/gi, "").trim();
+      const [hours, minutes = 0] = timeDigits.split(":").map(Number);
+
+      let hour24 = hours;
+      if (isPM && hours !== 12) {
+        hour24 = hours + 12;
+      } else if (!isPM && hours === 12) {
+        hour24 = 0;
+      }
+
+      return hour24 * 60 + minutes;
+    }
+
+    // Handle 24-hour format
+    const [hours, minutes = 0] = time.split(":").map(Number);
+    return hours * 60 + minutes;
   };
 
   const parseTimeRange = (
@@ -102,14 +121,35 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
   ): { start: number; end: number } | null => {
     try {
       const lowerString = timeString.toLowerCase().trim();
-      const match = lowerString.match(/(\d+)(am|pm)\s*-\s*(\d+)(am|pm)/);
+
+      // Match various formats:
+      // "Monday 10:00 AM-7:00 PM"
+      // "Monday - Sunday: 8am - 5pm"
+      // "8am - 5pm"
+      // "10:00 AM-7:00 PM"
+
+      // Remove day names and colons after day names
+      const timeOnly = lowerString
+        .replace(
+          /monday|tuesday|wednesday|thursday|friday|saturday|sunday/gi,
+          ""
+        )
+        .replace(/^[\s:-]+/, "")
+        .trim();
+
+      // Match time range: "10:00 AM-7:00 PM" or "8am - 5pm"
+      const match = timeOnly.match(
+        /(\d+):?(\d*)?\s*(am|pm)\s*-\s*(\d+):?(\d*)?\s*(am|pm)/
+      );
 
       if (!match) return null;
 
       let startHour = parseInt(match[1]);
-      const startPeriod = match[2];
-      let endHour = parseInt(match[3]);
-      const endPeriod = match[4];
+      const startMinute = parseInt(match[2] || "0");
+      const startPeriod = match[3];
+      let endHour = parseInt(match[4]);
+      const endMinute = parseInt(match[5] || "0");
+      const endPeriod = match[6];
 
       // Convert to 24-hour format
       if (startPeriod === "pm" && startHour !== 12) startHour += 12;
@@ -118,12 +158,53 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
       if (endPeriod === "am" && endHour === 12) endHour = 0;
 
       return {
-        start: startHour * 60, // Convert to minutes
-        end: endHour * 60,
+        start: startHour * 60 + startMinute,
+        end: endHour * 60 + endMinute,
       };
     } catch (error) {
+      console.error("Error parsing time range:", error);
       return null;
     }
+  };
+
+  const formatAvailabilityDisplay = (): string => {
+    if (
+      !selectedPractitioner.availability ||
+      selectedPractitioner.availability.length === 0
+    ) {
+      return "Not specified";
+    }
+
+    // Get the first availability entry
+    const firstAvailability = selectedPractitioner.availability[0];
+    if (typeof firstAvailability === "string") {
+      // Extract just the time portion and reformat
+      const timeRange = parseTimeRange(firstAvailability);
+      if (timeRange) {
+        const startHour = Math.floor(timeRange.start / 60);
+        const startMin = timeRange.start % 60;
+        const endHour = Math.floor(timeRange.end / 60);
+        const endMin = timeRange.end % 60;
+
+        const formatTime = (hour: number, min: number) => {
+          const period = hour >= 12 ? "PM" : "AM";
+          const hour12 = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+          return `${hour12}:${min.toString().padStart(2, "0")} ${period}`;
+        };
+
+        return `Monday - Sunday: ${formatTime(
+          startHour,
+          startMin
+        )} - ${formatTime(endHour, endMin)}`;
+      }
+
+      // If parsing fails, return as is
+      return firstAvailability.includes("Monday") ||
+        firstAvailability.includes("day")
+        ? firstAvailability
+        : `Monday - Sunday: ${firstAvailability}`;
+    }
+    return "Not specified";
   };
 
   const validateTimeAgainstAvailability = (selectedTime: string): boolean => {
@@ -135,16 +216,16 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
       !selectedPractitioner.availability ||
       selectedPractitioner.availability.length === 0
     ) {
-      return true;
+      return true; // No restrictions if no availability specified
     }
 
     const selectedTimeMinutes = convertTimeToMinutes(selectedTime);
     let isTimeValid = false;
 
+    // Check against all availability slots
     for (const availability of selectedPractitioner.availability) {
       if (typeof availability === "string") {
         const timeRange = parseTimeRange(availability);
-
         if (timeRange) {
           // Check if selected time falls within this availability slot
           if (
@@ -159,12 +240,9 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
     }
 
     if (!isTimeValid) {
-      const availableTimes = selectedPractitioner.availability
-        .filter((slot): slot is string => typeof slot === "string")
-        .join(", ");
-
+      const availabilityDisplay = formatAvailabilityDisplay();
       setTimeValidationError(
-        `Selected time ${selectedTime} is not available. Practitioner is available during: ${availableTimes}`
+        `Selected time is not within available hours. Practitioner is available: ${availabilityDisplay}`
       );
       return false;
     }
@@ -174,13 +252,11 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
   };
 
   const handleTimeSlotSelect = (time: string) => {
-    const isValid = validateTimeAgainstAvailability(time);
-    if (isValid) {
-      onTimeSlotSelect(time);
-      setTimeValidationError("");
-    } else {
-      onTimeSlotSelect(time);
-    }
+    onTimeSlotSelect(time);
+    // Validate after a short delay to ensure state is updated
+    setTimeout(() => {
+      validateTimeAgainstAvailability(time);
+    }, 100);
   };
 
   const handleContinue = () => {
@@ -213,172 +289,164 @@ const TimeSelection: React.FC<TimeSelectionProps> = ({
   return (
     <div className="space-y-6">
       {/* Selected Practitioner Summary */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
-          <img
-            src={
-              selectedPractitioner.profile_picture ||
-              "https://via.placeholder.com/48"
-            }
-            alt={selectedPractitioner.full_name}
-            className="w-12 h-12 rounded-full object-cover self-center sm:self-start flex-shrink-0"
-          />
-          <div className="flex-1 min-w-0 text-center sm:text-left">
-            <h3 className="font-semibold text-gray-900 truncate">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
+        <div className="flex items-start space-x-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+            {selectedPractitioner.full_name.charAt(0)}
+          </div>
+          <div className="flex-1">
+            <h3 className="font-bold text-lg text-gray-900">
               {selectedPractitioner.full_name}
             </h3>
-            <p className="text-blue-600">
+            <p className="text-sm text-gray-600 mb-3">
               {formatSpecialization(selectedPractitioner.specialization)}
             </p>
-            <p className="text-sm text-gray-600">
-              {selectedService.name} - {selectedService.duration || "As needed"}
-            </p>
-            <p className="text-sm text-blue-600 mt-1">
-              {getScheduleDescription()}
-            </p>
-          </div>
-          <div className="text-center sm:text-right flex-shrink-0">
-            <p className="font-semibold text-blue-600">
-              ₦{selectedService.price?.toLocaleString() || "N/A"}/session
-            </p>
-            <p className="text-lg font-bold text-blue-600">
-              Total: ₦{calculateTotalCost().toLocaleString()}
-            </p>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center text-gray-700">
+                <span className="font-semibold mr-2">Service:</span>
+                <span>
+                  {selectedService.name} -{" "}
+                  {selectedService.duration || "As needed"}
+                </span>
+              </div>
+              <div className="flex items-center text-gray-700">
+                <span className="font-semibold mr-2">Schedule:</span>
+                <span>{getScheduleDescription()}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-blue-200">
+                <span className="text-gray-700">
+                  <span className="font-semibold">Price per session:</span> ₦
+                  {selectedService.price?.toLocaleString() || "N/A"}
+                </span>
+                <span className="font-bold text-blue-700 text-base">
+                  Total: ₦{calculateTotalCost().toLocaleString()}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Time Selection */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-600" />
-            Select Preferred Time
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+          <Clock className="w-7 h-7 mr-3 text-blue-600" />
+          Select Preferred Time
+        </h2>
+
+        {/* Show Practitioner Availability Info */}
+        {selectedPractitioner?.availability?.length > 0 && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <Clock className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-blue-900 mb-2">
+                  Practitioner's Available Hours
+                </h4>
+                <p className="text-blue-800 font-medium">
+                  {formatAvailabilityDisplay()}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Time Validation Error */}
+        {timeValidationError && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-red-900 mb-1">
+                  Invalid Time Selection
+                </h4>
+                <p className="text-red-800 text-sm">{timeValidationError}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Time Slot Selection */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+            Choose Your Time Slot
           </h3>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+            {timeSlots.map((slot) => (
+              <button
+                key={slot.value}
+                onClick={() => handleTimeSlotSelect(slot.value)}
+                className={`p-3 text-sm font-medium rounded-lg border-2 transition-all ${
+                  scheduleConfig.timeSlot === slot.value
+                    ? "bg-blue-600 text-white border-blue-600 shadow-md scale-105"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:shadow-sm"
+                }`}
+              >
+                {slot.display}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-6">
-          {/* Show Practitioner Availability Info */}
-          {selectedPractitioner?.availability?.length > 0 && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-blue-600" />
-                Practitioner's Available Days/Times
-              </h4>
-              <div className="grid gap-2">
-                {selectedPractitioner.availability.map(
-                  (availability: any, index) => (
-                    <div
-                      key={index}
-                      className="bg-white p-3 rounded-md shadow-sm"
-                    >
-                      <p className="text-sm font-medium text-gray-800">
-                        {availability}
-                      </p>
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          )}
+        {/* Custom Time Input */}
+        <div className="mb-6 bg-gray-50 rounded-lg p-4">
+          <h3 className="text-base font-semibold text-gray-800 mb-3">
+            Or Enter Custom Time
+          </h3>
+          <input
+            type="time"
+            value={scheduleConfig.timeSlot || ""}
+            onChange={(e) => handleTimeSlotSelect(e.target.value)}
+            className="w-full sm:w-auto px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+          />
+          <p className="text-xs text-gray-600 mt-2">
+            💡 Please ensure the time aligns with the practitioner's
+            availability above
+          </p>
+        </div>
 
-          {/* Time Validation Error */}
-          {timeValidationError && (
-            <div className="bg-red-50 border-2 border-red-200 p-4 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-red-900 mb-1">
-                    Invalid Time Selection
-                  </p>
-                  <p className="text-sm text-red-800">{timeValidationError}</p>
-                </div>
+        {/* Selected Time Confirmation */}
+        {scheduleConfig.timeSlot && !timeValidationError && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-green-900 mb-2">
+                  Time Selected: {scheduleConfig.timeSlot}
+                </h4>
+                <p className="text-green-800 text-sm mb-1">
+                  {getScheduleDescription()}
+                </p>
+                <p className="text-green-800 font-semibold">
+                  Total Cost: ₦{calculateTotalCost().toLocaleString()}
+                </p>
               </div>
-            </div>
-          )}
-
-          {/* Time Slot Selection */}
-          <div>
-            <h4 className="font-semibold text-gray-900 mb-3">
-              Choose Your Time Slot
-            </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {timeSlots.map((slot) => (
-                <button
-                  key={slot.value}
-                  onClick={() => handleTimeSlotSelect(slot.value)}
-                  className={`p-3 text-sm font-medium rounded-lg border-2 transition-all ${
-                    scheduleConfig.timeSlot === slot.value
-                      ? "bg-blue-600 text-white border-blue-600 shadow-md scale-105"
-                      : "bg-white text-gray-700 border-gray-200 hover:border-blue-500 hover:bg-blue-50 hover:shadow-sm"
-                  }`}
-                >
-                  {slot.display}
-                </button>
-              ))}
             </div>
           </div>
+        )}
+      </div>
 
-          {/* Custom Time Input */}
-          <div className="border-t border-gray-200 pt-6">
-            <h4 className="font-semibold text-gray-900 mb-3">
-              Or Enter Custom Time
-            </h4>
-            <div className="space-y-2">
-              <input
-                type="time"
-                value={scheduleConfig.timeSlot}
-                onChange={(e) => handleTimeSlotSelect(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-              />
-              <p className="text-sm text-gray-500">
-                💡 Please ensure the time aligns with the practitioner's
-                availability above
-              </p>
-            </div>
-          </div>
-
-          {/* Selected Time Confirmation */}
-          {scheduleConfig.timeSlot && !timeValidationError && (
-            <div className="bg-gradient-to-r from-blue-50 to-emerald-50 p-4 rounded-lg border-2 border-blue-200">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 mt-0.5">
-                  <CheckCircle className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold text-blue-900 mb-1">
-                    Time Selected: {scheduleConfig.timeSlot}
-                  </p>
-                  <p className="text-sm text-blue-700 mb-2">
-                    {getScheduleDescription()}
-                  </p>
-                  <p className="text-sm font-semibold text-blue-900">
-                    Total Cost: ₦{calculateTotalCost().toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-between gap-3 p-4 sm:p-6 bg-gray-50 border-t border-gray-200">
-          <button
-            onClick={onBack}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Schedule</span>
-          </button>
-
-          <button
-            onClick={handleContinue}
-            disabled={!scheduleConfig.timeSlot || !!timeValidationError}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all disabled:opacity-50 shadow-sm hover:shadow-md"
-          >
-            Continue to Booking
-          </button>
-        </div>
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button
+          onClick={onBack}
+          className="flex items-center justify-center px-6 py-3 border-2 border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Schedule
+        </button>
+        <button
+          onClick={handleContinue}
+          disabled={!scheduleConfig.timeSlot || !!timeValidationError}
+          className={`flex-1 flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition-all ${
+            scheduleConfig.timeSlot && !timeValidationError
+              ? "bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+        >
+          Continue to Booking
+          <CheckCircle className="w-5 h-5 ml-2" />
+        </button>
       </div>
     </div>
   );
