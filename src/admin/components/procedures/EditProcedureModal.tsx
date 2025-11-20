@@ -5,6 +5,7 @@ import * as Yup from "yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../../constant/api";
 import { useSpecialization } from "../../../constant/GlobalContext";
+import { toast } from "react-toastify";
 
 interface InclusionItem {
   item: string;
@@ -134,7 +135,7 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["nurseProcedures"] });
       console.log("Procedure updated successfully:", data);
-      alert("Procedure updated successfully!");
+      toast.success("Procedure updated successfully!");
       onClose();
     },
     onError: (error: any) => {
@@ -142,13 +143,13 @@ const EditProcedureModal: React.FC<EditProcedureModalProps> = ({
 
       if (error.response?.data) {
         console.error("Server error:", error.response.data);
-        alert(
+        toast.error(
           `Error: ${
             error.response.data.message || "Failed to update procedure"
           }`
         );
       } else {
-        alert("Network error: Please check your connection and try again");
+        toast.error("Network error: Please check your connection and try again");
       }
     },
   });
