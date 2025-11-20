@@ -17,7 +17,7 @@ const HeroSection: React.FC = () => {
   return (
     <section
       id="home"
-      className="relative overflow-hidden w-full bg-gray-50 lg:px-25 md:px-8 px-4 lg:-mt-16 -mt-14"
+      className="relative overflow-hidden w-full bg-gray-50 lg:px-25 md:px-8 px-4 sm:mt-6 -mt-14"
     >
       <div className="container-custom relative z-10 w-full">
         <div className="min-h-screen flex items-center">
@@ -34,7 +34,7 @@ const HeroSection: React.FC = () => {
 
               {/* Main Heading */}
               <div className="space-y-6 w-full">
-                <h1 className="text-h1 md:text-[3.5rem] leading-tight text-gray-900">
+                <h1 className="text-3xl font-bold md:text-[3.5rem] leading-tight text-gray-900">
                   Book{" "}
                   <span className="text-primary-600">Verified Healthcare</span>{" "}
                   Workers Instantly
@@ -206,7 +206,7 @@ const HeroSection: React.FC = () => {
                   </div>
 
                   {/* Action Button */}
-                  <button className="w-full bg-primary-500 text-white py-4 rounded-xl font-semibold hover:bg-primary-600 transition-colors flex items-center justify-center gap-2">
+                  <button className="w-full bg-primary-500 text-white py-4 rounded-xl font-semibold hover:bg-primary-600 transition-colors flex items-center  justify-center gap-2">
                     View All Available Nurses
                     <ArrowRight className="w-full max-w-5 h-5" />
                   </button>
