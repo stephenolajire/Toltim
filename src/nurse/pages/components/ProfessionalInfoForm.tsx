@@ -2,6 +2,7 @@ import React from "react";
 import { useFormik } from "formik";
 import { type PersonalInfo } from "../../../types/kyctypes";
 import {personalInfoSchema} from "../KYCValidation"
+import { useSpecialization } from "../../../constant/GlobalContext";
 
 interface ProfessionalInfoFormProps {
   initialData: PersonalInfo;
@@ -21,6 +22,9 @@ export const ProfessionalInfoForm: React.FC<ProfessionalInfoFormProps> = ({
       onNext(values);
     },
   });
+
+  const {data:specialityData, isLoading:isSpecialityLoading} =  useSpecialization();
+  console.log("Speciality Data:", specialityData);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -102,19 +106,24 @@ export const ProfessionalInfoForm: React.FC<ProfessionalInfoFormProps> = ({
                   value={formik.values.specialization}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
+                  disabled={isSpecialityLoading}
                   className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
                     formik.touched.specialization &&
                     formik.errors.specialization
                       ? "border-red-500"
                       : "border-gray-300"
+                  } ${
+                    isSpecialityLoading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
-                  <option value="">Select specialty</option>
-                  <option value="critical-care">Critical Care</option>
-                  <option value="emergency">Emergency</option>
-                  <option value="pediatric">Pediatric</option>
-                  <option value="surgical">Surgical</option>
-                  <option value="general">General Nursing</option>
+                  <option value="">
+                    {isSpecialityLoading ? "Loading..." : "Select specialty"}
+                  </option>
+                  {specialityData.results?.map((specialty:any) => (
+                    <option key={specialty.id} value={specialty.id}>
+                      {specialty.name}
+                    </option>
+                  ))}
                 </select>
                 {formik.touched.specialization &&
                   formik.errors.specialization && (

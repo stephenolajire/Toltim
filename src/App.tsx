@@ -26,7 +26,7 @@ import AdminBookingLayout from "./admin/components/booking/AdminBookingLayout";
 import NurseBooking from "./admin/pages/NurseBooking";
 import Procedures from "./admin/pages/Procedures";
 import AdminVerificationLayout from "./admin/components/verification/AdminVerificationLayout";
-import PendingNurseVerifications from "./admin/pages/PendingNurseVerification";
+import PendingNurseVerifications from "./admin/pages/NurseVerification";
 import PendingCHWVerifications from "./admin/pages/CHWVerification";
 import DoctorPendingVerifications from "./admin/pages/DoctorsVerification";
 // import VerificationHistory from "./admin/pages/VerificationHistory";

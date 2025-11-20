@@ -7,10 +7,6 @@ import {
   Filter,
   AlertTriangle,
   Loader2,
-  Download,
-  FileText,
-  Image,
-  ExternalLink,
 } from "lucide-react";
 import {
   useNurseApproval,
@@ -18,6 +14,7 @@ import {
   useNurseVerification,
 } from "../../constant/GlobalContext";
 import { toast } from "react-toastify";
+import DocumentModal from "../components/verification/DocumentModal";
 
 // Type definitions based on actual API response
 interface Nurse {
@@ -26,7 +23,7 @@ interface Nurse {
   first_name: string;
   last_name: string;
   license_number: string;
-  specialization: string;
+  specialization: string | { id: string; name: string }; // Can be string or object
   institution: string;
   year_of_graduation: number;
   year_of_experience: string;
@@ -48,12 +45,6 @@ interface Nurse {
   photo: string;
 }
 
-interface DocumentModalProps {
-  nurse: Nurse | null;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
 type StatusFilter =
   | "all"
   | "pending"
@@ -62,197 +53,16 @@ type StatusFilter =
   | "approved"
   | "rejected";
 
-// Document Modal Component
-const DocumentModal: React.FC<DocumentModalProps> = ({
-  nurse,
-  isOpen,
-  onClose,
-}) => {
-  if (!isOpen || !nurse) return null;
 
-  const documents = [
-    { name: "License Document", url: nurse.license_document, type: "license" },
-    { name: "CV Document", url: nurse.cv_document, type: "cv" },
-    {
-      name: "Employment Letter",
-      url: nurse.employment_letter,
-      type: "employment",
-    },
-    {
-      name: "Certificate Document",
-      url: nurse.certificate_document,
-      type: "certificate",
-    },
-    { name: "ID Card", url: nurse.id_card, type: "id" },
-    { name: "Photo", url: nurse.photo, type: "photo" },
-  ].filter((doc) => doc.url && doc.url.trim() !== "");
-
-  const getFileIcon = (type: string) => {
-    if (type === "photo") {
-      return <Image className="w-5 h-5" />;
-    }
-    return <FileText className="w-5 h-5" />;
-  };
-
-  const getFileName = (url: string, type: string) => {
-    if (!url) return `${type}.pdf`;
-    const urlParts = url.split("/");
-    return urlParts[urlParts.length - 1] || `${type}.pdf`;
-  };
-
-  const handleOpenInNewTab = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  const handleDownload = (url: string, filename: string) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.target = "_blank";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        {/* Modal Header */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Documents - {nurse.first_name} {nurse.last_name}
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              License: {nurse.license_number} | {nurse.specialization}
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {documents.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Documents Available
-              </h3>
-              <p className="text-gray-600">
-                No documents have been uploaded for this nurse yet.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {documents.map((doc, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {getFileIcon(doc.type)}
-                      <h4 className="font-medium text-gray-900">{doc.name}</h4>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleOpenInNewTab(doc.url)}
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors rounded"
-                        title="Open in new tab"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
-                      <a
-                        href={doc.url}
-                        download={getFileName(doc.url, doc.type)}
-                        className="p-2 text-gray-400 hover:text-green-600 transition-colors rounded"
-                        title="Download document"
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Document Preview */}
-                  <div
-                    className="bg-gray-50 rounded border-2 border-dashed border-gray-200 p-4 cursor-pointer hover:border-blue-300 transition-colors"
-                    onClick={() => handleOpenInNewTab(doc.url)}
-                  >
-                    {doc.type === "photo" ? (
-                      <div className="text-center">
-                        <img
-                          src={doc.url}
-                          alt={doc.name}
-                          className="max-w-full h-32 object-cover rounded mx-auto"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                            target.nextElementSibling?.classList.remove(
-                              "hidden"
-                            );
-                          }}
-                        />
-                        <div className="hidden">
-                          <Image className="w-16 h-16 text-gray-400 mx-auto mb-2" />
-                          <p className="text-sm text-gray-600">Photo Preview</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <FileText className="w-16 h-16 text-gray-400 mx-auto mb-2" />
-                        <p className="text-sm text-gray-600">
-                          Click to view document
-                        </p>
-                        {/* <p className="text-xs text-gray-500 mt-1">
-                          {getFileName(doc.url, doc.type)}
-                        </p> */}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Document Actions */}
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      onClick={() => handleOpenInNewTab(doc.url)}
-                      className="flex-1 bg-blue-50 text-blue-700 px-3 py-2 rounded text-sm font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      Open in New Tab
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleDownload(doc.url, getFileName(doc.url, doc.type))
-                      }
-                      className="flex-1 bg-green-50 text-green-700 px-3 py-2 rounded text-sm font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Download className="w-4 h-4" />
-                      Download
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Modal Footer */}
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+const getSpecializationName = (
+  specialization: string | { id: string; name: string }
+): string => {
+  if (typeof specialization === "string") {
+    return specialization;
+  }
+  return specialization?.name || "N/A";
 };
+
 
 const PendingNurseVerifications: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -292,6 +102,8 @@ const PendingNurseVerifications: React.FC = () => {
     return `${nurse.first_name} ${nurse.last_name}`.trim();
   };
 
+
+
   // Helper function to count documents
   const getDocumentCount = (nurse: Nurse): number => {
     const docs = [
@@ -317,10 +129,12 @@ const PendingNurseVerifications: React.FC = () => {
   const filteredNurses = useMemo(() => {
     return nurses.filter((nurse: Nurse) => {
       const fullName = getFullName(nurse);
+      const specializationName = getSpecializationName(nurse.specialization);
+
       const matchesSearch =
         fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         nurse.email_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        nurse.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        specializationName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         nurse.license_number.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
@@ -468,7 +282,7 @@ const PendingNurseVerifications: React.FC = () => {
                       {nurse.email_address}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {nurse.specialization}
+                      {getSpecializationName(nurse.specialization)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                       {nurse.year_of_experience}
