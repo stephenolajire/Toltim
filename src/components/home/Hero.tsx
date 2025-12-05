@@ -17,7 +17,7 @@ const HeroSection: React.FC = () => {
   return (
     <section
       id="home"
-      className="relative overflow-hidden w-full bg-gray-50 lg:px-25 md:px-8 px-4 sm:mt-6 -mt-14"
+      className="relative overflow-hidden w-full bg-gray-50 lg:px-25 md:px-8 px-4 -mt-15 lg:-mt-25"
     >
       <div className="container-custom relative z-10 w-full">
         <div className="min-h-screen flex items-center">

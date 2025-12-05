@@ -210,108 +210,145 @@ const HealthPractitionersMatching: React.FC<
     console.error("Error fetching practitioners:", error);
   }
 
-  const handleBookingSubmit = async () => {
-    try {
-      // Create FormData instance
-      const formData = new FormData();
+ const handleBookingSubmit = async () => {
+   try {
+     // Create FormData instance
+     const formData = new FormData();
 
-      // Add all fields to FormData
-      formData.append("nurse", selectedPractitioner?.user_id || "");
-      formData.append("nurse_id", selectedPractitioner?.user_id || "");
-      formData.append("scheduling_option", scheduleConfig.frequency);
-      formData.append("start_date", scheduleConfig.startDate);
-      formData.append("time_of_day", scheduleConfig.timeSlot);
-      formData.append("is_for_self", String(bookingForSelf));
-      formData.append("latitude", String(coordinates.latitude!));
-      formData.append("longitude", String(coordinates.longitude!));
-      formData.append("service_address", bookingDetails.address || "");
+     // Add all fields to FormData
+     formData.append("nurse", selectedPractitioner?.user_id || "");
+     formData.append("nurse_id", selectedPractitioner?.user_id || "");
+     formData.append("scheduling_option", scheduleConfig.frequency);
+     formData.append("start_date", scheduleConfig.startDate);
+     formData.append("time_of_day", scheduleConfig.timeSlot);
+     formData.append("is_for_self", String(bookingForSelf));
+     formData.append("latitude", String(coordinates.latitude!));
+     formData.append("longitude", String(coordinates.longitude!));
+     formData.append("service_address", bookingDetails.address || "");
 
-      // Add test_result file if it exists
-      if (bookingDetails.testResult) {
-        formData.append("test_result", bookingDetails.testResult);
-      }
+     // Add test_result file if it exists
+     if (bookingDetails.testResult) {
+       formData.append("test_result", bookingDetails.testResult);
+     }
 
-      // Add procedure_item as JSON string
-      formData.append(
-        "procedure_item",
-        JSON.stringify({
-          procedure_id: selectedService?.id || 0,
-          num_days: scheduleConfig.totalDays,
-        })
-      );
+     // Add procedure_item as JSON string
+     formData.append(
+       "procedure_item",
+       JSON.stringify({
+         procedure_id: selectedService?.id || 0,
+         num_days: scheduleConfig.totalDays,
+       })
+     );
 
-      // Add selected_days as JSON string
-      const capitalizedDays = scheduleConfig.selectedDays.map(
-        (day) => day.charAt(0).toUpperCase() + day.slice(1)
-      );
-      formData.append("selected_days", JSON.stringify(capitalizedDays));
+     // Handle selected_days based on frequency
+     if (scheduleConfig.frequency === "daily") {
+       // For daily frequency, calculate consecutive days starting from start_date
+       const allDays = [
+         "Sunday",
+         "Monday",
+         "Tuesday",
+         "Wednesday",
+         "Thursday",
+         "Friday",
+         "Saturday",
+       ];
+       const startDate = new Date(scheduleConfig.startDate);
+       const startDayIndex = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
+       const daysToSend = [];
+       for (let i = 0; i < scheduleConfig.totalDays; i++) {
+         const dayIndex = (startDayIndex + i) % 7; // Wrap around the week
+         daysToSend.push(allDays[dayIndex]);
+       }
 
-      // Add patient_detail
-      if (bookingForSelf) {
-        formData.append("patient_detail", "null");
-      } else {
-        formData.append(
-          "patient_detail",
-          JSON.stringify({
-            first_name: bookingDetails.firstName,
-            last_name: bookingDetails.lastName,
-            email: bookingDetails.email,
-            phone_number: bookingDetails.phone,
-            address: bookingDetails.address,
-            relationship_to_patient: bookingDetails.relationship,
-          })
-        );
-      }
+       // Remove duplicates and append to formData
+       const uniqueDays = [...new Set(daysToSend)];
+       uniqueDays.forEach((day) => {
+         formData.append("selected_days", day);
+       });
+     } else if (scheduleConfig.selectedDays.length > 0) {
+       // For specific days, capitalize and send each day
+       const capitalizedDays = scheduleConfig.selectedDays.map(
+         (day) => day.charAt(0).toUpperCase() + day.slice(1)
+       );
+       capitalizedDays.forEach((day) => {
+         formData.append("selected_days", day);
+       });
+     } else {
+       // Fallback: send at least one day (e.g., the start date's day)
+       const startDateDay = new Date(
+         scheduleConfig.startDate
+       ).toLocaleDateString("en-US", { weekday: "long" });
+       formData.append("selected_days", startDateDay);
+     }
 
-      console.log("Booking Data to be sent (FormData):");
-      // Log FormData contents for debugging
-      for (let pair of formData.entries()) {
-        console.log(pair[0], pair[1]);
-      }
+     // Add patient_detail
+     if (bookingForSelf) {
+       formData.append("patient_detail", "null");
+     } else {
+       formData.append(
+         "patient_detail",
+         JSON.stringify({
+           first_name: bookingDetails.firstName,
+           last_name: bookingDetails.lastName,
+           email: bookingDetails.email,
+           phone_number: bookingDetails.phone,
+           address: bookingDetails.address,
+           relationship_to_patient: bookingDetails.relationship,
+         })
+       );
+     }
 
-      // Make the API call
-      const response = await api.post(
-        "services/nurse-procedure-bookings/",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+     console.log("Booking Data to be sent (FormData):");
+     // Log FormData contents for debugging
+     for (let pair of formData.entries()) {
+       console.log(pair[0], pair[1]);
+     }
 
-      console.log("Booking response:", response.data);
+     // Make the API call
+     const response = await api.post(
+       "services/nurse-procedure-bookings/",
+       formData,
+       {
+         headers: {
+           "Content-Type": "multipart/form-data",
+         },
+       }
+     );
 
-      // Clear localStorage after successful booking
-      localStorage.removeItem("selectedServices");
-      localStorage.removeItem("procedureDays");
+     console.log("Booking response:", response.data);
 
-      toast.success("Appointment(s) booked successfully!");
-      navigate("/patient");
-    } catch (error: any) {
-      console.error("Booking failed:", error);
+     // Clear localStorage after successful booking
+     localStorage.removeItem("selectedServices");
+     localStorage.removeItem("procedureDays");
 
-      // Handle specific error responses
-      if (error.response) {
-        const errorMessage =
-          error.response.data?.message ||
-          error.response.data?.detail ||
-          "Booking failed";
+     toast.success("Appointment(s) booked successfully!");
+     navigate("/patient");
+   } catch (error: any) {
+     console.error("Booking failed:", error);
 
-        // Log detailed errors if available
-        if (error.response.data?.errors) {
-          console.error("Validation errors:", error.response.data.errors);
-        }
+     // Handle specific error responses
+     if (error.response) {
+       const errorMessage =
+         error.response.data?.message ||
+         error.response.data?.detail ||
+         "Booking failed";
 
-        toast.error(`Booking failed: ${errorMessage}`);
-      } else if (error.request) {
-        toast.error("Network error. Please check your connection and try again.");
-      } else {
-        toast.error("Booking failed. Please try again.");
-      }
-    }
-  };
+       // Log detailed errors if available
+       if (error.response.data?.errors) {
+         console.error("Validation errors:", error.response.data.errors);
+       }
+
+       toast.error(`Booking failed: ${errorMessage}`);
+     } else if (error.request) {
+       toast.error(
+         "Network error. Please check your connection and try again."
+       );
+     } else {
+       toast.error("Booking failed. Please try again.");
+     }
+   }
+ };
 
   const handleBackNavigation = () => {
     if (currentStep === "schedule-config") {
