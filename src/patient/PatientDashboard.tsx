@@ -71,12 +71,12 @@ const PatientOverviewDashboard = () => {
     100
   ).toFixed(1);
 
-  const formatCurrency = (value: any) => {
-    if (value >= 1000000) {
-      return `₦${(value / 1000000).toFixed(1)}M`;
-    }
-    return `₦${(value / 1000).toFixed(0)}K`;
-  };
+  // const formatCurrency = (value: any) => {
+  //   if (value >= 1000000) {
+  //     return `₦${(value / 1000000).toFixed(1)}M`;
+  //   }
+  //   return `₦${(value / 1000).toFixed(0)}K`;
+  // };
 
   interface StatCardProps {
     title: string;
@@ -146,7 +146,7 @@ const PatientOverviewDashboard = () => {
     accepted,
     rejected,
     pending,
-    totalSpent,
+    // totalSpent,
   }) => (
     <div className="patient-theme bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200">
       <div className="flex items-center gap-3 mb-5">
@@ -174,7 +174,7 @@ const PatientOverviewDashboard = () => {
           <span className="text-lg font-bold text-amber-600">{pending}</span>
         </div>
 
-        <div className="pt-4 mt-4 border-t border-gray-200">
+        {/* <div className="pt-4 mt-4 border-t border-gray-200">
           <div className="flex justify-between items-center">
             <span className="text-sm font-semibold text-gray-900">
               Total Spent
@@ -183,7 +183,7 @@ const PatientOverviewDashboard = () => {
               {formatCurrency(totalSpent)}
             </span>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

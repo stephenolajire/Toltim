@@ -9,7 +9,7 @@ import TestimonialsSection from "../components/home/TestimonialSection";
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="min-h-screen  bg-gray-50 hide-scrollbar">
+    <div className="min-h-screen lg:mt-10 bg-gray-50 hide-scrollbar">
       <Hero />
       <ServicesSection />
       <HowITWorks />
