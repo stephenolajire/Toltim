@@ -105,8 +105,8 @@ const CaregiverBooking: React.FC = () => {
   // Add scroll listener for floating summary
   useEffect(() => {
     const handleScroll = () => {
-      // Show floating summary when scrolled down more than 100px
-      setShowFloatingSummary(window.scrollY > 100);
+      // Show floating summary when scrolled down more than 300px
+      setShowFloatingSummary(window.scrollY > 300);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -731,7 +731,7 @@ const CaregiverBooking: React.FC = () => {
           </div>
 
           {/* Booking Summary */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 hidden md:block">
             <div className="sticky top-4">
               <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-5 text-white mb-4 shadow-sm">
                 <div className="flex items-center space-x-2.5">
@@ -839,42 +839,43 @@ const CaregiverBooking: React.FC = () => {
       </div>
 
       {/* Floating Summary - Mobile Only */}
-      {bookingData.caregiverType && showFloatingSummary && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-blue-500 border-t-2 border-gray-200 shadow-2xl transition-all duration-300">
-          <div className="px-4 py-4 max-w-full">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <p className="text-xs text-white">Total Amount</p>
-                <p className="text-2xl font-bold text-white">
-                  ₦{getTotalAmount().toLocaleString()}
-                </p>
+      {bookingData.caregiverType &&
+        (showFloatingSummary || window.innerWidth < 624) && (
+          <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t-2 border-gray-200 shadow-2xl animate-in slide-in-from-bottom-4">
+            <div className="px-4 py-4 max-w-full">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-xs text-gray-500">Total Amount</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    ₦{getTotalAmount().toLocaleString()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-600 mb-1">
+                    {bookingData.caregiverType.name}
+                  </p>
+                  <p className="text-sm font-medium text-gray-700">
+                    {bookingData.duration === "daily" ? "Daily" : "Full-time"}
+                  </p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-white mb-1">
-                  {bookingData.caregiverType.name}
-                </p>
-                <p className="text-sm font-medium text-white">
-                  {bookingData.duration === "daily" ? "Daily" : "Full-time"}
-                </p>
-              </div>
-            </div>
 
-            <button
-              onClick={handleBooking}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={
-                !bookingData.patientName ||
-                !bookingData.careLocation ||
-                !bookingData.startDate ||
-                !location ||
-                isSubmitting
-              }
-            >
-              {isSubmitting ? "Processing..." : "Book Service"}
-            </button>
+              <button
+                onClick={handleBooking}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={
+                  !bookingData.patientName ||
+                  !bookingData.careLocation ||
+                  !bookingData.startDate ||
+                  !location ||
+                  isSubmitting
+                }
+              >
+                {isSubmitting ? "Processing..." : "Book Service"}
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Add padding to prevent content from being hidden behind floating summary */}
       {bookingData.caregiverType && showFloatingSummary && (

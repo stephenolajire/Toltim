@@ -87,11 +87,23 @@ const NursingProcedures: React.FC = () => {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [showFloatingSummary, setShowFloatingSummary] = useState(false);
 
   const navigate = useNavigate();
 
   const { data, isLoading } = useNurseProcedures();
   console.log(data);
+
+  // Add scroll listener for floating summary
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show floating summary when scrolled down more than 300px
+      setShowFloatingSummary(window.scrollY > 300);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     getCurrentLocation();
@@ -309,7 +321,9 @@ const NursingProcedures: React.FC = () => {
 
   const handleProceed = () => {
     if (selectedServices.length === 0) {
-      toast.error("Please select at least one nursing procedure before proceeding.");
+      toast.error(
+        "Please select at least one nursing procedure before proceeding."
+      );
       return;
     }
 
@@ -354,7 +368,9 @@ const NursingProcedures: React.FC = () => {
       navigate("/patient/matching");
     } catch (error) {
       console.error("Error storing services data:", error);
-      toast.error("There was an error saving your selection. Please try again.");
+      toast.error(
+        "There was an error saving your selection. Please try again."
+      );
     }
   };
 
@@ -676,7 +692,7 @@ const NursingProcedures: React.FC = () => {
           </div>
 
           {/* Summary Card */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 hidden md:block">
             <div className="sticky top-4">
               <div className="bg-white rounded-xl shadow-md border-2 border-blue-100 p-5 sm:p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -760,6 +776,41 @@ const NursingProcedures: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Summary - Mobile Only */}
+      {selectedServices.length > 0 &&(
+        (showFloatingSummary || window.innerWidth < 624) && 
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t-2 border-gray-200 shadow-2xl transition-all duration-300">
+          <div className="px-4 py-4 max-w-full">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs text-gray-500">Total Amount</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  ₦{getTotalAmount().toLocaleString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-600 mb-1">
+                  {getTotalServices()} services
+                </p>
+                <p className="text-sm font-medium text-gray-700">selected</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleProceed}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 px-4 rounded-lg font-semibold transition-colors"
+            >
+              Proceed to Booking
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add padding to prevent content from being hidden behind floating summary */}
+      {selectedServices.length > 0 && showFloatingSummary && (
+        <div className="h-32 lg:hidden"></div>
+      )}
     </div>
   );
 };
