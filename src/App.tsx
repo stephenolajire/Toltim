@@ -41,7 +41,7 @@ import BedSideBooking from "./admin/pages/BedSideBooking";
 // Nurse Dashboard
 import NurseLayout from "./nurse/NurseLayout";
 import NurseKycVerification from "./nurse/pages/KYCVerification";
-import NurseDashboard from "./nurse/pages/NurseDashboard";
+import NurseDashboard from "./nurse/pages/Procedures";
 import ActivePatients from "./nurse/pages/ActivePatient";
 import IDCard from "./nurse/pages/IDCard";
 import KycStatus from "./nurse/pages/KYCStatus";

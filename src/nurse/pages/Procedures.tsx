@@ -419,7 +419,15 @@ const NurseDashboard: React.FC = () => {
 
                   {/* Action Buttons */}
                   <div className="space-y-2">
-                    {["accepted", "started"].includes(booking.status) ? (
+                    {booking.status === "completed" ? (
+                      <button
+                        disabled
+                        className="w-full bg-gray-100 text-gray-800 px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Request Completed
+                      </button>
+                    ) : ["accepted", "started"].includes(booking.status) ? (
                       <button
                         disabled
                         className="w-full bg-green-100 text-green-800 px-3 py-2 rounded-lg font-medium text-sm cursor-not-allowed flex items-center justify-center gap-2"

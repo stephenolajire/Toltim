@@ -184,8 +184,9 @@ const CareGiving: React.FC = () => {
         toast.success("Session code generated successfully!");
       }
       console.log(response.data);
-    } catch (error) {
+    } catch (error:any) {
       console.error("Failed to generate session code:", error);
+      toast.error(error.response?.data?.errors);
     }
   };
 
@@ -519,6 +520,7 @@ const CareGiving: React.FC = () => {
           close={() => setRecordingSessions(false)}
         />
       )}
+      
     </div>
   );
 };
