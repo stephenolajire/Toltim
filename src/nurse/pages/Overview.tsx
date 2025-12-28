@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   CheckCircle,
   XCircle,
-  Calendar,
+  // Calendar,
   // DollarSign,
   Heart,
   Syringe,
@@ -15,7 +15,7 @@ import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
 
 const NurseOverviewDashboard = () => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  // const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const {data, isLoading, isError} = useWorkerStats('nurse');
 
   console.log("Worker Stats Data:", data);
@@ -129,7 +129,7 @@ const NurseOverviewDashboard = () => {
                 Track your bookings, completions, and earnings
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-gray-500" />
                 <select
@@ -141,7 +141,7 @@ const NurseOverviewDashboard = () => {
                   <option value={2025}>2025</option>
                 </select>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
