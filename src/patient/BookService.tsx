@@ -18,7 +18,7 @@ import {
   MapPin,
   Loader,
   AlertCircle,
-  Heart,
+  // Heart,
 } from "lucide-react";
 import { useNurseProcedures } from "../constant/GlobalContext";
 import { useNavigate } from "react-router-dom";
@@ -623,7 +623,7 @@ const NursingProcedures: React.FC = () => {
             </button>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" />
+                {/* <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600" /> */}
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
                   Nursing Procedures
                 </h1>

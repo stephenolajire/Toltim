@@ -388,12 +388,12 @@ const AppointmentDetailsModal = ({
               >
                 Close
               </button>
-              {(appointment.status === "accepted" ||
+              {/* {(appointment.status === "accepted" ||
                 appointment.status === "pending") && (
                 <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
                   Reschedule Appointment
                 </button>
-              )}
+              )} */}
             </div>
           </div>
         </div>

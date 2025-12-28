@@ -5,12 +5,15 @@ import {
   ArrowDownLeft,
   Search,
   Filter,
-  Download,
+  // Download,
   Clock,
   CheckCircle,
-  Building2,
+  // Building2,
   Receipt,
-  Smartphone,
+  // Smartphone,
+  User,
+  Hospital,
+  ClipboardList,
 } from "lucide-react";
 import { useWalletTransactions } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
@@ -173,9 +176,9 @@ const WalletComponent = () => {
     >
       {role === "admin" && <WalletBalance />}
 
-      <div className="w-full mx-auto py-8">
+      <div className="w-full mx-auto">
         {/* Quick Actions */}
-        {role === "patient" && (
+        {/* {role === "patient" && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <button className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 group">
               <div className="flex items-center gap-4">
@@ -227,7 +230,7 @@ const WalletComponent = () => {
               </div>
             </button>
           </div>
-        )}
+        )} */}
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
@@ -345,22 +348,22 @@ const WalletComponent = () => {
                           <div className="flex flex-wrap gap-3 text-xs text-gray-600">
                             {metadata.doctor && (
                               <span className="flex items-center gap-1">
-                                <span>👨‍⚕️</span> {metadata.doctor}
+                                <span><User/></span> {metadata.doctor}
                               </span>
                             )}
                             {metadata.hospital && (
                               <span className="flex items-center gap-1">
-                                <span>🏥</span> {metadata.hospital}
+                                <span><Hospital/></span> {metadata.hospital}
                               </span>
                             )}
                             {metadata.source && (
                               <span className="flex items-center gap-1">
-                                <span>💳</span> {metadata.source}
+                                <span><CreditCard/></span> {metadata.source}
                               </span>
                             )}
                             {metadata.booking_id && (
                               <span className="flex items-center gap-1">
-                                <span>📋</span> {metadata.booking_id}
+                                <span><ClipboardList/></span> {metadata.booking_id}
                               </span>
                             )}
                           </div>

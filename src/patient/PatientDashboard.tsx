@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Users,
   CheckCircle,
   XCircle,
   DollarSign,
-  Calendar,
+  // Calendar,
   Heart,
   Building2,
   Syringe,
@@ -14,9 +14,10 @@ import {
 import { useFinancialSummary, usePatientStats } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
 import Error from "../components/Error";
+import { Link } from "react-router-dom";
 
 const PatientOverviewDashboard = () => {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  // const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { data, isLoading, isError } = usePatientStats();
   const {data:summary, isLoading:loading, isError:error} = useFinancialSummary()
 
@@ -213,7 +214,7 @@ const PatientOverviewDashboard = () => {
                 Track your healthcare bookings and spending
               </p>
             </div>
-            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            {/* <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <Calendar className="w-5 h-5 text-primary-600" />
               <select
                 value={selectedYear}
@@ -223,40 +224,48 @@ const PatientOverviewDashboard = () => {
                 <option value={2024}>2024</option>
                 <option value={2025}>2025</option>
               </select>
-            </div>
+            </div> */}
           </div>
         </div>
 
         {/* Summary Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard
-            title="Total Bookings"
-            value={totalBookings}
-            subtitle={`${acceptanceRate}% acceptance rate`}
-            icon={Users}
-            colorClass="bg-gradient-to-br from-blue-500 to-blue-600"
-          />
-          <StatCard
-            title="Accepted Bookings"
-            value={totalAccepted}
-            subtitle="Completed & Active"
-            icon={CheckCircle}
-            colorClass="bg-gradient-to-br from-emerald-500 to-emerald-600"
-          />
-          <StatCard
-            title="Rejected Bookings"
-            value={totalRejected}
-            subtitle="Unsuccessful requests"
-            icon={XCircle}
-            colorClass="bg-gradient-to-br from-red-500 to-red-600"
-          />
-          <StatCard
-            title="Pending Requests"
-            value={totalPending}
-            subtitle="Unapproved requests"
-            icon={DollarSign}
-            colorClass="bg-gradient-to-br from-purple-500 to-purple-600"
-          />
+          <Link to="/patient/history">
+            <StatCard
+              title="Total Bookings"
+              value={totalBookings}
+              subtitle={`${acceptanceRate}% acceptance rate`}
+              icon={Users}
+              colorClass="bg-gradient-to-br from-blue-500 to-blue-600"
+            />
+          </Link>
+          <Link to="/patient/history">
+            <StatCard
+              title="Accepted Bookings"
+              value={totalAccepted}
+              subtitle="Completed & Active"
+              icon={CheckCircle}
+              colorClass="bg-gradient-to-br from-emerald-500 to-emerald-600"
+            />
+          </Link>
+          <Link to="/patient/history">
+            <StatCard
+              title="Rejected Bookings"
+              value={totalRejected}
+              subtitle="Unsuccessful requests"
+              icon={XCircle}
+              colorClass="bg-gradient-to-br from-red-500 to-red-600"
+            />
+          </Link>
+          <Link to="/patient/history">
+            <StatCard
+              title="Pending Requests"
+              value={totalPending}
+              subtitle="Unapproved requests"
+              icon={DollarSign}
+              colorClass="bg-gradient-to-br from-purple-500 to-purple-600"
+            />
+          </Link>
         </div>
 
         {/* Service Type Breakdown Cards */}

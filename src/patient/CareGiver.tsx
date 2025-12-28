@@ -98,8 +98,20 @@ const CaregiverBooking: React.FC = () => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showFloatingSummary, setShowFloatingSummary] = useState(false);
 
   const navigate = useNavigate();
+
+  // Add scroll listener for floating summary
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show floating summary when scrolled down more than 100px
+      setShowFloatingSummary(window.scrollY > 100);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     getCurrentLocation();
@@ -320,9 +332,13 @@ const CaregiverBooking: React.FC = () => {
         <div className="p-4 sm:p-5">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-start space-x-3 flex-1 min-w-0">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                isSelected ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-              }`}>
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                  isSelected
+                    ? "bg-blue-100 text-blue-600"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
                 {caregiver.icon}
               </div>
               <div className="flex-1 min-w-0">
@@ -330,11 +346,13 @@ const CaregiverBooking: React.FC = () => {
                   <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
                     {caregiver.name}
                   </h3>
-                  <span className={`px-2.5 py-0.5 text-xs rounded-full font-medium ${
-                    isNurse 
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                      : 'bg-green-50 text-green-700 border border-green-200'
-                  }`}>
+                  <span
+                    className={`px-2.5 py-0.5 text-xs rounded-full font-medium ${
+                      isNurse
+                        ? "bg-blue-50 text-blue-700 border border-blue-200"
+                        : "bg-green-50 text-green-700 border border-green-200"
+                    }`}
+                  >
                     {caregiver.label}
                   </span>
                 </div>
@@ -359,9 +377,7 @@ const CaregiverBooking: React.FC = () => {
             </div>
 
             <div className="flex items-center ml-3 flex-shrink-0">
-              {isSelected && (
-                <CheckCircle className="w-6 h-6 text-blue-600" />
-              )}
+              {isSelected && <CheckCircle className="w-6 h-6 text-blue-600" />}
             </div>
           </div>
 
@@ -399,9 +415,11 @@ const CaregiverBooking: React.FC = () => {
         onClick={() => handleDurationSelect(duration)}
       >
         <div className="flex flex-col items-center space-y-3">
-          <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
-            isSelected ? "bg-blue-100" : "bg-gray-100"
-          }`}>
+          <div
+            className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+              isSelected ? "bg-blue-100" : "bg-gray-100"
+            }`}
+          >
             <Clock
               className={`w-7 h-7 ${
                 isSelected ? "text-blue-600" : "text-gray-400"
@@ -409,14 +427,18 @@ const CaregiverBooking: React.FC = () => {
             />
           </div>
           <div>
-            <h3 className={`font-semibold text-base mb-1 ${
-              isSelected ? "text-blue-900" : "text-gray-900"
-            }`}>
+            <h3
+              className={`font-semibold text-base mb-1 ${
+                isSelected ? "text-blue-900" : "text-gray-900"
+              }`}
+            >
               {title}
             </h3>
-            <p className={`text-sm ${
-              isSelected ? "text-blue-600" : "text-gray-600"
-            }`}>
+            <p
+              className={`text-sm ${
+                isSelected ? "text-blue-600" : "text-gray-600"
+              }`}
+            >
               {subtitle}
             </p>
           </div>
@@ -452,7 +474,9 @@ const CaregiverBooking: React.FC = () => {
           {locationLoading && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3.5 flex items-center gap-3 text-sm">
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-blue-700 font-medium">Getting your location...</span>
+              <span className="text-blue-700 font-medium">
+                Getting your location...
+              </span>
             </div>
           )}
 
@@ -491,7 +515,9 @@ const CaregiverBooking: React.FC = () => {
               <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl p-5 text-white mb-4 shadow-sm">
                 <div className="flex items-center space-x-2.5 mb-1.5">
                   <HeartHandshake className="w-5 h-5" />
-                  <h2 className="text-lg font-semibold">Step 1: Select Caregiver Type</h2>
+                  <h2 className="text-lg font-semibold">
+                    Step 1: Select Caregiver Type
+                  </h2>
                 </div>
                 <p className="text-blue-50 text-sm">
                   Choose the type of caregiver that best fits your needs
@@ -738,9 +764,7 @@ const CaregiverBooking: React.FC = () => {
                     </div>
 
                     <div className="pb-4 border-b border-gray-100">
-                      <div className="text-sm text-gray-500 mb-1.5">
-                        Period
-                      </div>
+                      <div className="text-sm text-gray-500 mb-1.5">Period</div>
                       <div className="font-semibold text-gray-900 text-base">
                         {bookingData.period} days
                       </div>
@@ -748,7 +772,9 @@ const CaregiverBooking: React.FC = () => {
 
                     <div className="pt-2">
                       <div className="flex justify-between items-baseline mb-5">
-                        <span className="text-gray-600 font-medium">Total Amount</span>
+                        <span className="text-gray-600 font-medium">
+                          Total Amount
+                        </span>
                         <span className="text-2xl font-bold text-blue-600">
                           ₦{getTotalAmount().toLocaleString()}
                         </span>
@@ -811,6 +837,49 @@ const CaregiverBooking: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Summary - Mobile Only */}
+      {bookingData.caregiverType && showFloatingSummary && (
+        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-blue-500 border-t-2 border-gray-200 shadow-2xl transition-all duration-300">
+          <div className="px-4 py-4 max-w-full">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-xs text-white">Total Amount</p>
+                <p className="text-2xl font-bold text-white">
+                  ₦{getTotalAmount().toLocaleString()}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-white mb-1">
+                  {bookingData.caregiverType.name}
+                </p>
+                <p className="text-sm font-medium text-white">
+                  {bookingData.duration === "daily" ? "Daily" : "Full-time"}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleBooking}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={
+                !bookingData.patientName ||
+                !bookingData.careLocation ||
+                !bookingData.startDate ||
+                !location ||
+                isSubmitting
+              }
+            >
+              {isSubmitting ? "Processing..." : "Book Service"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add padding to prevent content from being hidden behind floating summary */}
+      {bookingData.caregiverType && showFloatingSummary && (
+        <div className="h-32 lg:hidden"></div>
+      )}
     </div>
   );
 };

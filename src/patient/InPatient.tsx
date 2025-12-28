@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
-  Clock,
+  // Clock,
   MapPin,
   User,
   Calendar,
@@ -17,6 +17,7 @@ import { useInBedProcedures } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
 import api from "../constant/api";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 // Types
 interface ServiceOption {
@@ -125,6 +126,8 @@ const InPatientCaregiverService: React.FC = () => {
   const { data: inBedProceduresData, isLoading: proceduresLoading } =
     useInBedProcedures();
 
+  const navigate = useNavigate();
+
   const {
     data: nearByCHWData,
     isLoading: chwLoading,
@@ -186,6 +189,30 @@ const InPatientCaregiverService: React.FC = () => {
           : service
       ),
     }));
+
+    // Show toast on small devices
+    const service = bookingData.services.find((s) => s.id === serviceId);
+    if (service && window.innerWidth < 640) {
+      const isNowIncluded = !service.included;
+      const updatedServices = bookingData.services.map((s) =>
+        s.id === serviceId ? { ...s, included: isNowIncluded } : s
+      );
+      const newDailyRate = updatedServices
+        .filter((s) => s.included)
+        .reduce((total, s) => total + parseFloat(s.price_per_day), 0);
+      // const newTotalCost =
+      //   newDailyRate * (parseInt(bookingData.numberOfDays) || 0);
+
+      toast.info(
+        `${isNowIncluded ? "Added" : "Removed"} ${
+          service.name
+      }. New Daily Rate: ₦${newDailyRate.toLocaleString()}`,
+        {
+          position: "top-right",
+          autoClose: 3000,
+        }
+      );
+    }
   };
 
   const handleCHWSelect = (chwId: string) => {
@@ -261,6 +288,7 @@ const InPatientCaregiverService: React.FC = () => {
       const response = await api.post("inpatient-caregiver/bookings/", payload);
       console.log("Booking created successfully:", response.data);
       toast.success("Booking request submitted successfully!");
+      navigate("/patient/history");
     } catch (error: any) {
       console.error("Error creating booking:", error);
 
@@ -863,7 +891,7 @@ const InPatientCaregiverService: React.FC = () => {
             </div>
 
             {/* What to Expect */}
-            <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-md p-4 sm:p-6 text-white">
+            {/* <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-md p-4 sm:p-6 text-white">
               <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-blue-500">
                 <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
                   <Clock className="w-4 h-4 text-white" />
@@ -900,10 +928,10 @@ const InPatientCaregiverService: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Help Section */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5">
+            {/* <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <Heart className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
@@ -914,7 +942,7 @@ const InPatientCaregiverService: React.FC = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

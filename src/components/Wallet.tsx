@@ -269,7 +269,7 @@ const WalletBalance = () => {
             <button
               onClick={handleFund}
               disabled={!fundAmount || parseFloat(fundAmount) <= 0}
-              className={`w-full py-2.5 sm:py-3.5 bg-gradient-to-r ${themeConfig.gradientDark} text-white rounded-lg sm:rounded-xl font-bold hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none text-sm sm:text-base`}
+              className={`w-full py-2.5 sm:py-3.5 bg-blue-600 text-white rounded-lg sm:rounded-xl font-bold hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none text-sm sm:text-base`}
             >
               <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Continue to Payment
