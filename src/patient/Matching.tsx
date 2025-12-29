@@ -242,46 +242,46 @@ const HealthPractitionersMatching: React.FC<
       );
 
       // Handle selected_days based on frequency
-      if (scheduleConfig.frequency === "daily") {
-        // For daily frequency, calculate consecutive days starting from start_date
-        const allDays = [
-          "Sunday",
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-        ];
-        const startDate = new Date(scheduleConfig.startDate);
-        const startDayIndex = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      // if (scheduleConfig.frequency === "daily") {
+      //   // For daily frequency, calculate consecutive days starting from start_date
+      //   const allDays = [
+      //     "Sunday",
+      //     "Monday",
+      //     "Tuesday",
+      //     "Wednesday",
+      //     "Thursday",
+      //     "Friday",
+      //     "Saturday",
+      //   ];
+      //   const startDate = new Date(scheduleConfig.startDate);
+      //   const startDayIndex = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-        const daysToSend = [];
-        for (let i = 0; i < scheduleConfig.totalDays; i++) {
-          const dayIndex = (startDayIndex + i) % 7; // Wrap around the week
-          daysToSend.push(allDays[dayIndex]);
-        }
+      //   const daysToSend = [];
+      //   for (let i = 0; i < scheduleConfig.totalDays; i++) {
+      //     const dayIndex = (startDayIndex + i) % 7; // Wrap around the week
+      //     daysToSend.push(allDays[dayIndex]);
+      //   }
 
-        // Remove duplicates and append to formData
-        const uniqueDays = [...new Set(daysToSend)];
-        uniqueDays.forEach((day) => {
-          formData.append("selected_days", day);
-        });
-      } else if (scheduleConfig.selectedDays.length > 0) {
-        // For specific days, capitalize and send each day
-        const capitalizedDays = scheduleConfig.selectedDays.map(
-          (day) => day.charAt(0).toUpperCase() + day.slice(1)
-        );
-        capitalizedDays.forEach((day) => {
-          formData.append("selected_days", day);
-        });
-      } else {
-        // Fallback: send at least one day (e.g., the start date's day)
-        const startDateDay = new Date(
-          scheduleConfig.startDate
-        ).toLocaleDateString("en-US", { weekday: "long" });
-        formData.append("selected_days", startDateDay);
-      }
+      //   // Remove duplicates and append to formData
+      //   const uniqueDays = [...new Set(daysToSend)];
+      //   uniqueDays.forEach((day) => {
+      //     formData.append("selected_days", day);
+      //   });
+      // } else if (scheduleConfig.selectedDays.length > 0) {
+      //   // For specific days, capitalize and send each day
+      //   const capitalizedDays = scheduleConfig.selectedDays.map(
+      //     (day) => day.charAt(0).toUpperCase() + day.slice(1)
+      //   );
+      //   capitalizedDays.forEach((day) => {
+      //     formData.append("selected_days", day);
+      //   });
+      // } else {
+      //   // Fallback: send at least one day (e.g., the start date's day)
+      //   const startDateDay = new Date(
+      //     scheduleConfig.startDate
+      //   ).toLocaleDateString("en-US", { weekday: "long" });
+      //   formData.append("selected_days", startDateDay);
+      // }
 
       // Add patient_detail
       if (bookingForSelf) {

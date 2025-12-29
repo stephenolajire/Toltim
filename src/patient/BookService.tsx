@@ -626,7 +626,7 @@ const NursingProcedures: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br pb-20 md:pb-0 from-blue-50 via-white to-blue-50">
       <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 ">
         {/* Header */}
         <div className="mb-6">
