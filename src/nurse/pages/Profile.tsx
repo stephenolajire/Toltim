@@ -177,7 +177,7 @@ export default function NurseProfile() {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="w-full mx-auto">
         {/* Header Card */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+        <div className="bg-white rounded-xl shadow-sm overflow-visible mb-6">
           {/* Cover Background */}
           <div className="h-40 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 relative">
             {/* Active Status Toggle - Top Right */}
@@ -292,7 +292,7 @@ export default function NurseProfile() {
 
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium whitespace-nowrap"
+                    className="relative z-20 flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium whitespace-nowrap"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit Profile

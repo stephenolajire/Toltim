@@ -1,11 +1,6 @@
 // ScheduleConfig.tsx
 import React from "react";
-import {
-  ArrowLeft,
-  CalendarDays,
-  Calendar,
-  Repeat,
-} from "lucide-react";
+import { ArrowLeft, CalendarDays, Calendar, Repeat } from "lucide-react";
 import type { Service, Practitioner, ScheduleConfig } from "./types";
 
 const formatSpecialization = (specialization: any): string => {
@@ -60,6 +55,7 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
   onBack,
   onContinue,
 }) => {
+  /* Commented out: specific-days are no longer needed
   const getDaysOfWeek = () => [
     { value: "monday", label: "Monday" },
     { value: "tuesday", label: "Tuesday" },
@@ -69,15 +65,18 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
     { value: "saturday", label: "Saturday" },
     { value: "sunday", label: "Sunday" },
   ];
+  */
 
   const calculateTotalCost = () => {
     let multiplier = 1;
 
     if (scheduleConfig.frequency === "daily") {
       multiplier = scheduleConfig.totalDays;
+      /* Commented out: specific-days calculation removed
     } else if (scheduleConfig.frequency === "specific-days") {
       const weeksInPeriod = Math.ceil(scheduleConfig.totalDays / 7);
       multiplier = weeksInPeriod * scheduleConfig.selectedDays.length;
+    */
     } else if (scheduleConfig.frequency === "every-other-day") {
       multiplier = Math.ceil(scheduleConfig.totalDays / 2);
     } else if (scheduleConfig.frequency === "weekly") {
@@ -177,6 +176,7 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 <p className="text-sm text-gray-600">Every day</p>
               </button>
 
+              {/* Specific Days option removed - feature deprecated
               <button
                 onClick={() =>
                   updateScheduleConfig({
@@ -193,6 +193,7 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
                 <h4 className="font-semibold text-gray-900">Specific Days</h4>
                 <p className="text-sm text-gray-600">Select days of week</p>
               </button>
+              */}
 
               <button
                 onClick={() =>
@@ -233,40 +234,7 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
           </div>
 
           {/* Days of Week Selection */}
-          {scheduleConfig.frequency === "specific-days" && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Select Days of the Week
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-                {getDaysOfWeek().map((day) => (
-                  <button
-                    key={day.value}
-                    onClick={() => {
-                      const isSelected = scheduleConfig.selectedDays.includes(
-                        day.value
-                      );
-                      const newSelectedDays = isSelected
-                        ? scheduleConfig.selectedDays.filter(
-                            (d) => d !== day.value
-                          )
-                        : [...scheduleConfig.selectedDays, day.value];
-                      updateScheduleConfig({
-                        selectedDays: newSelectedDays,
-                      });
-                    }}
-                    className={`p-3 text-sm rounded-lg border transition-colors ${
-                      scheduleConfig.selectedDays.includes(day.value)
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-300 hover:border-blue-500"
-                    }`}
-                  >
-                    {day.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* Specific-days selection removed; not needed anymore */}
 
           {/* Start Date */}
           <div>
@@ -311,12 +279,7 @@ const ScheduleConfigComponent: React.FC<ScheduleConfigProps> = ({
 
           <button
             onClick={onContinue}
-            disabled={
-              !scheduleConfig.frequency ||
-              !scheduleConfig.startDate ||
-              (scheduleConfig.frequency === "specific-days" &&
-                scheduleConfig.selectedDays.length === 0)
-            }
+            disabled={!scheduleConfig.frequency || !scheduleConfig.startDate}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
           >
             Continue to Time Selection
