@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {Menu, X } from "lucide-react";
-import { BiHeart } from "react-icons/bi";
+
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -72,8 +72,7 @@ const Navigation: React.FC = () => {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             onClick={(e) => scrollToSection(e, "#home")}
           >
-            <BiHeart className="text-primary-500 text-4xl md:text-5xl" />
-            <span className="text-h5 font-bold text-primary-500">Toltimed</span>
+            <img className="h-20" src="/logoo.png"/>
           </a>
 
           {/* Desktop Navigation */}

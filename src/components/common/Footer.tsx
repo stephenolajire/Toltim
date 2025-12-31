@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Heart,
   Mail,
   Phone,
   MapPin,
@@ -84,8 +83,7 @@ const Footer: React.FC = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2 w-full">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <Heart className="w-full max-w-10 h-10 text-primary-500" />
-              <span className="text-h5 font-bold text-white">Toltimed</span>
+              <img className="h-20" src="/log.png"/>
             </Link>
             <p className="text-body-sm text-gray-400 mb-6 w-full max-w-sm">
               Connecting families with certified healthcare professionals for

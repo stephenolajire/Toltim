@@ -251,8 +251,7 @@ const Login: React.FC = () => {
             {/* Logo & Header */}
             <div className="mb-8">
               <div className="flex items-center justify-center mb-6">
-                <Heart className="text-primary-600 text-3xl md:text-4xl" />
-                <span className="text-xl font-bold ml-2">Toltimed</span>
+                <img className="h-30 w-30" src="/Icon1 .png"/>
               </div>
               <h1 className="text-h3 text-center text-gray-900 mb-2">
                 Welcome Back
