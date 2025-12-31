@@ -14,6 +14,7 @@ import api from "../../constant/api";
 import { X, MapPin, User, CheckCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import CaregiverBookingTable from "../components/booking/CaregiverBookingTable";
+import CaregiverBookingModal from "../../nurse/components/CaregiverBookingModal";
 
 // Rest of your component code stays the same
 
@@ -31,6 +32,7 @@ const CaregiverBooking: React.FC = () => {
   const [isAssignModalOpen, setIsAssignModalOpen] = React.useState(false);
   const [selectedBooking, setSelectedBooking] =
     React.useState<CaregiverBookingData | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = React.useState(false);
   const [nearbyWorkers, setNearbyWorkers] = React.useState<NearbyWorker[]>([]);
   const [loadingWorkers, setLoadingWorkers] = React.useState(false);
   const [selectedWorker, setSelectedWorker] =
@@ -188,7 +190,10 @@ const CaregiverBooking: React.FC = () => {
     const booking = CareBookings?.results.find(
       (b: CaregiverBookingData) => b.id === appointmentId
     );
-    console.log("Booking details:", booking);
+    if (booking) {
+      setSelectedBooking(booking);
+      setIsViewModalOpen(true);
+    }
   };
 
   if (isLoading) {
@@ -249,6 +254,18 @@ const CaregiverBooking: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* View Details Modal */}
+      {isViewModalOpen && selectedBooking && (
+        <CaregiverBookingModal
+          isOpen={isViewModalOpen}
+          onClose={() => {
+            setIsViewModalOpen(false);
+            setSelectedBooking(null);
+          }}
+          booking={selectedBooking}
+        />
+      )}
 
       {/* Assign Worker Modal */}
       {isAssignModalOpen && (

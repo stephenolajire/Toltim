@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, User, Stethoscope, Eye, MoreVertical } from "lucide-react";
+import { Clock, User, Stethoscope, Eye } from "lucide-react";
 import LocationDisplay from "../../../components/LocationDisplay";
 
 interface Appointment {
@@ -9,7 +9,13 @@ interface Appointment {
   appointmentType: string;
   time: string;
   location: string;
-  status: "pending" | "assigned" | "active" | "completed" | "cancelled";
+  status:
+    | "pending"
+    | "assigned"
+    | "active"
+    | "completed"
+    | "cancelled"
+    | "rejected";
   assignedNurse?: string;
 }
 
@@ -26,12 +32,12 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
   appointments,
   onAssignNurse,
   onViewDetails,
-  onApprove,
   onCancel,
   isLoading = false,
 }) => {
   const [activeMenu, setActiveMenu] = React.useState<string | null>(null);
   const menuRef = React.useRef<HTMLDivElement>(null);
+  console.log(activeMenu);
 
   // Close menu when clicking outside
   React.useEffect(() => {
@@ -63,8 +69,8 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
   };
 
   const canAssign = (appointment: Appointment) =>
-    appointment.status === "pending" && !appointment.assignedNurse;
-  const canApprove = (appointment: Appointment) => appointment.status === "assigned";
+    (appointment.status === "pending" || appointment.status === "rejected") &&
+    !appointment.assignedNurse;
   const canCancel = (appointment: Appointment) =>
     ["pending", "assigned"].includes(appointment.status);
 
@@ -133,8 +139,7 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2 text-sm text-gray-600 max-w-xs">
-                        <LocationDisplay
-                        location={appointment.location}/>
+                        <LocationDisplay location={appointment.location} />
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
@@ -164,23 +169,15 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
                         {canAssign(appointment) && (
                           <button
                             onClick={() =>
-                              onAssignNurse(appointment.id, appointment.patientId)
+                              onAssignNurse(
+                                appointment.id,
+                                appointment.patientId
+                              )
                             }
                             disabled={isLoading}
                             className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                           >
                             {isLoading ? "Processing..." : "Assign"}
-                          </button>
-                        )}
-                        {canApprove(appointment) && onApprove && (
-                          <button
-                            onClick={() =>
-                              onApprove(appointment.id, appointment.patientId)
-                            }
-                            disabled={isLoading}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                          >
-                            {isLoading ? "Processing..." : "Approve"}
                           </button>
                         )}
                         <button
@@ -191,35 +188,28 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
                           <Eye className="w-3 h-3" />
                           View
                         </button>
+                        {appointment.status === "rejected" && (
+                          <button
+                            onClick={() =>
+                              onAssignNurse(
+                                appointment.id,
+                                appointment.patientId
+                              )
+                            }
+                            disabled={isLoading}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? "Processing..." : "Assign"}
+                          </button>
+                        )}
                         {canCancel(appointment) && onCancel && (
-                          <div className="relative" ref={menuRef}>
-                            <button
-                              onClick={() =>
-                                setActiveMenu(
-                                  activeMenu === appointment.id
-                                    ? null
-                                    : appointment.id
-                                )
-                              }
-                              disabled={isLoading}
-                              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors disabled:cursor-not-allowed"
-                            >
-                              <MoreVertical className="w-4 h-4 text-gray-600" />
-                            </button>
-                            {activeMenu === appointment.id && (
-                              <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
-                                <button
-                                  onClick={() => {
-                                    onCancel(appointment.id);
-                                    setActiveMenu(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                >
-                                  Cancel Booking
-                                </button>
-                              </div>
-                            )}
-                          </div>
+                          <button
+                            onClick={() => onCancel(appointment.id)}
+                            disabled={isLoading}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          >
+                            {isLoading ? "Processing..." : "Cancel"}
+                          </button>
                         )}
                       </div>
                     </td>

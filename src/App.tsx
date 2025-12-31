@@ -114,7 +114,7 @@ const App: React.FC = () => {
             <Route path="/change-password" element={<ChangePassword />} />
 
             {/* KYC ROUTES */}
-            <Route path="/kyc-verification" element={<KYCVerification />} />
+            <Route path="/kyc" element={<KYCVerification />} />
             <Route path="/kyc-nurse" element={<NurseKycVerification />} />
             <Route path="/kyc-chw" element={<CHWVerification />} />
 

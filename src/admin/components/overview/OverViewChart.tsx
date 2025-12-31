@@ -9,26 +9,32 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { state: "Lagos", bookings: 450, nurses: 42, penetration: 75 },
-  { state: "Abuja", bookings: 320, nurses: 38, penetration: 72 },
-  { state: "Kano", bookings: 280, nurses: 31, penetration: 65 },
-  { state: "Rivers", bookings: 240, nurses: 28, penetration: 58 },
-  { state: "Oyo", bookings: 180, nurses: 35, penetration: 68 },
-  { state: "Delta", bookings: 150, nurses: 24, penetration: 52 },
-];
+interface State {
+  state: string;
+  bookings: number;
+  workers: number;
+  penetration: number;
+  breakdown: {
+    nurses: number;
+    chws: number;
+  };
+}
+
+interface OverviewChartProps {
+  states: State[];
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
       <div className="bg-gray-100 p-3 border border-gray-300 rounded-lg shadow-lg">
-        <h4 className="font-semibold text-gray-800 mb-2">{label}</h4>
+        <h4 className="font-semibold text-gray-800 mb-2">{data.state}</h4>
         <div className="text-sm">
           <div className="text-blue-600 mb-1">Bookings: {data.bookings}</div>
-          <div className="text-green-600 mb-1">Nurses: {data.nurses}</div>
+          <div className="text-green-600 mb-1">Workers: {data.workers}</div>
           <div className="text-purple-600">
-            Penetration: {data.penetration}%
+            Penetration: {data.penetration.toFixed(2)}%
           </div>
         </div>
       </div>
@@ -37,7 +43,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const OverviewChart: React.FC = () => {
+const OverviewChart: React.FC<OverviewChartProps> = ({ states }) => {
   return (
     <div className="w-full h-auto border-gray-100 shadow-sm rounded-lg">
       <div className="m-6">
@@ -52,7 +58,7 @@ const OverviewChart: React.FC = () => {
       <div className="w-full -ml-5 -mb-7" style={{ height: "370px" }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={data}
+            data={states}
             margin={{
               top: 20,
               right: 10,
@@ -71,7 +77,6 @@ const OverviewChart: React.FC = () => {
               tick={{ fontSize: 12, fill: "#666" }}
               axisLine={{ stroke: "#e0e0e0" }}
               tickLine={{ stroke: "#e0e0e0" }}
-              domain={[0, 600]}
             />
             <Tooltip content={<CustomTooltip />} />
             <Bar
@@ -81,16 +86,16 @@ const OverviewChart: React.FC = () => {
               name="Bookings"
             />
             <Bar
-              dataKey="nurses"
+              dataKey="workers"
               fill="#22c55e"
               radius={[2, 2, 0, 0]}
-              name="Bookings"
+              name="Workers"
             />
             <Bar
               dataKey="penetration"
               fill="#a855f7"
               radius={[2, 2, 0, 0]}
-              name="Bookings"
+              name="Penetration"
             />
           </BarChart>
         </ResponsiveContainer>
@@ -103,7 +108,7 @@ const OverviewChart: React.FC = () => {
 
         <div className="flex items-center">
           <div className="w-4 h-4 bg-green-500 mr-2 rounded-sm"></div>
-          <span className="text-sm text-gray-600">Nurses</span>
+          <span className="text-sm text-gray-600">Workers</span>
         </div>
 
         <div className="flex items-center">

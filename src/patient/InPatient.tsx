@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   ArrowLeft,
-  // Clock,
   MapPin,
   User,
   Calendar,
@@ -58,18 +57,20 @@ interface BookingData {
   start_date: string;
 }
 
+interface LocationData {
+  latitude: number;
+  longitude: number;
+}
+
 const InPatientCaregiverService: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationError, setLocationError] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [showFloatingSummary, setShowFloatingSummary] = useState(false);
-  const [coordinates, setCoordinates] = useState<{
-    latitude: number | null;
-    longitude: number | null;
-  }>({
-    latitude: null,
-    longitude: null,
-  });
+
+  // Updated location state to match first component
+  const [location, setLocation] = useState<LocationData | null>(null);
+
   const [selectedCHW, setSelectedCHW] = useState<string>("");
 
   const [bookingData, setBookingData] = useState<BookingData>({
@@ -86,15 +87,14 @@ const InPatientCaregiverService: React.FC = () => {
     start_date: "",
   });
 
-  // Load coordinates from localStorage on mount
+  // Load location on mount
   useEffect(() => {
-    getUserLocation();
+    getCurrentLocation();
   }, []);
 
   // Add scroll listener for floating summary
   useEffect(() => {
     const handleScroll = () => {
-      // Show floating summary when scrolled down more than 300px
       setShowFloatingSummary(window.scrollY > 300);
     };
 
@@ -102,37 +102,104 @@ const InPatientCaregiverService: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const getUserLocation = () => {
+  // Updated location function to match first component
+  const getCurrentLocation = async () => {
     setLoadingLocation(true);
     setLocationError("");
 
     if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser");
+      setLocationError("Geolocation is not supported by this browser");
       setLoadingLocation(false);
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-
-        setCoordinates({
-          latitude: lat,
-          longitude: lng,
+    try {
+      // Check current permission status
+      if ("permissions" in navigator) {
+        const permission = await navigator.permissions.query({
+          name: "geolocation",
         });
+        console.log("Current geolocation permission:", permission.state);
 
-        localStorage.setItem("latitude", lat.toString());
-        localStorage.setItem("longitude", lng.toString());
-
-        setLoadingLocation(false);
-      },
-      (error) => {
-        setLocationError("Unable to retrieve your location");
-        setLoadingLocation(false);
-        console.error("Error getting location:", error);
+        if (permission.state === "denied") {
+          console.log(
+            "Permission was denied, but attempting to request again..."
+          );
+        }
       }
-    );
+
+      // Always attempt to get location
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          console.log("Location obtained:", locationData);
+          setLocation(locationData);
+          setLoadingLocation(false);
+
+          // Store in localStorage for use in other components
+          localStorage.setItem("userLocation", JSON.stringify(locationData));
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          let errorMessage = "Unable to get your location";
+
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage =
+                "Location access denied. Please enable location access and try again.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Location information unavailable";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Location request timed out";
+              break;
+            default:
+              errorMessage = `Unknown error occurred (${error.code})`;
+          }
+
+          setLocationError(errorMessage);
+          setLoadingLocation(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 0,
+        }
+      );
+    } catch (error) {
+      console.error("Permission query error:", error);
+      // Fallback
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          };
+
+          console.log("Location obtained:", locationData);
+          setLocation(locationData);
+          setLoadingLocation(false);
+          localStorage.setItem("userLocation", JSON.stringify(locationData));
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLocationError(
+            "Unable to get your location. Please enable location access."
+          );
+          setLoadingLocation(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 15000,
+          maximumAge: 0,
+        }
+      );
+    }
   };
 
   const { data: inBedProceduresData, isLoading: proceduresLoading } =
@@ -145,14 +212,14 @@ const InPatientCaregiverService: React.FC = () => {
     isLoading: chwLoading,
     error: chwError,
   } = useQuery({
-    queryKey: ["nearByCHW", coordinates.latitude, coordinates.longitude],
+    queryKey: ["nearByCHW", location?.latitude, location?.longitude],
     queryFn: async () => {
       const response = await api.get(
-        `inpatient-caregiver/nearby-workers/?role=chw&latitude=${coordinates.latitude}&longitude=${coordinates.longitude}`
+        `inpatient-caregiver/nearby-workers/?role=chw&latitude=${location?.latitude}&longitude=${location?.longitude}`
       );
       return response.data;
     },
-    enabled: !!coordinates.latitude && !!coordinates.longitude,
+    enabled: !!location?.latitude && !!location?.longitude,
     staleTime: 20 * 60 * 1000,
     gcTime: 20 * 60 * 1000,
   });
@@ -212,8 +279,6 @@ const InPatientCaregiverService: React.FC = () => {
       const newDailyRate = updatedServices
         .filter((s) => s.included)
         .reduce((total, s) => total + parseFloat(s.price_per_day), 0);
-      // const newTotalCost =
-      //   newDailyRate * (parseInt(bookingData.numberOfDays) || 0);
 
       toast.info(
         `${isNowIncluded ? "Added" : "Removed"} ${
@@ -263,13 +328,19 @@ const InPatientCaregiverService: React.FC = () => {
       bookingData.numberOfDays &&
       bookingData.chw &&
       hasSelectedService &&
-      bookingData.start_date
+      bookingData.start_date &&
+      location // Added location check
     );
   };
 
   const handleSubmit = async () => {
     if (!isFormValid()) {
       toast.error("Please fill all required fields and select a CHW");
+      return;
+    }
+
+    if (!location) {
+      toast.error("Location not available. Please enable location access.");
       return;
     }
 
@@ -283,6 +354,7 @@ const InPatientCaregiverService: React.FC = () => {
           notes: "",
         }));
 
+      // Updated payload with location
       const payload = {
         patient_name: bookingData.patientName,
         hospital_name: bookingData.hospitalName,
@@ -295,6 +367,8 @@ const InPatientCaregiverService: React.FC = () => {
         items: items,
         chw: bookingData.chw,
         start_date: bookingData.start_date,
+        latitude: location.latitude, // Added latitude
+        longitude: location.longitude, // Added longitude
       };
 
       const response = await api.post("inpatient-caregiver/bookings/", payload);
@@ -354,7 +428,7 @@ const InPatientCaregiverService: React.FC = () => {
           </div>
 
           {/* Info Banner */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-5 text-white shadow-lg">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 sm:p-5 text-white shadow-lg mb-4">
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" />
               <div>
@@ -368,25 +442,43 @@ const InPatientCaregiverService: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Location Error */}
-        {locationError && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6 shadow-sm">
-            <div className="flex items-start gap-3">
+          {/* Location Status Banner */}
+          {loadingLocation && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3.5 flex items-center gap-3 text-sm">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-blue-700 font-medium">
+                Getting your location...
+              </span>
+            </div>
+          )}
+
+          {locationError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3.5 flex items-start gap-3 text-sm">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
-                <p className="text-red-800 font-medium">{locationError}</p>
+                <p className="text-red-700 font-semibold">Location Error</p>
+                <p className="text-red-600 mt-0.5">{locationError}</p>
                 <button
-                  onClick={getUserLocation}
-                  className="mt-2 text-sm text-red-600 hover:text-red-800 font-semibold underline"
+                  onClick={getCurrentLocation}
+                  className="mt-2 text-red-700 font-medium underline hover:text-red-800"
                 >
                   Try Again
                 </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {location && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3.5 flex items-center gap-3 text-sm">
+              <MapPin className="w-5 h-5 text-blue-600" />
+              <span className="text-blue-700 font-medium">
+                Location detected: {location.latitude.toFixed(4)},{" "}
+                {location.longitude.toFixed(4)}
+              </span>
+            </div>
+          )}
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Content */}

@@ -53,7 +53,7 @@ const VerifyEmail: React.FC = () => {
         localStorage.removeItem("email")
 
         setTimeout(() => {
-          navigate("/login");
+          navigate("/kyc");
         }, 2000);
 
       } catch (error: any) {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Sidebar from "./components/Sidebar";
 import { Outlet } from "react-router-dom";
-import { Bell, Home, Menu, X } from "lucide-react";
+import { Home, Menu, X } from "lucide-react";
 
 const AdminLayout: React.FC = () => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -38,12 +38,12 @@ const AdminLayout: React.FC = () => {
             </div>
 
             <div className="flex space-x-3">
-              <div className="rounded-lg border border-gray-200 w-10 h-10 flex items-center justify-center hover:bg-gray-100">
+              {/* <div className="rounded-lg border border-gray-200 w-10 h-10 flex items-center justify-center hover:bg-gray-100">
                 <Bell size={18} />
               </div>
               <div className="rounded-lg border border-gray-200 w-10 h-10 flex items-center justify-center hover:bg-gray-100">
                 <Bell size={18} />
-              </div>
+              </div> */}
               <div className="md:hidden flex rounded-lg border border-gray-200 w-10 h-10 items-center justify-center hover:bg-gray-100">
                 {isOpen ? (
                   <X onClick={toggleMenu} size={18} />

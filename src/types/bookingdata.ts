@@ -192,4 +192,5 @@ export interface BedsideBooking {
   status: "pending" | "assigned" | "active" | "completed";
   created_at: string;
   updated_at: string;
+  user_location?: string | null;
 }
