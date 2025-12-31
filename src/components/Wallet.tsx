@@ -18,6 +18,7 @@ const WalletBalance = () => {
   const [showFundModal, setShowFundModal] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { data: wallet, isLoading, error } = useWallet();
 
@@ -85,18 +86,40 @@ const WalletBalance = () => {
   };
 
   const handleFund = async () => {
+    if (!fundAmount || parseFloat(fundAmount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    setIsProcessing(true);
     try {
-      const response = await api.post("wallet/fund/", {
+      const response = await api.post("wallet/initiate-funding/", {
         amount: fundAmount,
       });
-      if (response.data) {
-        toast.success("Wallet has been funded successfully");
+
+      if (
+        response.data &&
+        response.data.payment_url &&
+        response.data.reference
+      ) {
+        // Store the reference in localStorage for verification later
+        localStorage.setItem("paymentReference", response.data.reference);
+
+        toast.info("Redirecting to payment gateway...");
+
+        // Redirect to payment URL
+        window.location.href = response.data.payment_url;
+      } else {
+        toast.error("Invalid payment response received");
+        setIsProcessing(false);
       }
-      setShowFundModal(false);
-      setFundAmount("");
-    } catch (error) {
-      console.log(error);
-      toast.error("An error occurred, please try again later");
+    } catch (error: any) {
+      console.error("Funding error:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "An error occurred, please try again later"
+      );
+      setIsProcessing(false);
     }
   };
 
@@ -180,7 +203,9 @@ const WalletBalance = () => {
                 <div className="w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500/20 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0">
                   <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-300" />
                 </div>
-                <p className="text-white/90 text-xs sm:text-sm font-medium truncate">Available</p>
+                <p className="text-white/90 text-xs sm:text-sm font-medium truncate">
+                  Available
+                </p>
               </div>
               <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">
                 {showBalance ? formatCurrency(availableBalance) : "₦ •••••"}
@@ -192,7 +217,9 @@ const WalletBalance = () => {
                 <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500/20 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0">
                   <Lock className="w-3 h-3 sm:w-4 sm:h-4 text-amber-300" />
                 </div>
-                <p className="text-white/90 text-xs sm:text-sm font-medium truncate">Locked</p>
+                <p className="text-white/90 text-xs sm:text-sm font-medium truncate">
+                  Locked
+                </p>
               </div>
               <p className="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">
                 {showBalance ? formatCurrency(lockedBalance) : "₦ •••••"}
@@ -219,7 +246,8 @@ const WalletBalance = () => {
               </div>
               <button
                 onClick={() => setShowFundModal(false)}
-                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg sm:rounded-xl transition-colors flex-shrink-0"
+                disabled={isProcessing}
+                className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg sm:rounded-xl transition-colors flex-shrink-0 disabled:opacity-50"
               >
                 <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
               </button>
@@ -238,7 +266,8 @@ const WalletBalance = () => {
                   value={fundAmount}
                   onChange={(e) => setFundAmount(e.target.value)}
                   placeholder="0.00"
-                  className={`w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3.5 border-2 border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 ${themeConfig.focusRing} focus:border-transparent text-lg sm:text-xl font-bold text-gray-900 transition-all`}
+                  disabled={isProcessing}
+                  className={`w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3.5 border-2 border-gray-300 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 ${themeConfig.focusRing} focus:border-transparent text-lg sm:text-xl font-bold text-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
                 />
               </div>
             </div>
@@ -252,9 +281,10 @@ const WalletBalance = () => {
                   <button
                     key={amount}
                     onClick={() => setFundAmount(amount.toString())}
+                    disabled={isProcessing}
                     className={`px-2 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-lg sm:rounded-xl ${
                       themeConfig.hoverBg
-                    } hover:border-transparent transition-all text-xs sm:text-sm font-semibold text-gray-700 hover:shadow-md ${
+                    } hover:border-transparent transition-all text-xs sm:text-sm font-semibold text-gray-700 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed ${
                       fundAmount === amount.toString()
                         ? `border-transparent ${themeConfig.lightBg} ${themeConfig.textColor}`
                         : ""
@@ -268,11 +298,22 @@ const WalletBalance = () => {
 
             <button
               onClick={handleFund}
-              disabled={!fundAmount || parseFloat(fundAmount) <= 0}
+              disabled={
+                !fundAmount || parseFloat(fundAmount) <= 0 || isProcessing
+              }
               className={`w-full py-2.5 sm:py-3.5 bg-blue-600 text-white rounded-lg sm:rounded-xl font-bold hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none text-sm sm:text-base`}
             >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-              Continue to Payment
+              {isProcessing ? (
+                <>
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Continue to Payment
+                </>
+              )}
             </button>
           </div>
         </div>

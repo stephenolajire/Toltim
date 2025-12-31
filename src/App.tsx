@@ -76,6 +76,7 @@ import OverviewDashboard from "./chw/pages/Overview";
 import NurseOverviewDashboard from "./nurse/pages/Overview";
 import WalletComponent from "./patient/Wallet";
 import SpecialtiesManagement from "./admin/pages/Specialization";
+import VerifyPayment from "./patient/VerifyPayment";
 
 const queryClient = new QueryClient();
 
@@ -147,7 +148,10 @@ const App: React.FC = () => {
               <Route path="nurse/procedures" element={<Procedures />} />
               <Route path="chw/procedures" element={<CareProcedures />} />
               <Route path="in-bed/procedures" element={<InBedProcedures />} />
-              <Route path="specialization" element={<SpecialtiesManagement />} />
+              <Route
+                path="specialization"
+                element={<SpecialtiesManagement />}
+              />
 
               {/* Verifications Management */}
               <Route path="verifications" element={<AdminVerificationLayout />}>
@@ -181,6 +185,7 @@ const App: React.FC = () => {
                 element={<InPatientCaregiverService />}
               />
               <Route path="caregiver" element={<CaregiverBooking />} />
+              <Route path="verify-payment" element={<VerifyPayment />} />
 
               {/* Patient History */}
               <Route path="history" element={<PatientAppointmentHistory />} />
