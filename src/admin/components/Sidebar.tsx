@@ -9,11 +9,13 @@ import {
   Wallet,
 } from "lucide-react";
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 interface SidebarProp {
   close: () => void;
 }
+
+const navigate = useNavigate();
 
 const adminLinks = [
   {
@@ -67,6 +69,12 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
 
   const toggleProcedures = () => {
     setIsProceduresOpen(!isProceduresOpen);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    navigate("/login");
   };
 
   return (
@@ -145,7 +153,7 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
       </div>
 
       <div>
-        <button className="text-red-500">Logout</button>
+        <button onClick={handleLogout} className="text-red-500">Logout</button>
       </div>
     </div>
   );
