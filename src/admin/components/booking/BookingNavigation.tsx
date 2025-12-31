@@ -7,7 +7,7 @@ const BookingNavigation: React.FC = () => {
     {
       id: 1,
       href: "/admin/bookings",
-      name: "Nursing Procedures",
+      name: "Procedures",
       icon: <Stethoscope size={18} />,
     },
     {
