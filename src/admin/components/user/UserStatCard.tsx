@@ -1,4 +1,4 @@
-import {Eye, UserCheck, Users, UserX } from "lucide-react";
+import {UserCheck, Users, UserX } from "lucide-react";
 import React from "react";
 
 interface UserStatProps {
@@ -67,12 +67,12 @@ const PatientStatCard: React.FC<UserStatProps> = ({text1, text2, text3, num1, nu
         </div>
         <div className="flex items-center justify-between">
           <p className="text-gray-500"> </p>
-          <button className="text-black border border-gray-200 p-2 rounded-lg flex space-x-2 items-center">
+          {/* <button className="text-black border border-gray-200 p-2 rounded-lg flex space-x-2 items-center">
             <span>
               <Eye size={16} />
             </span>
             <span> View More</span>
-          </button>
+          </button> */}
         </div>
       </div>
 

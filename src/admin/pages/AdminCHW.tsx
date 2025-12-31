@@ -10,6 +10,7 @@ import type { Patient } from "../../types/patient";
 const AdminPatients: React.FC = () => {
   const role = "chw";
   const { data, isLoading, error } = useUser(role);
+  console.log("chw data", data);
 
   if (isLoading) {
     return <Loading />;
@@ -25,7 +26,9 @@ const AdminPatients: React.FC = () => {
   }
 
   const nurseData = data.results || [];
-  const totalCount = data.results.length || 0;
+  const totalCount = data.verification_summary.chw.verified + data.verification_summary.chw.unverified || 0;
+  const verifiedCount = data.verification_summary.chw.verified || 0;
+  const unverifiedCount = data.verification_summary.chw.unverified || 0;
 
   return (
     <div>
@@ -41,9 +44,9 @@ const AdminPatients: React.FC = () => {
         text1="Total CHW"
         num1={totalCount}
         text2="Verified CHW"
-        num2={800}
+        num2={verifiedCount}
         text3="Unverified CHW"
-        num3={447}
+        num3={unverifiedCount}
       />
 
       <div className="py-10">
