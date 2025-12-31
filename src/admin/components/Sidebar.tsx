@@ -15,8 +15,6 @@ interface SidebarProp {
   close: () => void;
 }
 
-const navigate = useNavigate();
-
 const adminLinks = [
   {
     name: "overview",
@@ -66,6 +64,7 @@ const procedureSubLinks = [
 
 const Sidebar: React.FC<SidebarProp> = ({ close }) => {
   const [isProceduresOpen, setIsProceduresOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleProcedures = () => {
     setIsProceduresOpen(!isProceduresOpen);
