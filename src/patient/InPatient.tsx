@@ -402,7 +402,7 @@ const InPatientCaregiverService: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+    <div className="min-h-screen pb-25 md:pb-0 bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -993,60 +993,6 @@ const InPatientCaregiverService: React.FC = () => {
                 )}
               </div>
             </div>
-
-            {/* What to Expect */}
-            {/* <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-md p-4 sm:p-6 text-white">
-              <div className="flex items-center gap-2 mb-5 pb-3 border-b-2 border-blue-500">
-                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-white" />
-                </div>
-                <h3 className="text-lg font-bold">What to Expect</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
-                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm sm:text-base font-medium">
-                    Caregiver matching within 2 hours
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
-                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm sm:text-base font-medium">
-                    Verified Community Health Workers
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
-                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm sm:text-base font-medium">
-                    24/7 support available
-                  </p>
-                </div>
-
-                <div className="flex items-start gap-3 bg-white/10 p-3 rounded-lg backdrop-blur-sm">
-                  <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm sm:text-base font-medium">
-                    Daily progress updates
-                  </p>
-                </div>
-              </div>
-            </div> */}
-
-            {/* Help Section */}
-            {/* <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 sm:p-5">
-              <div className="flex items-start gap-3">
-                <Heart className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="font-bold text-gray-900 mb-2">Need Help?</h4>
-                  <p className="text-sm text-gray-700">
-                    Our support team is available 24/7 to assist you with your
-                    booking.
-                  </p>
-                </div>
-              </div>
-            </div> */}
           </div>
         </div>
       </div>

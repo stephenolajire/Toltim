@@ -268,12 +268,14 @@ const EditUserProfile: React.FC = () => {
   const updateProfileMutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: () => {
+      console.log("Profile update successful");
       queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
       navigate("/patient/profile");
       toast.success("Profile updated successfully");
     },
     onError: (error: any) => {
       console.error("Profile update failed:", error);
+      console.error("Error response:", error.response);
       toast.error(error.response?.data?.message || "Failed to update profile");
     },
   });
@@ -305,15 +307,20 @@ const EditUserProfile: React.FC = () => {
       emergency_contacts: [
         {
           name: "",
-          relationship: "spouse",
+          relationship: "spouse" as const,
           phone_number: "",
         },
       ],
     },
     enableReinitialize: true,
     validationSchema,
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
+      console.log("Form submitted with values:", values);
+      console.log("Original profileData:", profileData);
+
       const changedFields = getChangedFields(profileData!, values);
+      console.log("Changed fields:", changedFields);
+      console.log("Profile image:", profileImage);
 
       if (changedFields.phone_number) {
         changedFields.phone_number = formatPhoneNumber(
@@ -331,13 +338,12 @@ const EditUserProfile: React.FC = () => {
       }
 
       const formData = new FormData();
+      let hasChanges = false;
 
       // Add profile picture if changed
       if (profileImage) {
         formData.append("profile_picture", profileImage);
-      } else if (profileData?.profile_picture) {
-        // Send the old profile picture URL if not changed
-        formData.append("profile_picture_url", profileData.profile_picture);
+        hasChanges = true;
       }
 
       // Add other changed fields
@@ -349,13 +355,29 @@ const EditUserProfile: React.FC = () => {
           key === "emergency_contacts"
         ) {
           formData.append(key, JSON.stringify(value));
+          hasChanges = true;
         } else if (value !== undefined && value !== null) {
           formData.append(key, String(value));
+          hasChanges = true;
         }
       });
 
+      // Check if there are any changes
+      if (!hasChanges) {
+        toast.info("No changes detected");
+        console.log("No changes to submit");
+        return;
+      }
+
+      console.log("Submitting form with changes:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0], pair[1]);
+      }
+
       updateProfileMutation.mutate(formData);
     },
+    validateOnChange: true,
+    validateOnBlur: true,
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -373,13 +395,98 @@ const EditUserProfile: React.FC = () => {
         return;
       }
 
-      setProfileImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProfileImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      // Compress and resize image
+      compressImage(file)
+        .then((compressedFile) => {
+          setProfileImage(compressedFile);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            setProfileImagePreview(reader.result as string);
+          };
+          reader.readAsDataURL(compressedFile);
+        })
+        .catch((error) => {
+          console.error("Image compression error:", error);
+          toast.error("Failed to process image");
+        });
     }
+  };
+
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"));
+            return;
+          }
+
+          // Set max dimensions
+          const MAX_WIDTH = 800;
+          const MAX_HEIGHT = 800;
+
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate new dimensions while maintaining aspect ratio
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height * MAX_WIDTH) / width);
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width * MAX_HEIGHT) / height);
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw image on canvas
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert canvas to blob with compression
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Canvas to Blob conversion failed"));
+                return;
+              }
+
+              // Create new file from blob
+              const compressedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+
+              console.log(`Original size: ${(file.size / 1024).toFixed(2)} KB`);
+              console.log(
+                `Compressed size: ${(compressedFile.size / 1024).toFixed(2)} KB`
+              );
+
+              resolve(compressedFile);
+            },
+            "image/jpeg",
+            0.85 // Quality: 0.85 = 85% quality
+          );
+        };
+        img.onerror = () => {
+          reject(new Error("Failed to load image"));
+        };
+      };
+      reader.onerror = () => {
+        reject(new Error("Failed to read file"));
+      };
+    });
   };
 
   const handleRemoveImage = () => {
@@ -459,6 +566,50 @@ const EditUserProfile: React.FC = () => {
               <button
                 type="submit"
                 form="profile-form"
+                onClick={(e) => {
+                  // Trigger validation on all fields
+                  formik.setTouched({
+                    first_name: true,
+                    last_name: true,
+                    phone_number: true,
+                    date_of_birth: true,
+                    gender: true,
+                    blood_type: true,
+                    address: true,
+                    city: true,
+                    state: true,
+                    zipcode: true,
+                    medical_information: {
+                      known_allergies: true,
+                      current_medications: true,
+                      medical_history: true,
+                      primary_physician: true,
+                    },
+                    preferences: {
+                      preferred_language: true,
+                      communication_preference: true,
+                      appointment_reminders: true,
+                    },
+                    emergency_contacts: [
+                      {
+                        name: true,
+                        relationship: true,
+                        phone_number: true,
+                      },
+                    ],
+                  });
+
+                  // Check for validation errors
+                  formik.validateForm().then((errors) => {
+                    if (Object.keys(errors).length > 0) {
+                      e.preventDefault();
+                      toast.error(
+                        "Please fill in all required fields correctly"
+                      );
+                      console.log("Validation errors:", errors);
+                    }
+                  });
+                }}
                 disabled={
                   updateProfileMutation.isPending || formik.isSubmitting
                 }
@@ -938,13 +1089,13 @@ const EditUserProfile: React.FC = () => {
                       id="emergency_contacts[0].relationship"
                       name="emergency_contacts[0].relationship"
                       value={
-                        formik.values.emergency_contacts[0]?.relationship ||
-                        "spouse"
+                        formik.values.emergency_contacts[0]?.relationship || ""
                       }
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
+                      <option value="">Select Relationship</option>
                       {relationshipOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
@@ -1088,6 +1239,7 @@ const EditUserProfile: React.FC = () => {
                           : "border-gray-300"
                       }`}
                     >
+                      <option value="">Select Language</option>
                       {languageOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
@@ -1116,6 +1268,7 @@ const EditUserProfile: React.FC = () => {
                           : "border-gray-300"
                       }`}
                     >
+                      <option value="">Select Method</option>
                       {communicationOptions.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}

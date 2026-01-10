@@ -7,7 +7,7 @@ import Loading from "../../components/common/Loading";
 import Error from "../../components/Error";
 import type { Patient } from "../../types/patient";
 
-const AdminPatients: React.FC = () => {
+const AdminCHW: React.FC = () => {
   const role = "chw";
   const { data, isLoading, error } = useUser(role);
   console.log("chw data", data);
@@ -60,4 +60,4 @@ const AdminPatients: React.FC = () => {
   );
 };
 
-export default AdminPatients;
+export default AdminCHW;

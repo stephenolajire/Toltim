@@ -9,11 +9,13 @@ import {
   Wallet,
 } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../constant/api";
 import { toast } from "react-toastify";
 import { useWallet } from "../constant/GlobalContext";
 
 const WalletBalance = () => {
+  const navigate = useNavigate();
   const [showBalance, setShowBalance] = useState(true);
   const [showFundModal, setShowFundModal] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
@@ -102,12 +104,8 @@ const WalletBalance = () => {
         response.data.payment_url &&
         response.data.reference
       ) {
-        // Store the reference in localStorage for verification later
         localStorage.setItem("paymentReference", response.data.reference);
-
         toast.info("Redirecting to payment gateway...");
-
-        // Redirect to payment URL
         window.location.href = response.data.payment_url;
       } else {
         toast.error("Invalid payment response received");
@@ -121,6 +119,10 @@ const WalletBalance = () => {
       );
       setIsProcessing(false);
     }
+  };
+
+  const handleWithdraw = () => {
+    navigate("/worker/withdrawal");
   };
 
   if (isLoading) {
@@ -188,7 +190,10 @@ const WalletBalance = () => {
               Fund Wallet
             </button>
           ) : (
-            <button className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-white text-gray-900 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold hover:bg-white/90 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
+            <button
+              onClick={handleWithdraw}
+              className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 bg-white text-gray-900 text-xs sm:text-sm rounded-lg sm:rounded-xl font-semibold hover:bg-white/90 transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+            >
               <Minus className="w-4 h-4" />
               Withdraw
             </button>

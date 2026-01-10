@@ -507,7 +507,7 @@ const CaregiverBooking: React.FC = () => {
           )}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid pb-30 md:pb-0 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Step 1: Select Caregiver Type */}
