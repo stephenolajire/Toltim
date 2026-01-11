@@ -27,8 +27,6 @@ const ActivePatients: React.FC = () => {
     error: any;
   };
 
-  console.log("ActiveBooking:", activeBooking)
-
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isViewAssessmentOpen, setIsViewAssessmentOpen] = useState(false);
@@ -38,10 +36,27 @@ const ActivePatients: React.FC = () => {
   const [dateError, setDateError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Check if current date matches any service date
-  const checkServiceDate = (serviceDates: string[]): boolean => {
-    const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
-    return serviceDates.includes(today);
+  // Helper: Check if today is a scheduled service date
+  const canRecordSession = (booking: BookingData): boolean => {
+    const today = new Date().toISOString().split("T")[0];
+    return booking.service_dates.includes(today);
+  };
+
+  // Helper: Get session statistics
+  const getSessionStats = (booking: BookingData) => {
+    const totalSessions = booking.service_dates.length;
+    const today = new Date().toISOString().split("T")[0];
+
+    // Count completed sessions (dates before today)
+    const completedSessions = booking.service_dates.filter(
+      (date) => date < today
+    ).length;
+
+    return {
+      completed: completedSessions,
+      total: totalSessions,
+      percentage: (completedSessions / totalSessions) * 100,
+    };
   };
 
   // Handle OTP submission from PatientConfirmation modal
@@ -50,59 +65,20 @@ const ActivePatients: React.FC = () => {
 
     setIsSubmitting(true);
 
-    // Check if today is a service date
-    if (!checkServiceDate(selectedBooking.service_dates)) {
-      setDateError("Today is not a scheduled service date for this patient.");
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
       const id = selectedBooking.id;
-      const service_date = localStorage.getItem("service_date");
+      const today = new Date().toISOString().split("T")[0];
 
-      // More robust service_date validation
-      if (!service_date) {
-        setDateError("Service date not found. Please try again.");
+      // Validate that today is a scheduled service date
+      if (!selectedBooking.service_dates.includes(today)) {
+        setDateError("Today is not a scheduled service date for this patient.");
         setIsSubmitting(false);
+        toast.error("Today is not a scheduled service date.");
         return;
       }
 
-      // Validate service_date format (should be YYYY-MM-DD)
-      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(service_date)) {
-        setDateError("Invalid service date format. Please try again.");
-        localStorage.removeItem("service_date"); // Clean up invalid data
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (service_date > new Date().toISOString().split("T")[0]) {
-        setDateError("Service date cannot be in the future.");
-        localStorage.removeItem("service_date");
-        setIsSubmitting(false);
-        toast.error("Service date cannot be in the future.");
-        return;
-      }
-
-      if (service_date < new Date().toISOString().split("T")[0]) {
-        setDateError("Service date has already passed.");
-        localStorage.removeItem("service_date");
-        setIsSubmitting(false);
-        toast.error("Service date has already passed.");
-        return;
-      }
-
-      // Double-check that the service_date is actually in the booking's service_dates
-      if (!selectedBooking.service_dates.includes(service_date)) {
-        setDateError("Service date mismatch. Please try again.");
-        localStorage.removeItem("service_date"); // Clean up invalid data
-        setIsSubmitting(false);
-        return;
-      }
-
-      console.log("Service Date:", service_date);
-      console.log("Booking ID:", id);
+      console.log("Verifying OTP for Booking:", id);
+      console.log("Service Date:", today);
       console.log("OTP:", otp);
 
       const response = await api.post(
@@ -117,24 +93,25 @@ const ActivePatients: React.FC = () => {
         setIsConfirmationOpen(false);
         setDateError("");
         setIsSubmitting(false);
-        setIsOpen(true); // Open the Record Treatment Modal after successful verification
+        setIsOpen(true); // Open the Record Treatment Modal
         toast.success("OTP verified successfully!");
-        localStorage.removeItem("service_date"); // Clean up after successful verification
       }
     } catch (error: any) {
       console.error("Error verifying OTP:", error);
 
-      // More specific error handling
+      // Handle specific error responses
       if (error.response?.status === 400) {
-        setDateError(
-          "Invalid OTP. Please check and try again."
-        );
+        setDateError("Invalid OTP. Please check and try again.");
+        toast.error("Invalid OTP. Please check and try again.");
       } else if (error.response?.data?.errors) {
         setDateError(`Verification failed: ${error.response.data.errors}`);
+        toast.error(error.response.data.errors);
       } else if (error.response?.data?.message) {
         setDateError(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
         setDateError("Failed to verify OTP. Please try again.");
+        toast.error("Failed to verify OTP. Please try again.");
       }
 
       setIsSubmitting(false);
@@ -149,6 +126,41 @@ const ActivePatients: React.FC = () => {
     setIsSubmitting(false);
   };
 
+  // Open confirmation modal
+  const openConfirmation = (booking: BookingData) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    // Pre-validate that today is a service date
+    if (!booking.service_dates.includes(today)) {
+      toast.error(
+        `Today is not a scheduled service date. Next session: ${getNextSession(
+          booking.service_dates,
+          booking.time_of_day
+        )}`
+      );
+      console.log("Validation Failed:");
+      console.log("Today:", today);
+      console.log("Service dates:", booking.service_dates);
+      return;
+    }
+
+    setSelectedBooking(booking);
+    setIsConfirmationOpen(true);
+    setDateError("");
+  };
+
+  // Open view assessment modal
+  const openViewAssessment = (booking: BookingData) => {
+    setSelectedBooking(booking);
+    setIsViewAssessmentOpen(true);
+  };
+
+  // Toggle record modal
+  const openModal = () => {
+    setIsOpen(!isOpen);
+  };
+
+  // View Assessment Modal Component
   const ViewAssessmentModal = () => {
     if (!selectedBooking) return null;
 
@@ -256,7 +268,10 @@ const ActivePatients: React.FC = () => {
                     Total Amount
                   </p>
                   <p className="text-sm text-gray-600">
-                    ₦{parseFloat(selectedBooking.total_amount_display).toLocaleString()}
+                    ₦
+                    {parseFloat(
+                      selectedBooking.total_amount_display.toString()
+                    ).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -376,17 +391,6 @@ const ActivePatients: React.FC = () => {
     );
   };
 
-  // const getProgressPercentage = (serviceDates: string[]): number => {
-  //   const today = new Date().toISOString().split("T")[0];
-  //   const completedDates = serviceDates.filter((date) => date < today);
-  //   return (completedDates.length / serviceDates.length) * 100;
-  // };
-
-  // const getCompletedSessions = (serviceDates: string[]): number => {
-  //   const today = new Date().toISOString().split("T")[0];
-  //   return serviceDates.filter((date) => date < today).length;
-  // };
-
   const getNextSession = (
     serviceDates: string[],
     timeOfDay: string
@@ -406,23 +410,8 @@ const ActivePatients: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: string): string => {
-    return `₦${parseFloat(amount).toLocaleString()}`;
-  };
-
-  const openConfirmation = (booking: BookingData) => {
-    setSelectedBooking(booking);
-    setIsConfirmationOpen(true);
-    setDateError(""); // Clear any previous errors
-  };
-
-  const openViewAssessment = (booking: BookingData) => {
-    setSelectedBooking(booking);
-    setIsViewAssessmentOpen(true);
-  };
-
-  const openModal = () => {
-    setIsOpen(!isOpen);
+  const formatCurrency = (amount: string | number): string => {
+    return `₦${parseFloat(amount.toString()).toLocaleString()}`;
   };
 
   if (isLoading) {
@@ -447,73 +436,97 @@ const ActivePatients: React.FC = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg overflow-x-auto hide-scrollbar">
+    <div className="bg-white rounded-lg overflow-x-auto hide-scrollbar p-6">
       <h2 className="text-xl font-semibold text-gray-900 mb-6">
         Active Patients
       </h2>
 
       <div className="space-y-6">
-        {activeBooking.results.map((booking) => (
-          <div
-            key={booking.id}
-            className="border border-gray-100 rounded-lg p-5 bg-gray-50"
-          >
-            {/* Header */}
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  {booking.patient_detail.first_name}{" "}
-                  {booking.patient_detail.last_name}
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {booking.procedure_item.procedure.title} -{" "}
-                  {booking.procedure_item.num_days} days
-                </p>
-                <p className="text-sm text-gray-600 mt-1">
-                  Next Session:{" "}
-                  {getNextSession(booking.service_dates, booking.time_of_day)}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold text-green-600">
-                  {formatCurrency(booking.total_amount_display)}
+        {activeBooking.results.map((booking) => {
+          const sessionStats = getSessionStats(booking);
+          const canRecord = canRecordSession(booking);
+
+          return (
+            <div
+              key={booking.id}
+              className="border border-gray-100 rounded-lg p-5 bg-gray-50"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {booking.patient_detail.first_name}{" "}
+                    {booking.patient_detail.last_name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {booking.procedure_item.procedure.title} -{" "}
+                    {booking.procedure_item.num_days} days
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Next Session:{" "}
+                    {getNextSession(booking.service_dates, booking.time_of_day)}
+                  </p>
                 </div>
-                <div className="text-sm text-gray-500">total amount</div>
+                <div className="text-right">
+                  <div className="text-lg font-semibold text-green-600">
+                    {formatCurrency(booking.total_amount_display)}
+                  </div>
+                  <div className="text-sm text-gray-500">total amount</div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Progress</span>
+                  <span>
+                    {sessionStats.completed}/{sessionStats.total} sessions
+                  </span>
+                </div>
+                <progress
+                  className="w-full h-2 [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:bg-green-500 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:bg-green-500 [&::-moz-progress-bar]:rounded-full"
+                  value={sessionStats.completed}
+                  max={sessionStats.total}
+                ></progress>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 flex-wrap">
+                <button
+                  disabled={!canRecord}
+                  onClick={() => {
+                    const today = new Date().toISOString().split("T")[0];
+                    console.log("=== Record Session Debug ===");
+                    console.log("Today:", today);
+                    console.log("Service dates:", booking.service_dates);
+                    console.log("Can record?", canRecord);
+                    console.log("Booking ID:", booking.id);
+                    openConfirmation(booking);
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    !canRecord
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-50"
+                      : "bg-green-600 hover:bg-green-700 text-white"
+                  }`}
+                >
+                  <Play className="w-4 h-4" />
+                  {canRecord ? "Record Session" : "No Session Today"}
+                </button>
+                <button
+                  onClick={() => openViewAssessment(booking)}
+                  className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  View Assessment
+                </button>
+                <button className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                  <Download className="w-4 h-4" />
+                  Test Results
+                </button>
               </div>
             </div>
-
-            <progress
-              className="w-full h-2 [&::-webkit-progress-bar]:bg-gray-200 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-value]:bg-green-500 [&::-webkit-progress-value]:rounded-full [&::-moz-progress-bar]:bg-green-500 [&::-moz-progress-bar]:rounded-full"
-              value={booking.draft_sessions}
-              max={booking.total_sessions}
-            ></progress>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3 flex-wrap">
-              <button
-                disabled={booking.draft_sessions === booking.total_sessions}
-                onClick={() => openConfirmation(booking)}
-                className={`flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  booking.draft_sessions === booking.total_sessions && "opacity-50"
-                }`}
-              >
-                <Play className="w-4 h-4" />
-                Record Session
-              </button>
-              <button
-                onClick={() => openViewAssessment(booking)}
-                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                <Eye className="w-4 h-4" />
-                View Assessment
-              </button>
-              <button className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                <Download className="w-4 h-4" />
-                Test Results
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Render modals */}
         {isConfirmationOpen && (
