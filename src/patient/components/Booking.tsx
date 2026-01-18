@@ -1,5 +1,5 @@
 // Booking.tsx
-import React from "react";
+import React, { useState } from "react";
 import { ArrowLeft, User, Users, Calendar } from "lucide-react";
 import type {
   Service,
@@ -18,7 +18,7 @@ interface BookingProps {
   onBookingForSelfChange: (forSelf: boolean) => void;
   onBookingDetailsChange: (details: BookingDetails) => void;
   onBack: () => void;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void>;
 }
 
 const Booking: React.FC<BookingProps> = ({
@@ -33,6 +33,8 @@ const Booking: React.FC<BookingProps> = ({
   onBack,
   onSubmit,
 }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const calculateTotalCost = () => {
     let multiplier = 1;
     if (scheduleConfig.frequency === "daily") {
@@ -95,6 +97,18 @@ const Booking: React.FC<BookingProps> = ({
       bookingDetails.address &&
       bookingDetails.relationship
     );
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting || !isFormValid()) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit();
+    } finally {
+      // Only reset if component is still mounted
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -211,6 +225,7 @@ const Booking: React.FC<BookingProps> = ({
                 rows={3}
                 placeholder="Enter the full address where the service should be provided..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-none"
+                disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Include street address, city, state, and any specific directions
@@ -220,11 +235,10 @@ const Booking: React.FC<BookingProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Test Result 
+                Test Result
               </label>
               <input
                 type="file"
-                required
                 accept="image/*"
                 onChange={(e) =>
                   updateBookingDetails({
@@ -232,6 +246,7 @@ const Booking: React.FC<BookingProps> = ({
                   })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Upload an image of test results if available (JPG, PNG, etc.)
@@ -259,6 +274,7 @@ const Booking: React.FC<BookingProps> = ({
                   updateBookingDetails({ firstName: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -273,6 +289,7 @@ const Booking: React.FC<BookingProps> = ({
                   updateBookingDetails({ lastName: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -287,6 +304,7 @@ const Booking: React.FC<BookingProps> = ({
                   updateBookingDetails({ email: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -301,6 +319,7 @@ const Booking: React.FC<BookingProps> = ({
                   updateBookingDetails({ phone: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                disabled={isSubmitting}
               />
             </div>
 
@@ -316,6 +335,7 @@ const Booking: React.FC<BookingProps> = ({
                 rows={3}
                 placeholder="Enter the full address where the service should be provided..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base resize-none"
+                disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Include street address, city, state, and any specific directions
@@ -329,7 +349,6 @@ const Booking: React.FC<BookingProps> = ({
               </label>
               <input
                 type="file"
-                required
                 accept="image/*"
                 onChange={(e) =>
                   updateBookingDetails({
@@ -337,6 +356,7 @@ const Booking: React.FC<BookingProps> = ({
                   })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isSubmitting}
               />
               <p className="text-xs text-gray-500 mt-1">
                 Upload an image of test results if available (JPG, PNG, etc.)
@@ -353,6 +373,7 @@ const Booking: React.FC<BookingProps> = ({
                   updateBookingDetails({ relationship: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isSubmitting}
               >
                 <option value="">Select relationship</option>
                 <option value="parent">Parent</option>
@@ -373,17 +394,18 @@ const Booking: React.FC<BookingProps> = ({
         <div className="flex justify-between">
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800"
+            disabled={isSubmitting}
+            className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
           </button>
           <button
-            onClick={onSubmit}
-            disabled={loading || !isFormValid()}
+            onClick={handleSubmit}
+            disabled={isSubmitting || loading || !isFormValid()}
             className="px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
           >
-            {loading ? (
+            {isSubmitting || loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span>Booking...</span>

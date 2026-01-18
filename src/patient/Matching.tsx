@@ -23,7 +23,7 @@ interface SelectedServiceFromStorage {
 }
 
 interface HealthPractitionersMatchingProps {
-  services?: Service[]; // Make it optional since we'll get from localStorage
+  services?: Service[];
 }
 
 const HealthPractitionersMatching: React.FC<
@@ -34,7 +34,6 @@ const HealthPractitionersMatching: React.FC<
     "practitioners" | "schedule-config" | "scheduling" | "booking"
   >("practitioners");
 
-  // State for selected services from localStorage
   const [selectedServices, setSelectedServices] = useState<
     SelectedServiceFromStorage[]
   >([]);
@@ -60,7 +59,7 @@ const HealthPractitionersMatching: React.FC<
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [locationError, setLocationError] = useState("");
-  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(true); // Changed to true initially
   const [coordinates, setCoordinates] = useState<{
     latitude: number | null;
     longitude: number | null;
@@ -68,9 +67,6 @@ const HealthPractitionersMatching: React.FC<
     latitude: null,
     longitude: null,
   });
-
-  console.log(locationError);
-  console.log(loadingLocation);
 
   const getUserLocation = () => {
     setLoadingLocation(true);
@@ -94,7 +90,7 @@ const HealthPractitionersMatching: React.FC<
         setLocationError("Unable to retrieve your location");
         setLoadingLocation(false);
         console.error("Error getting location:", error);
-      }
+      },
     );
   };
 
@@ -128,13 +124,12 @@ const HealthPractitionersMatching: React.FC<
     const storedDays = localStorage.getItem("procedureDays");
     const totalDays = storedDays ? parseInt(storedDays) : 1;
     setScheduleConfig((prev) => ({ ...prev, totalDays }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // 👈 run only once
+  }, []);
 
   // Fetch nearby health practitioners using TanStack Query
   const {
     data: practitioners = [],
-    isLoading: loading,
+    isLoading: practitionersLoading,
     error,
   } = useQuery({
     queryKey: [
@@ -144,7 +139,7 @@ const HealthPractitionersMatching: React.FC<
     ],
     queryFn: async () => {
       const res = await api.get(
-        `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}&specialization=${selectedService?.specialization}`
+        `/services/nurses/nearby/?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}&specialization=${selectedService?.specialization}`,
       );
       console.log("NURSES NEARBY RESPONSE:", res.data);
 
@@ -160,18 +155,18 @@ const HealthPractitionersMatching: React.FC<
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
+  // Combined loading state
+  const isLoading = loadingLocation || practitionersLoading;
+
   const filteredPractitioners = practitioners.filter((practitioner: any) => {
     const name = practitioner?.full_name;
     const searchLower = searchTerm.toLowerCase();
 
-    // Handle specialization as an array of objects with {id, name}
     const specializationMatch = Array.isArray(practitioner?.specialization)
       ? practitioner.specialization.some((spec: any) => {
-          // Check if spec is an object with a name property
           if (typeof spec === "object" && spec !== null && spec.name) {
             return spec.name.toLowerCase().includes(searchLower);
           }
-          // Fallback for string format (if API changes)
           if (typeof spec === "string") {
             return spec.toLowerCase().includes(searchLower);
           }
@@ -179,18 +174,17 @@ const HealthPractitionersMatching: React.FC<
         })
       : false;
 
-    // Search in services array (these are strings)
     const servicesMatch = Array.isArray(practitioner?.services)
       ? practitioner.services.some((service: string) =>
-          service.toLowerCase().includes(searchLower)
+          service.toLowerCase().includes(searchLower),
         )
       : false;
 
     return name.includes(searchLower) || specializationMatch || servicesMatch;
   });
+
   const handlePractitionerSelect = (practitioner: Practitioner) => {
     setSelectedPractitioner(practitioner);
-    console.log(selectedPractitioner);
     setCurrentStep("schedule-config");
   };
 
@@ -212,10 +206,8 @@ const HealthPractitionersMatching: React.FC<
 
   const handleBookingSubmit = async () => {
     try {
-      // Create FormData instance
       const formData = new FormData();
 
-      // Add all fields to FormData
       formData.append("nurse", selectedPractitioner?.user_id || "");
       formData.append("nurse_id", selectedPractitioner?.user_id || "");
       formData.append("scheduling_option", scheduleConfig.frequency);
@@ -226,64 +218,13 @@ const HealthPractitionersMatching: React.FC<
       formData.append("longitude", String(coordinates.longitude!));
       formData.append("service_address", bookingDetails.address || "");
 
-      // Add test_result file if it exists
       if (bookingDetails.testResult) {
         formData.append("test_result", bookingDetails.testResult);
       }
 
-      // Add procedure_item as JSON string
-      formData.append(
-        "procedure_id",
-        String(selectedService?.id)
-      );
-      formData.append(
-        "num_days",
-        String(scheduleConfig.totalDays)
-      );
+      formData.append("procedure_id", String(selectedService?.id));
+      formData.append("num_days", String(scheduleConfig.totalDays));
 
-      // Handle selected_days based on frequency
-      // if (scheduleConfig.frequency === "daily") {
-      //   // For daily frequency, calculate consecutive days starting from start_date
-      //   const allDays = [
-      //     "Sunday",
-      //     "Monday",
-      //     "Tuesday",
-      //     "Wednesday",
-      //     "Thursday",
-      //     "Friday",
-      //     "Saturday",
-      //   ];
-      //   const startDate = new Date(scheduleConfig.startDate);
-      //   const startDayIndex = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
-
-      //   const daysToSend = [];
-      //   for (let i = 0; i < scheduleConfig.totalDays; i++) {
-      //     const dayIndex = (startDayIndex + i) % 7; // Wrap around the week
-      //     daysToSend.push(allDays[dayIndex]);
-      //   }
-
-      //   // Remove duplicates and append to formData
-      //   const uniqueDays = [...new Set(daysToSend)];
-      //   uniqueDays.forEach((day) => {
-      //     formData.append("selected_days", day);
-      //   });
-      // } else if (scheduleConfig.selectedDays.length > 0) {
-      //   // For specific days, capitalize and send each day
-      //   const capitalizedDays = scheduleConfig.selectedDays.map(
-      //     (day) => day.charAt(0).toUpperCase() + day.slice(1)
-      //   );
-      //   capitalizedDays.forEach((day) => {
-      //     formData.append("selected_days", day);
-      //   });
-      // } else {
-      //   // Fallback: send at least one day (e.g., the start date's day)
-      //   const startDateDay = new Date(
-      //     scheduleConfig.startDate
-      //   ).toLocaleDateString("en-US", { weekday: "long" });
-      //   formData.append("selected_days", startDateDay);
-      // }
-
-      // Add patient_detail
       if (bookingForSelf) {
         formData.append("patient_detail", "null");
       } else {
@@ -296,17 +237,15 @@ const HealthPractitionersMatching: React.FC<
             phone_number: bookingDetails.phone,
             address: bookingDetails.address,
             relationship_to_patient: bookingDetails.relationship,
-          })
+          }),
         );
       }
 
       console.log("Booking Data to be sent (FormData):");
-      // Log FormData contents for debugging
       for (let pair of formData.entries()) {
         console.log(pair[0], pair[1]);
       }
 
-      // Make the API call
       const response = await api.post(
         "services/nurse-procedure-bookings/",
         formData,
@@ -314,7 +253,7 @@ const HealthPractitionersMatching: React.FC<
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       console.log("Booking response:", response.data);
@@ -324,14 +263,12 @@ const HealthPractitionersMatching: React.FC<
     } catch (error: any) {
       console.error("Booking failed:", error);
 
-      // Handle specific error responses
       if (error.response) {
         const errorMessage =
           error.response.data?.message ||
           error.response.data?.detail ||
           "Booking failed";
 
-        // Log detailed errors if available
         if (error.response.data?.errors) {
           console.error("Validation errors:", error.response.data.errors);
         }
@@ -339,7 +276,7 @@ const HealthPractitionersMatching: React.FC<
         toast.error(`Booking failed: ${errorMessage}`);
       } else if (error.request) {
         toast.error(
-          "Network error. Please check your connection and try again."
+          "Network error. Please check your connection and try again.",
         );
       } else {
         toast.error("Booking failed. Please try again.");
@@ -389,7 +326,6 @@ const HealthPractitionersMatching: React.FC<
     }
   };
 
-  // Show loading state if selectedService is not loaded yet
   if (!selectedService) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -423,7 +359,6 @@ const HealthPractitionersMatching: React.FC<
                   Treatment plan: {scheduleConfig.totalDays} days
                 </p>
               )}
-              {/* Show selected services summary */}
               {selectedServices.length > 0 && (
                 <div className="text-sm text-gray-500 mt-2">
                   Selected services:{" "}
@@ -451,15 +386,27 @@ const HealthPractitionersMatching: React.FC<
         <div className="space-y-6">
           {currentStep === "practitioners" && (
             <div className="space-y-4 md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {loading ? (
-                <div className="text-center py-12">
+              {isLoading ? (
+                <div className="col-span-full text-center py-12">
                   <div className="w-6 h-6 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                   <p className="text-gray-600">
-                    Loading healthcare providers...
+                    {loadingLocation
+                      ? "Getting your location..."
+                      : "Loading healthcare providers..."}
                   </p>
                 </div>
+              ) : locationError ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-red-500 text-lg mb-2">{locationError}</p>
+                  <button
+                    onClick={getUserLocation}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Retry Location Access
+                  </button>
+                </div>
               ) : error ? (
-                <div className="text-center py-12">
+                <div className="col-span-full text-center py-12">
                   <p className="text-red-500 text-lg mb-2">
                     Failed to load healthcare providers
                   </p>
@@ -467,7 +414,7 @@ const HealthPractitionersMatching: React.FC<
                     Please check your internet connection and try again
                   </p>
                 </div>
-              ) : filteredPractitioners.length > 0 ? (
+              ) : filteredPractitioners?.length > 0 ? (
                 filteredPractitioners.map((practitioner: any) => (
                   <PractitionerCard
                     key={practitioner.id}
@@ -476,7 +423,7 @@ const HealthPractitionersMatching: React.FC<
                   />
                 ))
               ) : practitioners.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="col-span-full text-center py-12">
                   <p className="text-gray-500 text-lg">
                     No healthcare providers found in your area
                   </p>
@@ -485,7 +432,7 @@ const HealthPractitionersMatching: React.FC<
                   </p>
                 </div>
               ) : (
-                <div className="text-center py-12">
+                <div className="col-span-full text-center py-12">
                   <p className="text-gray-500 text-lg">
                     No healthcare providers match your search
                   </p>
@@ -526,7 +473,7 @@ const HealthPractitionersMatching: React.FC<
               scheduleConfig={scheduleConfig}
               bookingForSelf={bookingForSelf}
               bookingDetails={bookingDetails}
-              loading={loading}
+              loading={isLoading}
               onBookingForSelfChange={setBookingForSelf}
               onBookingDetailsChange={setBookingDetails}
               onBack={() => setBookingForSelf(null)}

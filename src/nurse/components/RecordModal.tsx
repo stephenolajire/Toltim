@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 interface RecordTreatmentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  bookingId: string;
+  bookingId: number;
   bookingData: BookingData;
 }
 
