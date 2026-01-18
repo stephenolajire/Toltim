@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Eye, Mail, Phone, User, FileText } from "lucide-react";
+// import { useNavigate } from "react-router-dom";
+import { Eye, Mail, Phone, User} from "lucide-react";
 import type { Patient } from "../../../types/patient";
 import WorkerDetailModal from "./WorkerDetailModal";
 import PatientDetailModal from "./PatientDetailModal";
@@ -11,7 +11,7 @@ interface PatientsTableProps {
 }
 
 const PatientsTable: React.FC<PatientsTableProps> = ({ patients, role }) => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{
     id: string;
@@ -28,9 +28,9 @@ const PatientsTable: React.FC<PatientsTableProps> = ({ patients, role }) => {
     setSelectedUser(null);
   };
 
-  const handleCheckReport = (patient: Patient) => {
-    navigate(`/admin/reports/${patient.id}`);
-  };
+  // const handleCheckReport = (patient: Patient) => {
+  //   navigate(`/admin/reports/${patient.id}`);
+  // };
 
   // Determine which modal to show based on role
   const isWorker = role === "nurse" || role === "chw";
@@ -131,7 +131,7 @@ const PatientsTable: React.FC<PatientsTableProps> = ({ patients, role }) => {
                             <Eye className="w-4 h-4" />
                             <span className="text-sm font-medium">View</span>
                           </button>
-                          {isPatient && (
+                          {/* {isPatient && (
                             <button
                               onClick={() => handleCheckReport(patient)}
                               className="inline-flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors duration-200"
@@ -141,7 +141,7 @@ const PatientsTable: React.FC<PatientsTableProps> = ({ patients, role }) => {
                                 Report
                               </span>
                             </button>
-                          )}
+                          )} */}
                         </div>
                       </td>
                     </tr>
@@ -188,7 +188,7 @@ const PatientsTable: React.FC<PatientsTableProps> = ({ patients, role }) => {
                       <Eye className="w-4 h-4" />
                       <span className="text-sm font-medium">View</span>
                     </button>
-                    {isPatient && (
+                    {/* {isPatient && (
                       <button
                         onClick={() => handleCheckReport(patient)}
                         className="flex items-center space-x-1 text-gray-600 hover:text-purple-600 transition-colors duration-200"
@@ -196,7 +196,7 @@ const PatientsTable: React.FC<PatientsTableProps> = ({ patients, role }) => {
                         <FileText className="w-4 h-4" />
                         <span className="text-sm font-medium">Report</span>
                       </button>
-                    )}
+                    )} */}
                   </div>
                 </div>
 

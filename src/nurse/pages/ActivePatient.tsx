@@ -31,7 +31,7 @@ const ActivePatients: React.FC = () => {
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [isViewAssessmentOpen, setIsViewAssessmentOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<BookingData | null>(
-    null
+    null,
   );
   const [dateError, setDateError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,7 +49,7 @@ const ActivePatients: React.FC = () => {
 
     // Count completed sessions (dates before today)
     const completedSessions = booking.service_dates.filter(
-      (date) => date < today
+      (date) => date < today,
     ).length;
 
     return {
@@ -58,6 +58,8 @@ const ActivePatients: React.FC = () => {
       percentage: (completedSessions / totalSessions) * 100,
     };
   };
+
+  console.log(activeBooking);
 
   // Handle OTP submission from PatientConfirmation modal
   const handleOTPSubmit = async (otp: string) => {
@@ -85,7 +87,7 @@ const ActivePatients: React.FC = () => {
         `services/nurse-procedure-bookings/${id}/verify-code/`,
         {
           verification_code: otp,
-        }
+        },
       );
 
       if (response.status === 200) {
@@ -135,8 +137,8 @@ const ActivePatients: React.FC = () => {
       toast.error(
         `Today is not a scheduled service date. Next session: ${getNextSession(
           booking.service_dates,
-          booking.time_of_day
-        )}`
+          booking.time_of_day,
+        )}`,
       );
       console.log("Validation Failed:");
       console.log("Today:", today);
@@ -153,6 +155,16 @@ const ActivePatients: React.FC = () => {
   const openViewAssessment = (booking: BookingData) => {
     setSelectedBooking(booking);
     setIsViewAssessmentOpen(true);
+  };
+
+  // Open test results - directly open image in new tab
+  const openTestResults = (booking: BookingData) => {
+    if (booking.test_result) {
+      const imageUrl = `${api.defaults.baseURL}${booking.test_result}`;
+      window.open(imageUrl, "_blank");
+    } else {
+      toast.info("No test results available for this patient.");
+    }
   };
 
   // Toggle record modal
@@ -270,7 +282,7 @@ const ActivePatients: React.FC = () => {
                   <p className="text-sm text-gray-600">
                     ₦
                     {parseFloat(
-                      selectedBooking.total_amount_display.toString()
+                      selectedBooking.total_amount_display.toString(),
                     ).toLocaleString()}
                   </p>
                 </div>
@@ -347,7 +359,7 @@ const ActivePatients: React.FC = () => {
                         <span className="w-2 h-2 bg-purple-400 rounded-full mr-2"></span>
                         {inclusion.item}
                       </li>
-                    )
+                    ),
                   )}
                 </ul>
               </div>
@@ -370,7 +382,7 @@ const ActivePatients: React.FC = () => {
                         <span className="w-2 h-2 bg-red-400 rounded-full mr-2"></span>
                         {requirement.item}
                       </li>
-                    )
+                    ),
                   )}
                 </ul>
               </div>
@@ -393,7 +405,7 @@ const ActivePatients: React.FC = () => {
 
   const getNextSession = (
     serviceDates: string[],
-    timeOfDay: string
+    timeOfDay: string,
   ): string => {
     const today = new Date().toISOString().split("T")[0];
     const nextDate = serviceDates.find((date) => date >= today);
@@ -519,7 +531,10 @@ const ActivePatients: React.FC = () => {
                   <Eye className="w-4 h-4" />
                   View Assessment
                 </button>
-                <button className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                <button
+                  onClick={() => openTestResults(booking)}
+                  className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   <Download className="w-4 h-4" />
                   Test Results
                 </button>

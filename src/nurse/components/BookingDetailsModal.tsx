@@ -11,7 +11,10 @@ import {
   CheckCircle,
   AlertCircle,
   Download,
+  Image,
 } from "lucide-react";
+import api from "../../constant/api";
+import { getLocationAddress } from "../../utils/locationHelper";
 
 interface Booking {
   id: number;
@@ -59,6 +62,7 @@ interface Booking {
   service_location: string;
   created_at: string;
   updated_at: string;
+  test_result: string;
 }
 
 interface PatientAssessmentModalProps {
@@ -171,6 +175,13 @@ const BookingDetailsModal: React.FC<PatientAssessmentModalProps> = ({
     return "Patient name not provided";
   };
 
+  const handleViewTestResult = () => {
+    if (booking.test_result) {
+      const imageUrl = `${api.defaults.baseURL}${booking.test_result}`;
+      window.open(imageUrl, "_blank");
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -178,12 +189,12 @@ const BookingDetailsModal: React.FC<PatientAssessmentModalProps> = ({
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
         {/* Background overlay */}
         <div
-        //   className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+          //   className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
           onClick={onClose}
         ></div>
 
         {/* Modal panel */}
-        <div className="inline-block w-full max-w-4xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
+        <div className="inline-block w-full max-w-4xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6 relative z-10">
           {/* Header */}
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
@@ -296,7 +307,7 @@ const BookingDetailsModal: React.FC<PatientAssessmentModalProps> = ({
                           {booking.service_address}
                         </p>
                         <p className="text-sm text-gray-600">
-                          {booking.service_location}
+                          {getLocationAddress(booking.service_location)}
                         </p>
                       </div>
                     </div>
@@ -401,7 +412,7 @@ const BookingDetailsModal: React.FC<PatientAssessmentModalProps> = ({
                             >
                               {inclusion.item}
                             </li>
-                          )
+                          ),
                         )}
                       </ul>
                     </div>
@@ -423,7 +434,7 @@ const BookingDetailsModal: React.FC<PatientAssessmentModalProps> = ({
                             >
                               {requirement.item}
                             </li>
-                          )
+                          ),
                         )}
                       </ul>
                     </div>
@@ -499,6 +510,16 @@ const BookingDetailsModal: React.FC<PatientAssessmentModalProps> = ({
                 <Download className="w-4 h-4" />
                 Download Details
               </button>
+
+              {booking.test_result && (
+                <button
+                  onClick={handleViewTestResult}
+                  className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Image className="w-4 h-4" />
+                  View Test Result
+                </button>
+              )}
             </div>
 
             <div className="flex gap-3">

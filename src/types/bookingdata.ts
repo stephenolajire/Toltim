@@ -52,6 +52,7 @@ export interface BookingData {
   total_amount_display: string;
   updated_at: string;
   user: string;
+  test_result:string;
 }
 
 export interface Booking {
@@ -101,6 +102,7 @@ export interface Booking {
   created_at: string;
   updated_at: string;
   total_amount_display: string;
+  test_result:string;
 }
 
 
