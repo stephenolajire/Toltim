@@ -561,7 +561,7 @@ const ActivePatients: React.FC = () => {
           <RecordTreatmentModal
             isOpen={isOpen}
             onClose={openModal}
-            bookingId={selectedBooking.id}
+            bookingId={selectedBooking.booking_id}
             bookingData={selectedBooking}
           />
         )}

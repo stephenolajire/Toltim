@@ -135,19 +135,48 @@ export interface CaregiverBookingData {
   updated_at: string;
 }
 
-export interface NearbyWorker {
+export interface Specialization {
+  id: number;
+  name: string;
+}
+
+export interface Review {
   id: string;
+  nurse_profile: number;
+  nurse_name: string;
+  reviewer_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+}
+
+export interface NearbyWorker {
+  id: number;
+  user_id: string;
   full_name: string;
-  user: string;
   profile_picture?: string | null;
+  specialization: Specialization[];
+  biography: string;
+  services: string[];
+  availability: string[];
+  languages: string[];
+  verified_nurse: boolean;
+  price_range: string | null;
+  completed_cases: number;
+  rating: number;
+  active: boolean;
+  review_count: number;
+  latest_reviews: Review[];
+  distance_away: number;
+  latitude: number;
+  longitude: number;
+  // Optional legacy fields for backward compatibility
+  user?: string;
   distance?: number;
   location?: string;
-  specialization?: string;
-  biography?: string;
   years_of_experience?: number;
   available?: boolean;
   verified_chw?: boolean;
-  user_id?: string;
 }
 
 export interface Appointment {

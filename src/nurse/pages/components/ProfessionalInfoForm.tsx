@@ -1,7 +1,7 @@
 import React from "react";
 import { useFormik } from "formik";
 import { type PersonalInfo } from "../../../types/kyctypes";
-import {personalInfoSchema} from "../KYCValidation"
+import { personalInfoSchema } from "../KYCValidation";
 import { useSpecialization } from "../../../constant/GlobalContext";
 
 interface ProfessionalInfoFormProps {
@@ -23,8 +23,12 @@ export const ProfessionalInfoForm: React.FC<ProfessionalInfoFormProps> = ({
     },
   });
 
-  const {data:specialityData, isLoading:isSpecialityLoading} =  useSpecialization();
+  const { data: specialityData, isLoading: isSpecialityLoading } =
+    useSpecialization();
   console.log("Speciality Data:", specialityData);
+
+  // Safely get specializations array
+  const specializations = specialityData?.results || [];
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm border">
@@ -117,9 +121,13 @@ export const ProfessionalInfoForm: React.FC<ProfessionalInfoFormProps> = ({
                   }`}
                 >
                   <option value="">
-                    {isSpecialityLoading ? "Loading..." : "Select specialty"}
+                    {isSpecialityLoading
+                      ? "Loading..."
+                      : specializations.length === 0
+                        ? "No specializations available"
+                        : "Select specialty"}
                   </option>
-                  {specialityData.results?.map((specialty:any) => (
+                  {specializations.map((specialty: any) => (
                     <option key={specialty.id} value={specialty.id}>
                       {specialty.name}
                     </option>

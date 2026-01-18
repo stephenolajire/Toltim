@@ -16,8 +16,6 @@ import { toast } from "react-toastify";
 import CaregiverBookingTable from "../components/booking/CaregiverBookingTable";
 import CaregiverBookingModal from "../../nurse/components/CaregiverBookingModal";
 
-// Rest of your component code stays the same
-
 const CaregiverBooking: React.FC = () => {
   const {
     data: CareBookings,
@@ -41,7 +39,7 @@ const CaregiverBooking: React.FC = () => {
 
   // Extract longitude and latitude from care_location string
   const parseLocation = (
-    locationString: string
+    locationString: string,
   ): { longitude: number; latitude: number } | null => {
     try {
       // Format: "SRID=4326;POINT (longitude latitude)"
@@ -63,11 +61,16 @@ const CaregiverBooking: React.FC = () => {
     if (!CareBookings?.results) return [];
 
     return CareBookings.results.filter((booking: CaregiverBookingInfo) => {
+      const bookingId = String(booking.id || "");
+      const patientName = String(booking.patient_name || "");
+      const bookingCode = String(booking.booking_code || "");
+      const status = String(booking.status || "");
+
       const matchesSearch =
-        booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.booking_code.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = !statusFilter || booking.status === statusFilter;
+        bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bookingCode.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = !statusFilter || status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
@@ -102,12 +105,9 @@ const CaregiverBooking: React.FC = () => {
     }
   };
 
-  const handleAssignNurse = async (
-    appointmentId: string
-    // patientId: string
-  ) => {
+  const handleAssignNurse = async (appointmentId: string) => {
     const booking = CareBookings?.results.find(
-      (b: CaregiverBookingData) => b.id === appointmentId
+      (b: CaregiverBookingData) => String(b.id) === String(appointmentId),
     );
 
     if (booking) {
@@ -125,7 +125,7 @@ const CaregiverBooking: React.FC = () => {
   const handleConfirmAssignment = async () => {
     if (!selectedWorker || !selectedBooking) return;
 
-    setActionLoading(selectedBooking.id);
+    setActionLoading(String(selectedBooking.id));
     try {
       await api.post(`caregiver-booking/${selectedBooking.id}/assign/`, {
         caregiver_id: selectedWorker.user || selectedWorker.user_id,
@@ -150,7 +150,7 @@ const CaregiverBooking: React.FC = () => {
 
   const handleApprove = async (appointmentId: string, patientId: string) => {
     try {
-      setActionLoading(appointmentId);
+      setActionLoading(String(appointmentId));
       await api.post(`/caregiver-booking/${appointmentId}/approve/`, {
         user_id: patientId,
       });
@@ -159,9 +159,11 @@ const CaregiverBooking: React.FC = () => {
         await refetch();
       }
 
+      toast.success(`Appointment approved successfully`);
       console.log(`Appointment ${appointmentId} approved`);
     } catch (err) {
       console.error("Error approving appointment:", err);
+      toast.error("Failed to approve appointment");
     } finally {
       setActionLoading(null);
     }
@@ -169,7 +171,7 @@ const CaregiverBooking: React.FC = () => {
 
   const handleCancel = async (appointmentId: string) => {
     try {
-      setActionLoading(appointmentId);
+      setActionLoading(String(appointmentId));
       await api.post(`/api/caregiver-booking/${appointmentId}/cancel/`, {
         id: appointmentId,
       });
@@ -178,9 +180,11 @@ const CaregiverBooking: React.FC = () => {
         await refetch();
       }
 
+      toast.success(`Appointment cancelled successfully`);
       console.log(`Appointment ${appointmentId} cancelled`);
     } catch (err) {
       console.error("Error cancelling appointment:", err);
+      toast.error("Failed to cancel appointment");
     } finally {
       setActionLoading(null);
     }
@@ -188,7 +192,7 @@ const CaregiverBooking: React.FC = () => {
 
   const handleViewDetails = (appointmentId: string) => {
     const booking = CareBookings?.results.find(
-      (b: CaregiverBookingData) => b.id === appointmentId
+      (b: CaregiverBookingData) => String(b.id) === String(appointmentId),
     );
     if (booking) {
       setSelectedBooking(booking);
@@ -249,7 +253,6 @@ const CaregiverBooking: React.FC = () => {
               onViewDetails={handleViewDetails}
               onApprove={handleApprove}
               onCancel={handleCancel}
-              // actionLoading={actionLoading}
             />
           )}
         </div>
@@ -277,7 +280,8 @@ const CaregiverBooking: React.FC = () => {
                   Assign Worker
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  Select a nearby worker for {selectedBooking?.patient_name}
+                  Select a nearby worker for{" "}
+                  {selectedBooking?.patient_name || "this patient"}
                 </p>
               </div>
               <button
@@ -315,7 +319,7 @@ const CaregiverBooking: React.FC = () => {
                           {worker.profile_picture ? (
                             <img
                               src={worker.profile_picture}
-                              alt={worker.full_name}
+                              alt={worker.full_name || "Worker"}
                               className="w-12 h-12 rounded-full object-cover"
                             />
                           ) : (
@@ -325,48 +329,103 @@ const CaregiverBooking: React.FC = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="font-semibold text-gray-900">
-                              {worker.full_name}
+                              {worker.full_name || "Unknown Worker"}
                             </h3>
-                            {worker.verified_chw && (
+                            {worker.verified_nurse && (
                               <CheckCircle className="w-4 h-4 text-green-500" />
                             )}
                           </div>
-                          {worker.specialization && (
-                            <p className="text-sm text-blue-600 mb-1">
-                              {worker.specialization}
-                            </p>
-                          )}
+
+                          {/* Specializations */}
+                          {worker.specialization &&
+                            worker.specialization.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {worker.specialization
+                                  .slice(0, 3)
+                                  .map((spec: any) => (
+                                    <span
+                                      key={spec.id}
+                                      className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full"
+                                    >
+                                      {spec.name}
+                                    </span>
+                                  ))}
+                                {worker.specialization.length > 3 && (
+                                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">
+                                    +{worker.specialization.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
                           {worker.biography && (
                             <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                               {worker.biography}
                             </p>
                           )}
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
-                            {worker.years_of_experience !== undefined && (
+
+                          <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
+                            {worker.completed_cases !== undefined && (
                               <span className="flex items-center gap-1">
                                 <span className="font-medium">
-                                  {worker.years_of_experience} yrs
+                                  {worker.completed_cases}
                                 </span>
-                                experience
+                                cases
                               </span>
                             )}
-                            {worker.available !== undefined && (
+                            {worker.rating !== undefined &&
+                              worker.rating > 0 && (
+                                <span className="flex items-center gap-1">
+                                  ⭐{" "}
+                                  <span className="font-medium">
+                                    {worker.rating}
+                                  </span>
+                                  {worker.review_count > 0 && (
+                                    <span className="text-gray-400">
+                                      ({worker.review_count})
+                                    </span>
+                                  )}
+                                </span>
+                              )}
+                            {worker.active !== undefined && (
                               <span
                                 className={`px-2 py-0.5 rounded-full ${
-                                  worker.available
+                                  worker.active
                                     ? "bg-green-100 text-green-700"
                                     : "bg-gray-100 text-gray-600"
                                 }`}
                               >
-                                {worker.available ? "Available" : "Unavailable"}
+                                {worker.active ? "Available" : "Unavailable"}
                               </span>
                             )}
                           </div>
+
+                          {/* Services */}
+                          {worker.services && worker.services.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-1">
+                              {worker.services
+                                .slice(0, 2)
+                                .map((service: string, idx: number) => (
+                                  <span
+                                    key={idx}
+                                    className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full"
+                                  >
+                                    {service}
+                                  </span>
+                                ))}
+                              {worker.services.length > 2 && (
+                                <span className="text-xs text-gray-500">
+                                  +{worker.services.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        {worker.distance !== undefined && (
+
+                        {worker.distance_away !== undefined && (
                           <div className="flex items-center gap-1 text-sm text-gray-500">
                             <MapPin className="w-4 h-4" />
-                            <span>{worker.distance.toFixed(1)} km</span>
+                            <span>{worker.distance_away.toFixed(1)} km</span>
                           </div>
                         )}
                       </div>
@@ -393,15 +452,25 @@ const CaregiverBooking: React.FC = () => {
               <p className="text-gray-600">
                 Are you sure you want to assign{" "}
                 <span className="font-semibold">
-                  {selectedWorker.full_name}
+                  {selectedWorker.full_name || "this worker"}
                 </span>{" "}
                 to this booking?
               </p>
-              {selectedWorker.specialization && (
-                <p className="text-sm text-blue-600 mt-2">
-                  {selectedWorker.specialization}
-                </p>
-              )}
+              {selectedWorker.specialization &&
+                selectedWorker.specialization.length > 0 && (
+                  <div className="flex flex-wrap gap-1 justify-center mt-2">
+                    {selectedWorker.specialization
+                      .slice(0, 3)
+                      .map((spec: any) => (
+                        <span
+                          key={spec.id}
+                          className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full"
+                        >
+                          {spec.name}
+                        </span>
+                      ))}
+                  </div>
+                )}
             </div>
 
             <div className="flex gap-3">
@@ -416,10 +485,10 @@ const CaregiverBooking: React.FC = () => {
               </button>
               <button
                 onClick={handleConfirmAssignment}
-                disabled={actionLoading === selectedBooking?.id}
+                disabled={actionLoading === String(selectedBooking?.id)}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
-                {actionLoading === selectedBooking?.id ? (
+                {actionLoading === String(selectedBooking?.id) ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Assigning...
