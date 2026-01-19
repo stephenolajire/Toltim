@@ -4,7 +4,7 @@ import {
   Calendar,
   MapPin,
   Clock,
-  FileText,
+  // FileText,
   User,
   CreditCard,
   Hash,
@@ -12,10 +12,12 @@ import {
   XCircle,
   Timer,
   AlertCircle,
+  Stethoscope,
+  CalendarCheck,
 } from "lucide-react";
 
 interface AppointmentDetailsModalProps {
-  appointment: any; // Replace 'any' with the actual appointment type
+  appointment: any;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -38,28 +40,32 @@ const AppointmentDetailsModal = ({
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "accepted":
+      case "started":
         return {
-          bg: "bg-green-50",
-          text: "text-green-700",
-          border: "border-green-200",
+          bg: "bg-emerald-50",
+          text: "text-emerald-700",
+          border: "border-emerald-200",
           icon: <CheckCircle className="w-5 h-5" />,
-          badgeBg: "bg-green-100",
+          badgeBg: "bg-emerald-100",
+          gradient: "from-emerald-500 to-emerald-600",
         };
       case "pending":
         return {
-          bg: "bg-yellow-50",
-          text: "text-yellow-700",
-          border: "border-yellow-200",
+          bg: "bg-amber-50",
+          text: "text-amber-700",
+          border: "border-amber-200",
           icon: <Timer className="w-5 h-5" />,
-          badgeBg: "bg-yellow-100",
+          badgeBg: "bg-amber-100",
+          gradient: "from-amber-500 to-amber-600",
         };
       case "rejected":
         return {
-          bg: "bg-red-50",
-          text: "text-red-700",
-          border: "border-red-200",
+          bg: "bg-rose-50",
+          text: "text-rose-700",
+          border: "border-rose-200",
           icon: <XCircle className="w-5 h-5" />,
-          badgeBg: "bg-red-100",
+          badgeBg: "bg-rose-100",
+          gradient: "from-rose-500 to-rose-600",
         };
       case "completed":
         return {
@@ -68,311 +74,346 @@ const AppointmentDetailsModal = ({
           border: "border-blue-200",
           icon: <CheckCircle className="w-5 h-5" />,
           badgeBg: "bg-blue-100",
+          gradient: "from-blue-500 to-blue-600",
         };
       default:
         return {
-          bg: "bg-gray-50",
-          text: "text-gray-700",
-          border: "border-gray-200",
+          bg: "bg-slate-50",
+          text: "text-slate-700",
+          border: "border-slate-200",
           icon: <AlertCircle className="w-5 h-5" />,
-          badgeBg: "bg-gray-100",
+          badgeBg: "bg-slate-100",
+          gradient: "from-slate-500 to-slate-600",
         };
     }
   };
 
-  // Calculate days
-  const appointmentDate: Date = new Date(appointment.date);
-  const bookingDate: Date = new Date(appointment.bookingDate);
-  const today: Date = new Date();
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
+  };
 
-  const totalDays: number = Math.ceil(
-    (appointmentDate.getTime() - bookingDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  const daysLeft: number = Math.ceil(
-    (appointmentDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const calculateDaysLeft = () => {
+    if (!appointment.metadata?.start_date) return null;
 
-  const statusConfig = getStatusConfig(appointment.status);
+    const startDate = new Date(appointment.metadata.start_date);
+    const today = new Date();
+    const diffTime = startDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  };
+
+  const daysLeft = calculateDaysLeft();
+  const statusConfig = getStatusConfig(
+    appointment.status || appointment.metadata?.status,
+  );
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-white bg-opacity-60 backdrop-blur-sm z-40 transition-opacity"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 lg:ml-[250px]">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-          {/* Header */}
-          <div className="relative bg-gradient-to-r from-blue-600 to-blue-700 p-5 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-white">
-                    Appointment Details
-                  </h2>
-                  <p className="text-sm text-blue-100">
-                    Complete information about your appointment
-                  </p>
-                </div>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          {/* Header - Gradient with better styling */}
+          <div
+            className={`relative bg-gradient-to-br ${statusConfig.gradient} p-6`}
+          >
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-xl transition-all duration-200"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/30 shadow-lg">
+                <Stethoscope className="w-8 h-8 text-white" />
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white mb-1">
+                  Appointment Details
+                </h2>
+                <p className="text-white/90 text-sm">
+                  {appointment.consultationType || "Healthcare Service"}
+                </p>
+              </div>
+              <div
+                className={`px-4 py-2 rounded-xl ${statusConfig.badgeBg} ${statusConfig.text} font-semibold text-sm flex items-center gap-2 border-2 ${statusConfig.border}`}
               >
-                <X className="w-5 h-5 text-white" />
-              </button>
+                {statusConfig.icon}
+                {(
+                  appointment.status ||
+                  appointment.metadata?.status ||
+                  "pending"
+                )
+                  .charAt(0)
+                  .toUpperCase() +
+                  (
+                    appointment.status ||
+                    appointment.metadata?.status ||
+                    "pending"
+                  ).slice(1)}
+              </div>
             </div>
           </div>
 
-          {/* Content - Scrollable */}
-          <div className="flex-1 overflow-y-auto p-5 sm:p-6">
-            {/* Doctor Info Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-100 rounded-xl p-5 mb-6 shadow-sm">
-              <div className="flex items-start justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg flex-shrink-0">
-                    {appointment.doctor.avatar}
-                  </div>
-                  <div>
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">
-                      {appointment.doctor.name}
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600 font-medium mb-2">
-                      {appointment.doctor.specialty}
-                    </p>
-                    {appointment.doctor.rating && (
-                      <div className="flex items-center gap-1 bg-yellow-50 px-3 py-1 rounded-full border border-yellow-200">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-bold text-gray-700">
-                          {appointment.doctor.rating}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+          {/* Content - Scrollable with better spacing */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Healthcare Provider Card */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+              <div className="flex items-center gap-4">
                 <div
-                  className={`px-4 py-2 rounded-xl text-sm font-bold border-2 ${statusConfig.border} ${statusConfig.text} ${statusConfig.badgeBg} flex items-center gap-2 shadow-sm`}
+                  className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} flex items-center justify-center text-white font-bold text-3xl shadow-lg`}
                 >
-                  {statusConfig.icon}
-                  <span>
-                    {appointment.status.charAt(0).toUpperCase() +
-                      appointment.status.slice(1)}
-                  </span>
+                  {appointment.doctor?.avatar ||
+                    appointment.performedBy?.charAt(0) ||
+                    "N"}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {appointment.doctor?.name ||
+                      appointment.performedBy ||
+                      "Healthcare Provider"}
+                  </h3>
+                  <p className="text-gray-600 font-medium">
+                    {appointment.doctor?.specialty || "Nursing Procedure"}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Two Column Layout */}
-            <div className="grid md:grid-cols-2 gap-5 mb-6">
+            {/* Main Info Grid */}
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Appointment Information */}
-              <div className="bg-white border-2 border-blue-100 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-blue-100">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <h4 className="font-bold text-gray-900 text-base">
-                    Appointment Information
-                  </h4>
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">
-                      Type:
-                    </p>
-                    <p className="font-bold text-gray-900 text-sm">
-                      {appointment.consultationType}
-                    </p>
-                  </div>
+              <div className="space-y-4">
+                <h4 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                  <CalendarCheck className="w-5 h-5 text-blue-600" />
+                  Appointment Information
+                </h4>
 
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">
-                      Date & Time:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                      <p className="font-bold text-gray-900 text-sm">
-                        {appointment.date} at {appointment.time}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">
-                      Location:
-                    </p>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <p className="font-bold text-gray-900 text-sm">
-                        {appointment.location}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 rounded-lg shadow-md">
-                    <p className="text-xs font-semibold text-blue-100 mb-1">
-                      Service Fee:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-5 h-5 text-white" />
-                      <p className="font-bold text-white text-xl">
-                        {formatCurrency(appointment.fee)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Patient Information */}
-              <div className="bg-white border-2 border-blue-100 rounded-xl p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-blue-100">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <User className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <h4 className="font-bold text-gray-900 text-base">
-                    Patient Information
-                  </h4>
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">
-                      Patient Name:
-                    </p>
-                    <p className="font-bold text-gray-900 text-sm">
-                      {appointment.patientName}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-1">
-                      Booking Date:
-                    </p>
-                    <p className="font-bold text-gray-900 text-sm">
-                      {appointment.bookingDate}
-                    </p>
-                  </div>
-
-                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">
-                      Appointment ID:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Hash className="w-4 h-4 text-blue-600" />
-                      <p className="font-bold text-gray-900 text-sm font-mono">
-                        {appointment.appointmentId}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Days Information */}
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">
-                      Duration:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <p className="font-bold text-gray-900 text-sm">
-                        {totalDays} {totalDays === 1 ? "day" : "days"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-3 rounded-lg border-2 border-blue-200">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">
-                      Status:
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <p
-                        className={`font-bold text-sm px-3 py-1 rounded-full ${
-                          daysLeft < 0
-                            ? "bg-red-100 text-red-700"
-                            : daysLeft === 0
-                            ? "bg-orange-100 text-orange-700"
-                            : daysLeft <= 3
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {daysLeft < 0
-                          ? `${Math.abs(daysLeft)} days ago`
-                          : daysLeft === 0
-                          ? "Today"
-                          : `${daysLeft} days left`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Symptoms/Reason for Visit */}
-            {appointment.symptomsReason && (
-              <div className="mb-5">
-                <div className="bg-white border-2 border-blue-100 rounded-xl p-5 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 pb-3 border-b-2 border-blue-100">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <h4 className="font-bold text-gray-900 text-base">
-                      Symptoms/Reason for Visit
-                    </h4>
-                  </div>
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <p className="text-gray-800 text-sm leading-relaxed">
-                      {appointment.symptomsReason}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Additional Notes */}
-            {appointment.additionalNotes && (
-              <div className="mb-5">
-                <div className="bg-white border-2 border-blue-100 rounded-xl p-5 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3 pb-3 border-b-2 border-blue-100">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <h4 className="font-bold text-gray-900 text-base">
-                      Additional Notes
-                    </h4>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div className="space-y-3">
+                  {/* Date */}
+                  <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
                     <div className="flex items-start gap-3">
-                      <FileText className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-gray-800 text-sm leading-relaxed">
-                        {appointment.additionalNotes}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Rejection Reason */}
-            {appointment.status === "rejected" &&
-              appointment.rejectionReason && (
-                <div className="mb-5">
-                  <div className="bg-red-50 border-2 border-red-200 rounded-xl p-5 shadow-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
-                        <XCircle className="w-5 h-5 text-red-600" />
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-5 h-5 text-blue-600" />
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-red-800 mb-2 text-base">
-                          Reason for Rejection
-                        </h4>
-                        <p className="text-red-700 text-sm leading-relaxed">
-                          {appointment.rejectionReason}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          Appointment Date
+                        </p>
+                        <p className="font-bold text-gray-900">
+                          {formatDate(
+                            appointment.metadata?.start_date ||
+                              appointment.date,
+                          )}
                         </p>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  {appointment.time && appointment.time !== "N/A" && (
+                    <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-5 h-5 text-purple-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            Time
+                          </p>
+                          <p className="font-bold text-gray-900">
+                            {appointment.time}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Location */}
+                  <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          Location
+                        </p>
+                        <p className="font-bold text-gray-900 break-words">
+                          {appointment.location}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fee */}
+                  <div
+                    className={`rounded-xl p-4 bg-gradient-to-br ${statusConfig.gradient} shadow-lg`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-white/80 uppercase tracking-wide mb-1">
+                          Service Fee
+                        </p>
+                        <p className="font-bold text-white text-xl">
+                          {formatCurrency(appointment.fee || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Booking Information */}
+              <div className="space-y-4">
+                <h4 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-600" />
+                  Booking Information
+                </h4>
+
+                <div className="space-y-3">
+                  {/* Booking ID */}
+                  <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <Hash className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                          Booking ID
+                        </p>
+                        <p className="font-mono font-bold text-gray-900 text-sm break-all">
+                          {appointment.id}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Days Left */}
+                  {daysLeft !== null && (
+                    <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            daysLeft < 0
+                              ? "bg-red-100"
+                              : daysLeft === 0
+                                ? "bg-orange-100"
+                                : daysLeft <= 3
+                                  ? "bg-yellow-100"
+                                  : "bg-green-100"
+                          }`}
+                        >
+                          <Clock
+                            className={`w-5 h-5 ${
+                              daysLeft < 0
+                                ? "text-red-600"
+                                : daysLeft === 0
+                                  ? "text-orange-600"
+                                  : daysLeft <= 3
+                                    ? "text-yellow-600"
+                                    : "text-green-600"
+                            }`}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            Time Status
+                          </p>
+                          <p
+                            className={`font-bold text-sm ${
+                              daysLeft < 0
+                                ? "text-red-700"
+                                : daysLeft === 0
+                                  ? "text-orange-700"
+                                  : daysLeft <= 3
+                                    ? "text-yellow-700"
+                                    : "text-green-700"
+                            }`}
+                          >
+                            {daysLeft < 0
+                              ? `${Math.abs(daysLeft)} days ago`
+                              : daysLeft === 0
+                                ? "Today"
+                                : `${daysLeft} days left`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Reviewed Status */}
+                  {appointment.metadata?.reviewed !== undefined && (
+                    <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                            appointment.metadata.reviewed
+                              ? "bg-green-100"
+                              : "bg-gray-100"
+                          }`}
+                        >
+                          <Star
+                            className={`w-5 h-5 ${
+                              appointment.metadata.reviewed
+                                ? "text-green-600 fill-green-600"
+                                : "text-gray-400"
+                            }`}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            Review Status
+                          </p>
+                          <p className="font-bold text-gray-900">
+                            {appointment.metadata.reviewed
+                              ? "Reviewed"
+                              : "Not Reviewed"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Rejection Reason */}
+            {(appointment.status === "rejected" ||
+              appointment.metadata?.status === "rejected") &&
+              appointment.rejectionReason && (
+                <div className="bg-rose-50 border-2 border-rose-200 rounded-2xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
+                      <XCircle className="w-6 h-6 text-rose-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-rose-900 mb-2 text-lg">
+                        Reason for Rejection
+                      </h4>
+                      <p className="text-rose-700 leading-relaxed">
+                        {appointment.rejectionReason}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -380,20 +421,14 @@ const AppointmentDetailsModal = ({
           </div>
 
           {/* Footer */}
-          <div className="border-t-2 border-blue-100 bg-gray-50 p-5 sm:p-6">
-            <div className="flex flex-col sm:flex-row justify-end gap-3">
+          <div className="border-t border-gray-200 bg-gray-50 p-6">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={onClose}
-                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-100 transition-all shadow-sm"
+                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-white hover:border-gray-400 transition-all"
               >
                 Close
               </button>
-              {/* {(appointment.status === "accepted" ||
-                appointment.status === "pending") && (
-                <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                  Reschedule Appointment
-                </button>
-              )} */}
             </div>
           </div>
         </div>
