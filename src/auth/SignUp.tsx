@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Heart, Clock, Shield, Users, CheckCircle } from "lucide-react";
+import {
+  Heart,
+  Clock,
+  Shield,
+  Users,
+  CheckCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { useFormik } from "formik";
 import signUpSchema from "./SignupSchema";
 import api from "../constant/api";
@@ -17,6 +25,8 @@ interface FormValue {
 
 const SignUp: React.FC = () => {
   const [role, setRole] = useState<"patient" | "nurse" | "chw">("patient");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -133,6 +143,20 @@ const SignUp: React.FC = () => {
         return "Email Address";
     }
   };
+
+  // Password requirements checker
+  const getPasswordRequirements = (password: string) => {
+    return {
+      minLength: password.length >= 8,
+      hasNumber: /\d/.test(password),
+      hasUpperCase: /[A-Z]/.test(password),
+      hasLowerCase: /[a-z]/.test(password),
+      hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+  };
+
+  const passwordReqs = getPasswordRequirements(values.password);
+  // const allRequirementsMet = Object.values(passwordReqs).every(Boolean);
 
   const getRoleContent = () => {
     switch (role) {
@@ -531,23 +555,157 @@ const SignUp: React.FC = () => {
                 >
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={values.password}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={`input-field ${
-                    errors.password && touched.password ? "input-error" : ""
-                  }`}
-                  placeholder="Create a strong password"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={values.password}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`input-field pr-10 ${
+                      errors.password && touched.password ? "input-error" : ""
+                    }`}
+                    placeholder="Create a strong password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
                 {errors.password && touched.password && (
                   <p className="mt-1 text-body-xs text-red-600">
                     {errors.password}
                   </p>
+                )}
+
+                {/* Password Requirements */}
+                {values.password && (
+                  <div className="mt-3 space-y-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">
+                      Password Requirements:
+                    </p>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            passwordReqs.minLength
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
+                        >
+                          {passwordReqs.minLength && (
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs ${
+                            passwordReqs.minLength
+                              ? "text-green-700 font-medium"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          At least 8 characters
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            passwordReqs.hasNumber
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
+                        >
+                          {passwordReqs.hasNumber && (
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs ${
+                            passwordReqs.hasNumber
+                              ? "text-green-700 font-medium"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          At least one number
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            passwordReqs.hasUpperCase
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
+                        >
+                          {passwordReqs.hasUpperCase && (
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs ${
+                            passwordReqs.hasUpperCase
+                              ? "text-green-700 font-medium"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          At least one uppercase letter
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            passwordReqs.hasLowerCase
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
+                        >
+                          {passwordReqs.hasLowerCase && (
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs ${
+                            passwordReqs.hasLowerCase
+                              ? "text-green-700 font-medium"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          At least one lowercase letter
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-4 h-4 rounded-full flex items-center justify-center ${
+                            passwordReqs.hasSpecialChar
+                              ? "bg-green-500"
+                              : "bg-gray-300"
+                          }`}
+                        >
+                          {passwordReqs.hasSpecialChar && (
+                            <CheckCircle className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <span
+                          className={`text-xs ${
+                            passwordReqs.hasSpecialChar
+                              ? "text-green-700 font-medium"
+                              : "text-gray-600"
+                          }`}
+                        >
+                          At least one special character (!@#$%^&*)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -558,21 +716,34 @@ const SignUp: React.FC = () => {
                 >
                   Confirm Password
                 </label>
-                <input
-                  id="confirmpassword"
-                  name="confirmpassword"
-                  type="password"
-                  required
-                  value={values.confirmpassword}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={`input-field ${
-                    errors.confirmpassword && touched.confirmpassword
-                      ? "input-error"
-                      : ""
-                  }`}
-                  placeholder="Confirm your password"
-                />
+                <div className="relative">
+                  <input
+                    id="confirmpassword"
+                    name="confirmpassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    required
+                    value={values.confirmpassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`input-field pr-10 ${
+                      errors.confirmpassword && touched.confirmpassword
+                        ? "input-error"
+                        : ""
+                    }`}
+                    placeholder="Confirm your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
                 {errors.confirmpassword && touched.confirmpassword && (
                   <p className="mt-1 text-body-xs text-red-600">
                     {errors.confirmpassword}

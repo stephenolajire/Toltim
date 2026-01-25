@@ -148,6 +148,7 @@ const NurseDashboard: React.FC = () => {
   const handleViewFullAssessment = (booking: Booking) => {
     setSelectedBooking(booking);
     setIsModalOpen(true);
+    console.log("Viewing full assessment for booking:", booking);
   };
 
   const handleAcceptRequest = async (bookingId: number) => {

@@ -65,8 +65,11 @@ export interface Booking {
   start_date: string;
   time_of_day: string;
   selected_days: string[];
-  service_dates: string;
+  service_dates: string[];
   is_for_self: boolean;
+  total_sessions:number;
+  draft_sessions:number;
+  reviewed:boolean;
   status: "pending" | "accepted" | "active" | "completed" | "rejected";
   total_amount: string;
   procedure_item: {
