@@ -28,7 +28,7 @@ const LocationDisplay: React.FC<LocationDisplayProps> = ({
   return (
     <div className={className}>
       {showIcon && <MapPin className="h-3 w-3 flex-shrink-0" />}
-      <span className="truncate">{address}</span>
+      <span className="break-words">{address}</span>
     </div>
   );
 };

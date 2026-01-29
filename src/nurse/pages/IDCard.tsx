@@ -1,5 +1,9 @@
 import React from "react";
-import { Printer, Download, Heart, QrCode } from "lucide-react";
+import { Download, Heart, QrCode } from "lucide-react";
+import { useNurseProfile } from "../../constant/GlobalContext";
+import Loading from "../../components/common/Loading";
+import Error from "../../components/Error";
+import QRCodeCanvas from "qrcode";
 
 interface ProfessionalData {
   name: string;
@@ -10,58 +14,218 @@ interface ProfessionalData {
   verified: string;
   cardId: string;
   validThrough: string;
-  profileImage: string;
+  profileImage: string | null;
 }
 
 const IDCard: React.FC = () => {
-  const professionalData: ProfessionalData = {
-    name: "Nurse Rachel Williams, RN",
-    title: "Verified Healthcare Professional",
-    license: "RN-12345",
-    specialty: "General Nursing, Wound Care",
-    experience: "5+ years",
-    verified: "June 2024",
-    cardId: "TLT-RN-12345",
-    validThrough: "2024",
-    profileImage: "/api/placeholder/80/80",
+  const userRole = localStorage.getItem("userType");
+  const [qrCodeDataUrl, setQrCodeDataUrl] = React.useState<string>("");
+  const qrCanvasRef = React.useRef<HTMLCanvasElement>(null);
+
+  const {
+    data: profileDataRaw,
+    isLoading,
+    error,
+  } = useNurseProfile(userRole as string);
+
+  // Normalize the data structure
+  const profileData = React.useMemo(() => {
+    if (!profileDataRaw) return null;
+
+    // Check if it's the CHW format (has results array)
+    if (profileDataRaw.results && Array.isArray(profileDataRaw.results)) {
+      return profileDataRaw.results[0] || null;
+    }
+
+    // Otherwise, it's the nurse format (direct object)
+    return profileDataRaw;
+  }, [profileDataRaw]);
+
+  // Format specialization
+  const formatSpecialization = (spec: any) => {
+    if (Array.isArray(spec)) {
+      if (spec.length === 0) return "Healthcare Professional";
+
+      return spec
+        .map((s) => {
+          if (typeof s === "object" && s !== null && s.name) {
+            return s.name;
+          }
+          if (typeof s === "string") {
+            return s
+              .split("-")
+              .map(
+                (word: string) => word.charAt(0).toUpperCase() + word.slice(1),
+              )
+              .join(" ");
+          }
+          return null;
+        })
+        .filter(Boolean)
+        .join(", ");
+    }
+
+    if (typeof spec === "string") {
+      return spec
+        .split("-")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+    }
+
+    if (typeof spec === "object" && spec !== null && spec.name) {
+      return spec.name;
+    }
+
+    return "Healthcare Professional";
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // Convert profile data to professional data
+  const professionalData: ProfessionalData | null = React.useMemo(() => {
+    if (!profileData) return null;
+
+    const currentYear = new Date().getFullYear();
+    const isNurse = "verified_nurse" in profileData;
+    const isCHW = "years_of_experience" in profileData && !isNurse;
+
+    return {
+      name: profileData.full_name || "Healthcare Professional",
+      title: isNurse
+        ? "Verified Nurse"
+        : isCHW
+          ? "Community Health Worker"
+          : "Healthcare Professional",
+      license: profileData.user_id
+        ? `ID-${profileData.user_id.slice(0, 8).toUpperCase()}`
+        : "N/A",
+      specialty: profileData.specialization
+        ? formatSpecialization(profileData.specialization)
+        : isCHW
+          ? "Community Health"
+          : "General Healthcare",
+      experience: isCHW
+        ? `${profileData.years_of_experience || 0}+ years`
+        : profileData.completed_cases
+          ? `${profileData.completed_cases} completed cases`
+          : "Professional",
+      verified: profileData.verified_nurse ? "Verified" : "Active",
+      cardId: `TLT-${profileData.id || "0000"}`,
+      validThrough: currentYear.toString(),
+      profileImage:
+        profileData.profile_picture || profileData.profilePicture || null,
+    };
+  }, [profileData]);
+
+  // Generate QR Code with profile details
+  React.useEffect(() => {
+    if (professionalData && qrCanvasRef.current) {
+      // Create a JSON object with profile details
+      const qrData = {
+        platform: "Toltimed Healthcare",
+        name: professionalData.name,
+        title: professionalData.title,
+        license: professionalData.license,
+        specialty: professionalData.specialty,
+        experience: professionalData.experience,
+        verified: professionalData.verified,
+        cardId: professionalData.cardId,
+        validThrough: professionalData.validThrough,
+      };
+
+      // Generate QR code
+      QRCodeCanvas.toCanvas(
+        qrCanvasRef.current,
+        JSON.stringify(qrData),
+        {
+          width: 100,
+          margin: 1,
+          color: {
+            dark: "#1f2937",
+            light: "#ffffff",
+          },
+        },
+        (error) => {
+          if (error) {
+            console.error("QR Code generation error:", error);
+          } else {
+            // Convert canvas to data URL for download functionality
+            const dataUrl = qrCanvasRef.current?.toDataURL() || "";
+            setQrCodeDataUrl(dataUrl);
+          }
+        },
+      );
+    }
+  }, [professionalData]);
+
+  // const handlePrint = () => {
+  //   window.print();
+  // };
 
   const handleDownload = () => {
+    if (!professionalData) return;
+
     // Create a canvas element to generate the ID card as an image
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
 
     if (ctx) {
-      canvas.width = 400;
-      canvas.height = 250;
+      canvas.width = 500;
+      canvas.height = 300;
 
-      // Draw background
-      ctx.fillStyle = "#10b981";
-      ctx.fillRect(0, 0, 400, 250);
+      // Draw background gradient
+      const gradient = ctx.createLinearGradient(0, 0, 500, 300);
+      gradient.addColorStop(0, "#10b981");
+      gradient.addColorStop(1, "#059669");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 500, 300);
 
       // Add text content
       ctx.fillStyle = "white";
-      ctx.font = "bold 16px Arial";
-      ctx.fillText("Toltimed", 20, 30);
+      ctx.font = "bold 20px Arial";
+      ctx.fillText("Toltimed", 20, 35);
 
-      ctx.font = "12px Arial";
-      ctx.fillText("Verified Healthcare Professional", 20, 50);
+      ctx.font = "14px Arial";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      ctx.fillText(professionalData.title, 20, 55);
 
       ctx.font = "bold 18px Arial";
-      ctx.fillText(professionalData.name, 20, 90);
+      ctx.fillStyle = "white";
+      ctx.fillText(professionalData.name, 20, 100);
 
+      ctx.font = "13px Arial";
+      ctx.fillText(`License: ${professionalData.license}`, 20, 130);
+
+      // Truncate specialty if too long
+      const specialty =
+        professionalData.specialty.length > 35
+          ? professionalData.specialty.substring(0, 35) + "..."
+          : professionalData.specialty;
+      ctx.fillText(`Specialty: ${specialty}`, 20, 155);
+      ctx.fillText(`Experience: ${professionalData.experience}`, 20, 180);
+      ctx.fillText(`Status: ${professionalData.verified}`, 20, 205);
+
+      // Draw QR Code if available
+      if (qrCanvasRef.current) {
+        // Draw white background for QR code
+        ctx.fillStyle = "white";
+        ctx.fillRect(380, 90, 100, 120);
+
+        // Draw QR code
+        ctx.drawImage(qrCanvasRef.current, 385, 95, 90, 90);
+
+        // Add QR label
+        ctx.fillStyle = "#1f2937";
+        ctx.font = "10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Scan to Verify", 430, 195);
+        ctx.fillText("Professional", 430, 207);
+        ctx.textAlign = "left";
+      }
+
+      // Footer
+      ctx.fillStyle = "white";
       ctx.font = "12px Arial";
-      ctx.fillText(`License: ${professionalData.license}`, 20, 110);
-      ctx.fillText(`Specialty: ${professionalData.specialty}`, 20, 130);
-      ctx.fillText(`Experience: ${professionalData.experience}`, 20, 150);
-      ctx.fillText(`Verified: ${professionalData.verified}`, 20, 170);
-
-      ctx.fillText(`ID: ${professionalData.cardId}`, 20, 220);
-      ctx.fillText(`Valid through ${professionalData.validThrough}`, 280, 220);
+      ctx.fillText(`ID: ${professionalData.cardId}`, 20, 270);
+      ctx.fillText(`Valid through ${professionalData.validThrough}`, 350, 270);
 
       // Convert to blob and download
       canvas.toBlob((blob) => {
@@ -69,7 +233,7 @@ const IDCard: React.FC = () => {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = "professional-id-card.png";
+          a.download = `${professionalData.name.replace(/\s+/g, "-")}-id-card.png`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
@@ -79,85 +243,113 @@ const IDCard: React.FC = () => {
     }
   };
 
-  return (
-    <div className="bg-white rounded-lg shadow-sm px-2 sm:px-4 md:px-20 lg:px-50">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          Professional ID Card
-        </h2>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            <Printer className="w-4 h-4" />
-            Print
-          </button>
-          <button
-            onClick={handleDownload}
-            className="flex items-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Download
-          </button>
-        </div>
-      </div>
+  if (isLoading) {
+    return <Loading />;
+  }
 
-      <div className="mb-4">
+  if (error) {
+    return <Error />;
+  }
+
+  if (!professionalData) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 text-center">
+        <p className="text-gray-500">No profile data available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm px-4 sm:px-6 md:px-12 lg:px-20 py-6">
+      {/* Header - visible only on screen, hidden on print */}
+      <div className="print:hidden mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Professional ID Card
+          </h2>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* <button
+              onClick={handlePrint}
+              className="flex items-center justify-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <Printer className="w-4 h-4" />
+              Print
+            </button> */}
+            <button
+              onClick={handleDownload}
+              className="flex items-center justify-center gap-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+          </div>
+        </div>
+
         <h3 className="text-lg font-medium text-green-600 mb-6">
           Professional ID Card
         </h3>
       </div>
 
       {/* ID Card */}
-      <div className="flex justify-center mb-6">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 w-full max-w-md text-white shadow-lg">
+      <div className="flex justify-center mb-6 print:mb-0">
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 w-full max-w-md text-white shadow-lg print:shadow-none">
           {/* Header */}
           <div className="flex items-center gap-2 mb-4">
             <Heart className="w-6 h-6 text-white" />
             <div>
               <h4 className="font-bold text-lg">Toltimed</h4>
-              <p className="text-sm text-green-100">
-                Verified Healthcare Professional
-              </p>
+              <p className="text-sm text-green-100">{professionalData.title}</p>
             </div>
           </div>
 
           {/* Professional Info */}
           <div className="flex items-start gap-4 mb-6">
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center overflow-hidden">
-              <img
-                src={professionalData.profileImage}
-                alt="Professional"
-                className="w-full h-full object-cover rounded-full"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                  e.currentTarget.nextElementSibling?.classList.remove(
-                    "hidden"
-                  );
-                }}
-              />
-              <div className="hidden w-full h-full bg-white/30 md:flex items-center justify-center text-2xl font-bold">
-                {professionalData.name.split(" ")[1]?.[0] || "N"}
+            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+              {professionalData.profileImage ? (
+                <img
+                  src={professionalData.profileImage}
+                  alt={professionalData.name}
+                  className="w-full h-full object-cover rounded-full"
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = "none";
+                    const sibling = target.nextElementSibling as HTMLElement;
+                    if (sibling) {
+                      sibling.classList.remove("hidden");
+                    }
+                  }}
+                />
+              ) : null}
+              <div
+                className={`${
+                  professionalData.profileImage ? "hidden" : "flex"
+                } w-full h-full bg-white/30 items-center justify-center text-2xl font-bold`}
+              >
+                {professionalData.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
               </div>
             </div>
 
-            <div className="flex-1">
-              <h5 className="font-bold text-lg mb-1">
+            <div className="flex-1 min-w-0">
+              <h5 className="font-bold text-lg mb-1 break-words">
                 {professionalData.name}
               </h5>
               <div className="space-y-1 text-sm">
-                <p>
+                <p className="break-words">
                   <strong>License:</strong> {professionalData.license}
                 </p>
-                <p>
+                <p className="break-words">
                   <strong>Specialty:</strong> {professionalData.specialty}
                 </p>
-                <p>
+                <p className="break-words">
                   <strong>Experience:</strong> {professionalData.experience}
                 </p>
-                <p>
-                  <strong>Verified:</strong> {professionalData.verified}
+                <p className="break-words">
+                  <strong>Status:</strong> {professionalData.verified}
                 </p>
               </div>
             </div>
@@ -166,27 +358,56 @@ const IDCard: React.FC = () => {
           {/* QR Code Section */}
           <div className="flex justify-end mb-4">
             <div className="bg-white rounded p-2">
-              <div className="w-12 h-12 bg-gray-800 rounded flex items-center justify-center">
-                <QrCode className="w-8 h-8 text-white" />
-              </div>
-              <p className="text-xs text-gray-800 text-center mt-1">QR</p>
-              <p className="text-xs text-gray-600 text-center">Verify Online</p>
+              <canvas
+                ref={qrCanvasRef}
+                className="w-20 h-20 rounded"
+                style={{ display: qrCodeDataUrl ? "block" : "none" }}
+              />
+              {!qrCodeDataUrl && (
+                <div className="w-20 h-20 bg-gray-200 rounded flex items-center justify-center">
+                  <QrCode className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+              <p className="text-xs text-gray-800 text-center mt-1">
+                Scan to Verify
+              </p>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="border-t border-white/20 pt-3 flex justify-between items-center text-sm">
-            <span>ID: {professionalData.cardId}</span>
-            <span>Valid through {professionalData.validThrough}</span>
+          <div className="border-t border-white/20 pt-3 flex flex-wrap justify-between items-center text-xs sm:text-sm gap-2">
+            <span className="break-words">ID: {professionalData.cardId}</span>
+            <span className="break-words">
+              Valid through {professionalData.validThrough}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Description */}
-      <p className="text-sm text-gray-600 text-center">
+      {/* Description - hidden on print */}
+      <p className="text-sm text-gray-600 text-center print:hidden">
         This digital ID card serves as verification of your professional status
         on the Toltimed platform.
       </p>
+
+      {/* Print-specific styles */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+          #root, #root * {
+            visibility: hidden;
+          }
+          .print\\:block, .print\\:block * {
+            visibility: visible;
+          }
+          @page {
+            size: auto;
+            margin: 20mm;
+          }
+        }
+      `}</style>
     </div>
   );
 };

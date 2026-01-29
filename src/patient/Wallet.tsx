@@ -5,15 +5,14 @@ import {
   ArrowDownLeft,
   Search,
   Filter,
-  // Download,
   Clock,
   CheckCircle,
-  // Building2,
   Receipt,
-  // Smartphone,
   User,
   Hospital,
   ClipboardList,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useWalletTransactions } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
@@ -24,10 +23,27 @@ const WalletComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
+  const [expandedTransactions, setExpandedTransactions] = useState<Set<string>>(
+    new Set(),
+  );
 
   const { data, isLoading, error } = useWalletTransactions();
+  if (data) console.log("Wallet Transactions Data:", data);
 
   const role = localStorage.getItem("userType");
+
+  // Toggle transaction expansion
+  const toggleExpansion = (transactionId: string) => {
+    setExpandedTransactions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(transactionId)) {
+        newSet.delete(transactionId);
+      } else {
+        newSet.add(transactionId);
+      }
+      return newSet;
+    });
+  };
 
   // Theme configuration based on role
   const themeConfig = useMemo(() => {
@@ -96,15 +112,21 @@ const WalletComponent = () => {
 
   const getTransactionCategory = (transaction: any) => {
     try {
-      const metadata = JSON.parse(transaction.metadata || "{}");
+      const metadata =
+        typeof transaction.metadata === "string"
+          ? JSON.parse(transaction.metadata)
+          : transaction.metadata || {};
       return metadata.category || "general";
     } catch {
       return "general";
     }
   };
 
-  const parseMetadata = (metadataString: string) => {
+  const parseMetadata = (metadataString: string | object) => {
     try {
+      if (typeof metadataString === "object") {
+        return metadataString;
+      }
       return JSON.parse(metadataString || "{}");
     } catch {
       return {};
@@ -125,7 +147,7 @@ const WalletComponent = () => {
       selectedCategory === "all" || category === selectedCategory;
 
     const matchesType =
-      selectedType === "all" || transaction.transaction_type === selectedType;
+      selectedType === "all" || transaction.direction === selectedType;
 
     return matchesSearch && matchesCategory && matchesType;
   });
@@ -177,61 +199,6 @@ const WalletComponent = () => {
       {role === "admin" && <WalletBalance />}
 
       <div className="w-full mx-auto">
-        {/* Quick Actions */}
-        {/* {role === "patient" && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <button className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 group">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`w-12 h-12 ${themeConfig.iconBg} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm`}
-                >
-                  <CreditCard className={`w-6 h-6 ${themeConfig.iconColor}`} />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-gray-900">Add Card</h3>
-                  <p className="text-xs text-gray-600">Link payment card</p>
-                </div>
-              </div>
-            </button>
-
-            <button className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 group">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                  <Building2 className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-gray-900">Bank Transfer</h3>
-                  <p className="text-xs text-gray-600">Fund via bank</p>
-                </div>
-              </div>
-            </button>
-
-            <button className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 group">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                  <Smartphone className="w-6 h-6 text-purple-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-gray-900">USSD</h3>
-                  <p className="text-xs text-gray-600">Dial to fund</p>
-                </div>
-              </div>
-            </button>
-
-            <button className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-200 group">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
-                  <Download className="w-6 h-6 text-amber-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-gray-900">Statement</h3>
-                  <p className="text-xs text-gray-600">Export history</p>
-                </div>
-              </div>
-            </button>
-          </div>
-        )} */}
-
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -300,23 +267,24 @@ const WalletComponent = () => {
             {filteredTransactions.map((transaction: any) => {
               const metadata = parseMetadata(transaction.metadata);
               const category = getTransactionCategory(transaction);
+              const isExpanded = expandedTransactions.has(transaction.id);
 
               return (
                 <div
                   key={transaction.id}
-                  className="border border-gray-200 rounded-xl p-5 hover:shadow-md hover:border-gray-300 transition-all duration-200"
+                  className="border border-gray-200 rounded-xl hover:shadow-md hover:border-gray-300 transition-all duration-200"
                 >
-                  {/* Desktop View */}
-                  <div className="hidden md:flex items-start justify-between">
+                  {/* Main Transaction Row - Desktop View */}
+                  <div className="hidden md:flex items-start justify-between p-5">
                     <div className="flex items-start gap-4 flex-1">
                       <div
                         className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
-                          transaction.transaction_type === "credit"
+                          transaction.direction === "credit"
                             ? "bg-emerald-100"
                             : "bg-red-100"
                         }`}
                       >
-                        {getTransactionIcon(transaction.transaction_type)}
+                        {getTransactionIcon(transaction.direction)}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -326,107 +294,109 @@ const WalletComponent = () => {
                           </h3>
                           <span
                             className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryBadgeColor(
-                              category
+                              category,
                             )}`}
                           >
                             {category.replace("-", " ")}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-4 text-xs text-gray-600 mb-2">
+                        <div className="flex items-center gap-4 text-xs text-gray-600">
                           <span className="flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5" />
-                            {formatTimestamp(transaction.created_at)}
+                            {formatTimestamp(transaction.date)}
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Receipt className="w-3.5 h-3.5" />
                             {transaction.reference}
                           </span>
                         </div>
-
-                        {metadata && Object.keys(metadata).length > 0 && (
-                          <div className="flex flex-wrap gap-3 text-xs text-gray-600">
-                            {metadata.doctor && (
-                              <span className="flex items-center gap-1">
-                                <span><User/></span> {metadata.doctor}
-                              </span>
-                            )}
-                            {metadata.hospital && (
-                              <span className="flex items-center gap-1">
-                                <span><Hospital/></span> {metadata.hospital}
-                              </span>
-                            )}
-                            {metadata.source && (
-                              <span className="flex items-center gap-1">
-                                <span><CreditCard/></span> {metadata.source}
-                              </span>
-                            )}
-                            {metadata.booking_id && (
-                              <span className="flex items-center gap-1">
-                                <span><ClipboardList/></span> {metadata.booking_id}
-                              </span>
-                            )}
-                          </div>
-                        )}
                       </div>
                     </div>
 
-                    <div className="text-right ml-4">
-                      <p
-                        className={`text-xl font-bold mb-2 ${
-                          transaction.transaction_type === "credit"
-                            ? "text-emerald-600"
-                            : "text-red-600"
-                        }`}
+                    <div className="flex items-center gap-3 ml-4">
+                      <div className="text-right">
+                        <p
+                          className={`text-xl font-bold mb-2 ${
+                            transaction.direction === "credit"
+                              ? "text-emerald-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {transaction.direction === "credit" ? "+" : "-"}
+                          {formatCurrency(transaction.amount)}
+                        </p>
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          Completed
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => toggleExpansion(transaction.id)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label="Toggle details"
                       >
-                        {transaction.transaction_type === "credit" ? "+" : "-"}
-                        {formatCurrency(transaction.amount)}
-                      </p>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        Completed
-                      </span>
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-gray-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-600" />
+                        )}
+                      </button>
                     </div>
                   </div>
 
-                  {/* Mobile View */}
-                  <div className="md:hidden space-y-3">
+                  {/* Main Transaction Row - Mobile View */}
+                  <div className="md:hidden p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div
                           className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
-                            transaction.transaction_type === "credit"
+                            transaction.direction === "credit"
                               ? "bg-emerald-100"
                               : "bg-red-100"
                           }`}
                         >
-                          {getTransactionIcon(transaction.transaction_type)}
+                          {getTransactionIcon(transaction.direction)}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-gray-900 text-sm truncate">
                             {transaction.description}
                           </h3>
                           <p className="text-xs text-gray-600">
-                            {formatTimestamp(transaction.created_at)}
+                            {formatTimestamp(transaction.date)}
                           </p>
                         </div>
                       </div>
-                      <p
-                        className={`text-base font-bold flex-shrink-0 ${
-                          transaction.transaction_type === "credit"
-                            ? "text-emerald-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {transaction.transaction_type === "credit" ? "+" : "-"}
-                        {formatCurrency(transaction.amount)}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={`text-base font-bold flex-shrink-0 ${
+                            transaction.direction === "credit"
+                              ? "text-emerald-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {transaction.direction === "credit" ? "+" : "-"}
+                          {formatCurrency(transaction.amount)}
+                        </p>
+                        <button
+                          onClick={() => toggleExpansion(transaction.id)}
+                          className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                          aria-label="Toggle details"
+                        >
+                          {isExpanded ? (
+                            <ChevronUp className="w-5 h-5 text-gray-600" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-600" />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2 items-center">
                       <span
                         className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryBadgeColor(
-                          category
+                          category,
                         )}`}
                       >
                         {category.replace("-", " ")}
@@ -436,20 +406,113 @@ const WalletComponent = () => {
                         Completed
                       </span>
                     </div>
+                  </div>
 
-                    {metadata && Object.keys(metadata).length > 0 && (
-                      <div className="text-xs text-gray-600 flex flex-wrap gap-2">
-                        {metadata.doctor && <span>👨‍⚕️ {metadata.doctor}</span>}
-                        {metadata.hospital && (
-                          <span>🏥 {metadata.hospital}</span>
-                        )}
-                        {metadata.source && <span>💳 {metadata.source}</span>}
-                        {metadata.booking_id && (
-                          <span>📋 {metadata.booking_id}</span>
-                        )}
+                  {/* Expanded Metadata Section */}
+                  {isExpanded &&
+                    metadata &&
+                    Object.keys(metadata).length > 0 && (
+                      <div className="px-5 pb-5 border-t border-gray-100">
+                        <div className="pt-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                            Transaction Details
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {metadata.booking_id && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <ClipboardList className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Booking ID:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.booking_id}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            {metadata.booking_ref && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Receipt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Booking Ref:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.booking_ref}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            {metadata.role && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">Role:</span>
+                                  <span className="ml-2 text-gray-900 font-medium capitalize">
+                                    {metadata.role}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            {metadata.service_date && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Service Date:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {new Date(
+                                      metadata.service_date,
+                                    ).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            {metadata.doctor && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">Doctor:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.doctor}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            {metadata.hospital && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Hospital className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Hospital:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.hospital}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                            {metadata.source && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <CreditCard className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">Source:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.source}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     )}
-                  </div>
                 </div>
               );
             })}

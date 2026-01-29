@@ -10,7 +10,7 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
-  Download,
+  // Download,
   Image,
   XCircle,
 } from "lucide-react";
@@ -659,10 +659,10 @@ const BookingDetailsModal: React.FC<PatientAssessmentModalProps> = ({
             {/* Footer Actions */}
             <div className="sticky bottom-0 bg-white border-t flex flex-col sm:flex-row justify-between items-center px-6 py-4 gap-4">
               <div className="flex gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                {/* <button className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
                   <Download className="w-4 h-4" />
                   Download Details
-                </button>
+                </button> */}
 
                 {booking.test_result && (
                   <button

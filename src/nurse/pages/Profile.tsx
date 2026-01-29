@@ -7,6 +7,9 @@ import {
   Clock,
   Award,
   MapPin,
+  Star,
+  MessageSquare,
+  TrendingUp,
 } from "lucide-react";
 import { useNurseProfile } from "../../constant/GlobalContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -95,7 +98,7 @@ export default function NurseProfile() {
             return s
               .split("-")
               .map(
-                (word: string) => word.charAt(0).toUpperCase() + word.slice(1)
+                (word: string) => word.charAt(0).toUpperCase() + word.slice(1),
               )
               .join(" ");
           }
@@ -136,7 +139,7 @@ export default function NurseProfile() {
 
   const location = coordinatesToPostGIS(
     profileData?.latitude,
-    profileData?.longitude
+    profileData?.longitude,
   );
 
   // Check if it's a nurse (has nurse-specific fields)
@@ -168,7 +171,7 @@ export default function NurseProfile() {
   const availability = formatAvailability(
     profileData?.availability && profileData.availability.length > 0
       ? profileData.availability
-      : []
+      : [],
   );
 
   const isActive = profileData?.active;
@@ -241,13 +244,13 @@ export default function NurseProfile() {
               {/* Name and Edit Button */}
               <div className="mt-6 sm:mt-0 sm:ml-6 flex-1 w-full">
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h1 className="text-3xl font-bold text-gray-900">
+                      <h1 className="text-3xl font-bold text-gray-900 break-words">
                         {profileData?.full_name}
                       </h1>
                       {profileData?.verified_nurse && (
-                        <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full">
+                        <div className="flex items-center gap-1 px-2 py-1 bg-green-100 rounded-full flex-shrink-0">
                           <CheckCircle className="w-4 h-4 text-green-700" />
                           <span className="text-xs font-medium text-green-700">
                             Verified
@@ -255,21 +258,21 @@ export default function NurseProfile() {
                         </div>
                       )}
                     </div>
-                    <p className="text-lg text-gray-600 mt-1 font-medium">
+                    <p className="text-lg text-gray-600 mt-1 font-medium break-words">
                       {profileData?.specialization
                         ? formatSpecialization(profileData.specialization)
                         : isCHW
-                        ? "Community Health Worker"
-                        : "Healthcare Professional"}
+                          ? "Community Health Worker"
+                          : "Healthcare Professional"}
                     </p>
 
                     {/* Location */}
                     {(profileData?.latitude || profileData?.location) && (
-                      <div className="flex items-center gap-2 text-gray-500 mt-2">
-                        <MapPin className="w-4 h-4" />
+                      <div className="flex items-start gap-2 text-gray-500 mt-2">
+                        <MapPin className="w-4 h-4 flex-shrink-0 mt-1" />
                         <LocationDisplay
                           location={location}
-                          className="text-sm"
+                          className="text-sm break-words"
                         />
                       </div>
                     )}
@@ -278,8 +281,8 @@ export default function NurseProfile() {
                     {isCHW &&
                       profileData?.years_of_experience !== undefined && (
                         <div className="flex items-center gap-2 text-gray-600 mt-2">
-                          <Award className="w-4 h-4 text-green-600" />
-                          <span className="text-sm">
+                          <Award className="w-4 h-4 text-green-600 flex-shrink-0" />
+                          <span className="text-sm break-words">
                             {profileData.years_of_experience}{" "}
                             {profileData.years_of_experience === 1
                               ? "year"
@@ -292,7 +295,7 @@ export default function NurseProfile() {
 
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="relative z-20 flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium whitespace-nowrap"
+                    className="relative z-20 flex items-center justify-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm font-medium whitespace-nowrap flex-shrink-0"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit Profile
@@ -312,7 +315,7 @@ export default function NurseProfile() {
               <div
                 className={`w-2 h-2 rounded-full ${
                   isActive ? "bg-green-500" : "bg-gray-400"
-                } animate-pulse`}
+                } animate-pulse flex-shrink-0`}
               />
               <span
                 className={`text-sm font-medium ${
@@ -331,11 +334,65 @@ export default function NurseProfile() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">
               About Me
             </h2>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-gray-700 leading-relaxed break-words whitespace-pre-wrap">
               {profileData.biography}
             </p>
           </div>
         )}
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {/* Rating Card */}
+          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-yellow-400">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Average Rating
+                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-3xl font-bold text-gray-900">
+                    {profileData?.rating || 0}
+                  </p>
+                  <Star className="w-6 h-6 text-yellow-400 fill-yellow-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Review Count Card */}
+          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-blue-400">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Total Reviews
+                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-3xl font-bold text-gray-900">
+                    {profileData?.review_count || 0}
+                  </p>
+                  <MessageSquare className="w-6 h-6 text-blue-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Completed Cases Card */}
+          <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-400">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600 mb-1">
+                  Completed Cases
+                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-3xl font-bold text-gray-900">
+                    {profileData?.completed_cases || 0}
+                  </p>
+                  <TrendingUp className="w-6 h-6 text-green-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Information Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -343,7 +400,7 @@ export default function NurseProfile() {
           {(profileData?.languages?.length > 0 || isNurse) && (
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                   <Languages className="w-5 h-5 text-green-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -355,7 +412,7 @@ export default function NurseProfile() {
                   {profileData.languages.map((lang: any, idx: any) => (
                     <li
                       key={idx}
-                      className="text-gray-700 pl-4 border-l-2 border-green-200"
+                      className="text-gray-700 pl-4 border-l-2 border-green-200 break-words"
                     >
                       {lang}
                     </li>
@@ -373,7 +430,7 @@ export default function NurseProfile() {
           {(profileData?.services?.length > 0 || isNurse) && (
             <div className="bg-white rounded-xl shadow-sm p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                   <Briefcase className="w-5 h-5 text-green-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -385,7 +442,7 @@ export default function NurseProfile() {
                   {profileData.services.map((service: any, idx: any) => (
                     <li
                       key={idx}
-                      className="text-gray-700 capitalize pl-4 border-l-2 border-green-200"
+                      className="text-gray-700 capitalize pl-4 border-l-2 border-green-200 break-words"
                     >
                       {service}
                     </li>
@@ -402,7 +459,7 @@ export default function NurseProfile() {
           {/* Availability */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                 <Clock className="w-5 h-5 text-green-600" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
@@ -414,7 +471,7 @@ export default function NurseProfile() {
                 {availability.map((slot: string, idx: number) => (
                   <li
                     key={idx}
-                    className="text-gray-700 pl-4 border-l-2 border-green-200"
+                    className="text-gray-700 pl-4 border-l-2 border-green-200 break-words"
                   >
                     {slot}
                   </li>
@@ -439,13 +496,13 @@ export default function NurseProfile() {
           >
             <div className="flex items-start gap-3">
               <CheckCircle
-                className={`w-6 h-6 mt-0.5 ${
+                className={`w-6 h-6 mt-0.5 flex-shrink-0 ${
                   profileData.available ? "text-green-600" : "text-gray-400"
                 }`}
               />
-              <div>
+              <div className="min-w-0">
                 <h4
-                  className={`font-semibold ${
+                  className={`font-semibold break-words ${
                     profileData.available ? "text-green-900" : "text-gray-800"
                   }`}
                 >
@@ -454,7 +511,7 @@ export default function NurseProfile() {
                     : "Currently Unavailable"}
                 </h4>
                 <p
-                  className={`text-sm mt-1 ${
+                  className={`text-sm mt-1 break-words ${
                     profileData.available ? "text-green-700" : "text-gray-600"
                   }`}
                 >
@@ -471,12 +528,12 @@ export default function NurseProfile() {
         {profileData?.verified_nurse && (
           <div className="mt-6 bg-green-50 border border-green-200 rounded-xl p-5">
             <div className="flex items-start gap-3">
-              <CheckCircle className="w-6 h-6 text-green-600 mt-0.5" />
-              <div>
-                <h4 className="text-green-900 font-semibold">
+              <CheckCircle className="w-6 h-6 text-green-600 mt-0.5 flex-shrink-0" />
+              <div className="min-w-0">
+                <h4 className="text-green-900 font-semibold break-words">
                   Verified Healthcare Professional
                 </h4>
-                <p className="text-green-700 text-sm mt-1">
+                <p className="text-green-700 text-sm mt-1 break-words">
                   This healthcare professional has been verified and meets all
                   requirements.
                 </p>
@@ -484,6 +541,63 @@ export default function NurseProfile() {
             </div>
           </div>
         )}
+
+        {/* Latest Reviews Section */}
+        {profileData?.latest_reviews &&
+          profileData.latest_reviews.length > 0 && (
+            <div className="mt-6 bg-white rounded-xl shadow-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                  <MessageSquare className="w-5 h-5 text-yellow-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900">
+                  Latest Reviews
+                </h3>
+              </div>
+
+              <div className="space-y-4">
+                {profileData.latest_reviews.map((review: any) => (
+                  <div
+                    key={review.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 break-words">
+                          {review.reviewer_name}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(review.created_at).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {[...Array(5)].map((_, idx) => (
+                          <Star
+                            key={idx}
+                            className={`w-4 h-4 ${
+                              idx < review.rating
+                                ? "text-yellow-400 fill-yellow-400"
+                                : "text-gray-300"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-gray-700 break-words leading-relaxed">
+                      {review.comment}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
       </div>
 
       {/* Edit Profile Modal */}
