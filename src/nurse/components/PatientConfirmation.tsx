@@ -309,7 +309,9 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
               Enter Confirmation Code
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Enter the 6-digit code sent to verify the session
+              Dear nurse, to record this session, a code has been sent to the
+              patient's email address. Kindly request the patient to check their
+              email to proceed.
             </p>
           </div>
           <button
