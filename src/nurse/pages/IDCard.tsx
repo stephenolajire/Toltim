@@ -171,75 +171,139 @@ const IDCard: React.FC = () => {
       canvas.width = 500;
       canvas.height = 300;
 
-      // Draw background gradient
-      const gradient = ctx.createLinearGradient(0, 0, 500, 300);
-      gradient.addColorStop(0, "#10b981");
-      gradient.addColorStop(1, "#059669");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, 500, 300);
+      // Function to draw the card content
+      const drawCard = (profileImg?: HTMLImageElement) => {
+        // Draw background gradient
+        const gradient = ctx.createLinearGradient(0, 0, 500, 300);
+        gradient.addColorStop(0, "#10b981");
+        gradient.addColorStop(1, "#059669");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 500, 300);
 
-      // Add text content
-      ctx.fillStyle = "white";
-      ctx.font = "bold 20px Arial";
-      ctx.fillText("Toltimed", 20, 35);
-
-      ctx.font = "14px Arial";
-      ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.fillText(professionalData.title, 20, 55);
-
-      ctx.font = "bold 18px Arial";
-      ctx.fillStyle = "white";
-      ctx.fillText(professionalData.name, 20, 100);
-
-      ctx.font = "13px Arial";
-      ctx.fillText(`License: ${professionalData.license}`, 20, 130);
-
-      // Truncate specialty if too long
-      const specialty =
-        professionalData.specialty.length > 35
-          ? professionalData.specialty.substring(0, 35) + "..."
-          : professionalData.specialty;
-      ctx.fillText(`Specialty: ${specialty}`, 20, 155);
-      ctx.fillText(`Experience: ${professionalData.experience}`, 20, 180);
-      ctx.fillText(`Status: ${professionalData.verified}`, 20, 205);
-
-      // Draw QR Code if available
-      if (qrCanvasRef.current) {
-        // Draw white background for QR code
+        // Add text content
         ctx.fillStyle = "white";
-        ctx.fillRect(380, 90, 100, 120);
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("Toltimed", 20, 35);
 
-        // Draw QR code
-        ctx.drawImage(qrCanvasRef.current, 385, 95, 90, 90);
+        ctx.font = "14px Arial";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.fillText(professionalData.title, 20, 55);
 
-        // Add QR label
-        ctx.fillStyle = "#1f2937";
-        ctx.font = "10px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText("Scan to Verify", 430, 195);
-        ctx.fillText("Professional", 430, 207);
-        ctx.textAlign = "left";
-      }
+        // Draw profile image or initials
+        if (profileImg) {
+          // Save context state
+          ctx.save();
 
-      // Footer
-      ctx.fillStyle = "white";
-      ctx.font = "12px Arial";
-      ctx.fillText(`ID: ${professionalData.cardId}`, 20, 270);
-      ctx.fillText(`Valid through ${professionalData.validThrough}`, 350, 270);
+          // Create circular clipping path
+          ctx.beginPath();
+          ctx.arc(48, 100, 32, 0, Math.PI * 2);
+          ctx.closePath();
+          ctx.clip();
 
-      // Convert to blob and download
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${professionalData.name.replace(/\s+/g, "-")}-id-card.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          // Draw image
+          ctx.drawImage(profileImg, 16, 68, 64, 64);
+
+          // Restore context state
+          ctx.restore();
+        } else {
+          // Draw initials circle background
+          ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+          ctx.beginPath();
+          ctx.arc(48, 100, 32, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Draw initials
+          ctx.fillStyle = "white";
+          ctx.font = "bold 24px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const initials = professionalData.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+          ctx.fillText(initials, 48, 100);
+          ctx.textAlign = "left";
+          ctx.textBaseline = "alphabetic";
         }
-      });
+
+        // Professional name and details
+        ctx.font = "bold 18px Arial";
+        ctx.fillStyle = "white";
+        ctx.fillText(professionalData.name, 90, 90);
+
+        ctx.font = "13px Arial";
+        ctx.fillText(`License: ${professionalData.license}`, 90, 110);
+
+        // Truncate specialty if too long
+        const specialty =
+          professionalData.specialty.length > 30
+            ? professionalData.specialty.substring(0, 30) + "..."
+            : professionalData.specialty;
+        ctx.fillText(`Specialty: ${specialty}`, 90, 130);
+        ctx.fillText(`Experience: ${professionalData.experience}`, 90, 150);
+        ctx.fillText(`Status: ${professionalData.verified}`, 90, 170);
+
+        // Draw QR Code if available
+        if (qrCanvasRef.current) {
+          // Draw white background for QR code
+          ctx.fillStyle = "white";
+          ctx.fillRect(380, 90, 100, 120);
+
+          // Draw QR code
+          ctx.drawImage(qrCanvasRef.current, 385, 95, 90, 90);
+
+          // Add QR label
+          ctx.fillStyle = "#1f2937";
+          ctx.font = "10px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("Scan to Verify", 430, 195);
+          ctx.fillText("Professional", 430, 207);
+          ctx.textAlign = "left";
+        }
+
+        // Footer
+        ctx.fillStyle = "white";
+        ctx.font = "12px Arial";
+        ctx.fillText(`ID: ${professionalData.cardId}`, 20, 270);
+        ctx.fillText(
+          `Valid through ${professionalData.validThrough}`,
+          350,
+          270,
+        );
+
+        // Convert to blob and download
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${professionalData.name.replace(/\s+/g, "-")}-id-card.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+        });
+      };
+
+      // Load profile image if available
+      if (professionalData.profileImage) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          drawCard(img);
+        };
+        img.onerror = () => {
+          // If image fails to load, draw card without image
+          drawCard();
+        };
+        img.src = professionalData.profileImage;
+      } else {
+        // No profile image, draw card with initials
+        drawCard();
+      }
     }
   };
 
