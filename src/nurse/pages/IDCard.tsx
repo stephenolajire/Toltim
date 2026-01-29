@@ -79,6 +79,14 @@ const IDCard: React.FC = () => {
     return "Healthcare Professional";
   };
 
+  // Helper function to capitalize name
+  const capitalizeName = (name: string) => {
+    return name
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   // Convert profile data to professional data
   const professionalData: ProfessionalData | null = React.useMemo(() => {
     if (!profileData) return null;
@@ -88,7 +96,9 @@ const IDCard: React.FC = () => {
     const isCHW = "years_of_experience" in profileData && !isNurse;
 
     return {
-      name: profileData.full_name || "Healthcare Professional",
+      name: profileData.full_name
+        ? capitalizeName(profileData.full_name)
+        : "Healthcare Professional",
       title: isNurse
         ? "Verified Nurse"
         : isCHW
@@ -200,8 +210,35 @@ const IDCard: React.FC = () => {
           ctx.closePath();
           ctx.clip();
 
+          // Calculate dimensions to maintain aspect ratio and cover the circle
+          const size = 64;
+          const x = 16;
+          const y = 68;
+
+          // Draw white background
+          ctx.fillStyle = "white";
+          ctx.fillRect(x, y, size, size);
+
+          // Calculate scaling to cover the circle while maintaining aspect ratio
+          const scale = Math.max(
+            size / profileImg.width,
+            size / profileImg.height,
+          );
+          const scaledWidth = profileImg.width * scale;
+          const scaledHeight = profileImg.height * scale;
+
+          // Center the image
+          const offsetX = x + (size - scaledWidth) / 2;
+          const offsetY = y + (size - scaledHeight) / 2;
+
           // Draw image
-          ctx.drawImage(profileImg, 16, 68, 64, 64);
+          ctx.drawImage(
+            profileImg,
+            offsetX,
+            offsetY,
+            scaledWidth,
+            scaledHeight,
+          );
 
           // Restore context state
           ctx.restore();
@@ -290,16 +327,46 @@ const IDCard: React.FC = () => {
 
       // Load profile image if available
       if (professionalData.profileImage) {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          drawCard(img);
-        };
-        img.onerror = () => {
-          // If image fails to load, draw card without image
-          drawCard();
-        };
-        img.src = professionalData.profileImage;
+        // Fetch image as blob to avoid CORS issues
+        const imageUrl = professionalData.profileImage.startsWith("http")
+          ? professionalData.profileImage
+          : `${window.location.origin}${professionalData.profileImage}`;
+
+        console.log("Fetching image from:", imageUrl);
+
+        fetch(imageUrl)
+          .then((response) => {
+            if (!response.ok) {
+              throw error;
+            }
+            return response.blob();
+          })
+          .then((blob) => {
+            // Convert blob to data URL
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const img = new Image();
+              img.onload = () => {
+                console.log("Image loaded successfully for download");
+                drawCard(img);
+              };
+              img.onerror = (err) => {
+                console.error("Image failed to load from data URL:", err);
+                drawCard();
+              };
+              img.src = e.target?.result as string;
+            };
+            reader.onerror = () => {
+              console.error("Failed to read blob as data URL");
+              drawCard();
+            };
+            reader.readAsDataURL(blob);
+          })
+          .catch((err) => {
+            console.error("Failed to fetch image:", err);
+            // If fetch fails, draw card without image
+            drawCard();
+          });
       } else {
         // No profile image, draw card with initials
         drawCard();

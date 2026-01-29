@@ -4,7 +4,6 @@ import {
   Calendar,
   MapPin,
   Clock,
-  // FileText,
   User,
   CreditCard,
   Hash,
@@ -14,6 +13,7 @@ import {
   AlertCircle,
   Stethoscope,
   CalendarCheck,
+  UserCircle,
 } from "lucide-react";
 
 interface AppointmentDetailsModalProps {
@@ -48,6 +48,8 @@ const AppointmentDetailsModal = ({
           icon: <CheckCircle className="w-5 h-5" />,
           badgeBg: "bg-emerald-100",
           gradient: "from-emerald-500 to-emerald-600",
+          iconBg: "bg-emerald-100",
+          iconColor: "text-emerald-600",
         };
       case "pending":
         return {
@@ -57,6 +59,8 @@ const AppointmentDetailsModal = ({
           icon: <Timer className="w-5 h-5" />,
           badgeBg: "bg-amber-100",
           gradient: "from-amber-500 to-amber-600",
+          iconBg: "bg-amber-100",
+          iconColor: "text-amber-600",
         };
       case "rejected":
         return {
@@ -66,6 +70,8 @@ const AppointmentDetailsModal = ({
           icon: <XCircle className="w-5 h-5" />,
           badgeBg: "bg-rose-100",
           gradient: "from-rose-500 to-rose-600",
+          iconBg: "bg-rose-100",
+          iconColor: "text-rose-600",
         };
       case "completed":
         return {
@@ -75,6 +81,8 @@ const AppointmentDetailsModal = ({
           icon: <CheckCircle className="w-5 h-5" />,
           badgeBg: "bg-blue-100",
           gradient: "from-blue-500 to-blue-600",
+          iconBg: "bg-blue-100",
+          iconColor: "text-blue-600",
         };
       default:
         return {
@@ -84,6 +92,8 @@ const AppointmentDetailsModal = ({
           icon: <AlertCircle className="w-5 h-5" />,
           badgeBg: "bg-slate-100",
           gradient: "from-slate-500 to-slate-600",
+          iconBg: "bg-slate-100",
+          iconColor: "text-slate-600",
         };
     }
   };
@@ -128,24 +138,23 @@ const AppointmentDetailsModal = ({
 
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-          {/* Header - Gradient with better styling */}
-          <div
-            className={`relative bg-gradient-to-br ${statusConfig.gradient} p-6`}
-          >
+        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="relative bg-gradient-to-br from-blue-500 to-blue-600 p-6">
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-xl transition-all duration-200"
+              className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-lg transition-all duration-200"
+              aria-label="Close modal"
             >
-              <X className="w-6 h-6 text-white" />
+              <X className="w-5 h-5 text-white" />
             </button>
 
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center border-2 border-white/30 shadow-lg">
-                <Stethoscope className="w-8 h-8 text-white" />
+              <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                <Stethoscope className="w-7 h-7 text-white" />
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white mb-1">
+                <h2 className="text-xl font-bold text-white mb-1">
                   Appointment Details
                 </h2>
                 <p className="text-white/90 text-sm">
@@ -153,7 +162,7 @@ const AppointmentDetailsModal = ({
                 </p>
               </div>
               <div
-                className={`px-4 py-2 rounded-xl ${statusConfig.badgeBg} ${statusConfig.text} font-semibold text-sm flex items-center gap-2 border-2 ${statusConfig.border}`}
+                className={`px-3 py-1.5 rounded-lg ${statusConfig.badgeBg} ${statusConfig.text} font-semibold text-sm flex items-center gap-2 border ${statusConfig.border}`}
               >
                 {statusConfig.icon}
                 {(
@@ -172,25 +181,27 @@ const AppointmentDetailsModal = ({
             </div>
           </div>
 
-          {/* Content - Scrollable with better spacing */}
+          {/* Content - Scrollable */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Healthcare Provider Card */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-100">
+              <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4 flex items-center gap-2">
+                <UserCircle className="w-4 h-4" />
+                Healthcare Provider
+              </h3>
               <div className="flex items-center gap-4">
-                <div
-                  className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${statusConfig.gradient} flex items-center justify-center text-white font-bold text-3xl shadow-lg`}
-                >
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-2xl shadow-md">
                   {appointment.doctor?.avatar ||
                     appointment.performedBy?.charAt(0) ||
                     "N"}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                  <h4 className="text-lg font-bold text-gray-900 mb-0.5">
                     {appointment.doctor?.name ||
                       appointment.performedBy ||
                       "Healthcare Provider"}
-                  </h3>
-                  <p className="text-gray-600 font-medium">
+                  </h4>
+                  <p className="text-gray-600 text-sm font-medium">
                     {appointment.doctor?.specialty || "Nursing Procedure"}
                   </p>
                 </div>
@@ -201,23 +212,27 @@ const AppointmentDetailsModal = ({
             <div className="grid md:grid-cols-2 gap-6">
               {/* Appointment Information */}
               <div className="space-y-4">
-                <h4 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                  <CalendarCheck className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                  <CalendarCheck className="w-4 h-4" />
                   Appointment Information
-                </h4>
+                </h3>
 
                 <div className="space-y-3">
                   {/* Date */}
-                  <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                  <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-300 transition-colors">
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-5 h-5 text-blue-600" />
+                      <div
+                        className={`w-10 h-10 rounded-lg ${statusConfig.iconBg} flex items-center justify-center flex-shrink-0`}
+                      >
+                        <Calendar
+                          className={`w-5 h-5 ${statusConfig.iconColor}`}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                           Appointment Date
                         </p>
-                        <p className="font-bold text-gray-900">
+                        <p className="font-semibold text-gray-900 text-sm">
                           {formatDate(
                             appointment.metadata?.start_date ||
                               appointment.date,
@@ -229,7 +244,7 @@ const AppointmentDetailsModal = ({
 
                   {/* Time */}
                   {appointment.time && appointment.time !== "N/A" && (
-                    <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                    <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-purple-300 transition-colors">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
                           <Clock className="w-5 h-5 text-purple-600" />
@@ -238,7 +253,7 @@ const AppointmentDetailsModal = ({
                           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                             Time
                           </p>
-                          <p className="font-bold text-gray-900">
+                          <p className="font-semibold text-gray-900 text-sm">
                             {appointment.time}
                           </p>
                         </div>
@@ -247,7 +262,7 @@ const AppointmentDetailsModal = ({
                   )}
 
                   {/* Location */}
-                  <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                  <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-green-300 transition-colors">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
                         <MapPin className="w-5 h-5 text-green-600" />
@@ -256,7 +271,7 @@ const AppointmentDetailsModal = ({
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                           Location
                         </p>
-                        <p className="font-bold text-gray-900 break-words">
+                        <p className="font-semibold text-gray-900 text-sm break-words">
                           {appointment.location}
                         </p>
                       </div>
@@ -264,9 +279,7 @@ const AppointmentDetailsModal = ({
                   </div>
 
                   {/* Fee */}
-                  <div
-                    className={`rounded-xl p-4 bg-gradient-to-br ${statusConfig.gradient} shadow-lg`}
-                  >
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 shadow-md">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
                         <CreditCard className="w-5 h-5 text-white" />
@@ -275,7 +288,7 @@ const AppointmentDetailsModal = ({
                         <p className="text-xs font-semibold text-white/80 uppercase tracking-wide mb-1">
                           Service Fee
                         </p>
-                        <p className="font-bold text-white text-xl">
+                        <p className="font-bold text-white text-lg">
                           {formatCurrency(appointment.fee || 0)}
                         </p>
                       </div>
@@ -286,14 +299,14 @@ const AppointmentDetailsModal = ({
 
               {/* Booking Information */}
               <div className="space-y-4">
-                <h4 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                  <User className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                  <User className="w-4 h-4" />
                   Booking Information
-                </h4>
+                </h3>
 
                 <div className="space-y-3">
                   {/* Booking ID */}
-                  <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                  <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-indigo-300 transition-colors">
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
                         <Hash className="w-5 h-5 text-indigo-600" />
@@ -302,7 +315,7 @@ const AppointmentDetailsModal = ({
                         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                           Booking ID
                         </p>
-                        <p className="font-mono font-bold text-gray-900 text-sm break-all">
+                        <p className="font-mono font-semibold text-gray-900 text-xs break-all">
                           {appointment.id}
                         </p>
                       </div>
@@ -311,7 +324,7 @@ const AppointmentDetailsModal = ({
 
                   {/* Days Left */}
                   {daysLeft !== null && (
-                    <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                    <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-300 transition-colors">
                       <div className="flex items-start gap-3">
                         <div
                           className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -341,7 +354,7 @@ const AppointmentDetailsModal = ({
                             Time Status
                           </p>
                           <p
-                            className={`font-bold text-sm ${
+                            className={`font-semibold text-sm ${
                               daysLeft < 0
                                 ? "text-red-700"
                                 : daysLeft === 0
@@ -364,7 +377,7 @@ const AppointmentDetailsModal = ({
 
                   {/* Reviewed Status */}
                   {appointment.metadata?.reviewed !== undefined && (
-                    <div className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-200 transition-colors">
+                    <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-green-300 transition-colors">
                       <div className="flex items-start gap-3">
                         <div
                           className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -385,10 +398,29 @@ const AppointmentDetailsModal = ({
                           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                             Review Status
                           </p>
-                          <p className="font-bold text-gray-900">
+                          <p className="font-semibold text-gray-900 text-sm">
                             {appointment.metadata.reviewed
                               ? "Reviewed"
                               : "Not Reviewed"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Performed By */}
+                  {appointment.performedBy && (
+                    <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-300 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <User className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                            Performed By
+                          </p>
+                          <p className="font-semibold text-gray-900 text-sm break-words">
+                            {appointment.performedBy}
                           </p>
                         </div>
                       </div>
@@ -402,16 +434,16 @@ const AppointmentDetailsModal = ({
             {(appointment.status === "rejected" ||
               appointment.metadata?.status === "rejected") &&
               appointment.rejectionReason && (
-                <div className="bg-rose-50 border-2 border-rose-200 rounded-2xl p-6">
+                <div className="bg-rose-50 border border-rose-200 rounded-xl p-5">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-rose-100 flex items-center justify-center flex-shrink-0">
                       <XCircle className="w-6 h-6 text-rose-600" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-rose-900 mb-2 text-lg">
+                      <h4 className="font-bold text-rose-900 mb-2 text-base">
                         Reason for Rejection
                       </h4>
-                      <p className="text-rose-700 leading-relaxed">
+                      <p className="text-rose-700 leading-relaxed text-sm">
                         {appointment.rejectionReason}
                       </p>
                     </div>
@@ -421,11 +453,11 @@ const AppointmentDetailsModal = ({
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 bg-gray-50 p-6">
-            <div className="flex justify-end gap-3">
+          <div className="border-t border-gray-200 bg-gray-50 p-5">
+            <div className="flex justify-end">
               <button
                 onClick={onClose}
-                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-white hover:border-gray-400 transition-all"
+                className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-white hover:border-gray-400 transition-all text-sm"
               >
                 Close
               </button>
