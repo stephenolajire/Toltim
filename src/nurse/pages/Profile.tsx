@@ -6,7 +6,7 @@ import {
   Briefcase,
   Clock,
   Award,
-  MapPin,
+  // MapPin,
   Star,
   MessageSquare,
   TrendingUp,
@@ -269,7 +269,7 @@ export default function NurseProfile() {
                     {/* Location */}
                     {(profileData?.latitude || profileData?.location) && (
                       <div className="flex items-start gap-2 text-gray-500 mt-2">
-                        <MapPin className="w-4 h-4 flex-shrink-0 mt-1" />
+                        {/* <MapPin className="w-4 h-4 flex-shrink-0 mt-1" /> */}
                         <LocationDisplay
                           location={location}
                           className="text-sm break-words"
