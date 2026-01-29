@@ -204,23 +204,23 @@ const ActivePatients: React.FC = () => {
               <h4 className="text-lg font-medium text-gray-900 mb-3">
                 Patient Information
               </h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-700">Name</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 break-words">
                     {selectedBooking.patient_detail.first_name}{" "}
                     {selectedBooking.patient_detail.last_name}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Phone</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 break-words">
                     {selectedBooking.patient_detail.phone_number}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-700">Email</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 break-words">
                     {selectedBooking.patient_detail.email}
                   </p>
                 </div>
@@ -228,7 +228,7 @@ const ActivePatients: React.FC = () => {
                   <p className="text-sm font-medium text-gray-700">
                     Relationship
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 break-words">
                     {selectedBooking.patient_detail.relationship_to_patient}
                   </p>
                 </div>
