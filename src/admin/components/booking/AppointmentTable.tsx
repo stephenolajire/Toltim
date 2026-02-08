@@ -32,7 +32,7 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
   appointments,
   onAssignNurse,
   onViewDetails,
-  onCancel,
+  // onCancel,
   isLoading = false,
 }) => {
   const [activeMenu, setActiveMenu] = React.useState<string | null>(null);
@@ -71,8 +71,8 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
   const canAssign = (appointment: Appointment) =>
     (appointment.status === "pending" || appointment.status === "rejected") &&
     !appointment.assignedNurse;
-  const canCancel = (appointment: Appointment) =>
-    ["pending", "assigned"].includes(appointment.status);
+  // const canCancel = (appointment: Appointment) =>
+  //   ["pending", "assigned"].includes(appointment.status);
 
   return (
     <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
@@ -202,7 +202,7 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
                             {isLoading ? "Processing..." : "Assign"}
                           </button>
                         )}
-                        {canCancel(appointment) && onCancel && (
+                        {/* {canCancel(appointment) && onCancel && (
                           <button
                             onClick={() => onCancel(appointment.id)}
                             disabled={isLoading}
@@ -210,7 +210,7 @@ const AppointmentTable: React.FC<AppointmentTableProps> = ({
                           >
                             {isLoading ? "Processing..." : "Cancel"}
                           </button>
-                        )}
+                        )} */}
                       </div>
                     </td>
                   </tr>

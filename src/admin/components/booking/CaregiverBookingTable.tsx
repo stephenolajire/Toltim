@@ -27,7 +27,7 @@ const CaregiverBookingTable: React.FC<CaregiverBookingTableProps> = ({
   onAssignWorker,
   onViewDetails,
 //   onApprove,
-  onCancel,
+  // onCancel,
   isLoading = false,
 }) => {
   const getStatusColor = (status: string) => {
@@ -78,8 +78,8 @@ const CaregiverBookingTable: React.FC<CaregiverBookingTableProps> = ({
     booking.status === "pending" && !booking.assigned_worker;
 //   const canApprove = (booking: CaregiverBooking) =>
 //     booking.status === "assigned";
-  const canCancel = (booking: CaregiverBookingInfo) =>
-    ["pending", "assigned"].includes(booking.status);
+  // const canCancel = (booking: CaregiverBookingInfo) =>
+  //   ["pending", "assigned"].includes(booking.status);
 
   return (
     <div className="overflow-x-auto bg-white border border-gray-200 rounded-lg">
@@ -264,7 +264,7 @@ const CaregiverBookingTable: React.FC<CaregiverBookingTableProps> = ({
                           <Eye className="w-3 h-3" />
                           View
                         </button>
-                        {canCancel(booking) && onCancel && (
+                        {/* {canCancel(booking) && onCancel && (
                           <button
                             onClick={() => onCancel(booking.id)}
                             disabled={isLoading}
@@ -272,7 +272,7 @@ const CaregiverBookingTable: React.FC<CaregiverBookingTableProps> = ({
                           >
                             Cancel
                           </button>
-                        )}
+                        )} */}
                       </div>
                     </td>
                   </tr>

@@ -26,9 +26,17 @@ interface CaregiverReportDetails {
   worker_details: string;
 }
 
+interface ReportResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: CaregiverReportDetails[];
+}
+
 interface CaregiverReportModalProps {
   bookingId: string;
   bookingType: string;
+  reportId: string;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -36,23 +44,29 @@ interface CaregiverReportModalProps {
 const CaregiverReportModal: React.FC<CaregiverReportModalProps> = ({
   bookingId,
   bookingType,
+  reportId,
   isOpen,
   onClose,
 }) => {
-  // Fetch report details
+  // Fetch the specific report by finding it in the results
   const {
-    data: reportDetails,
+    data: reportResponse,
     isLoading,
     isError,
-  } = useQuery<CaregiverReportDetails>({
-    queryKey: ["caregiver-report", bookingId, bookingType],
+  } = useQuery<ReportResponse>({
+    queryKey: ["caregiver-report-detail", bookingId, bookingType, reportId],
     queryFn: async () => {
       const res = await api.get(`admin/reports/${bookingId}/${bookingType}/`);
       console.log("Fetched caregiver report details:", res.data);
       return res.data;
     },
-    enabled: isOpen && !!bookingId && !!bookingType,
+    enabled: isOpen && !!bookingId && !!bookingType && !!reportId,
   });
+
+  // Find the specific report from the results
+  const reportDetails = reportResponse?.results?.find(
+    (report) => report.id === reportId,
+  );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -137,7 +151,25 @@ const CaregiverReportModal: React.FC<CaregiverReportModalProps> = ({
                 </button>
               </div>
             </div>
-          ) : reportDetails ? (
+          ) : !reportDetails ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-600 text-lg font-medium">
+                  Report not found
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
+                  The requested report could not be found
+                </p>
+                <button
+                  onClick={onClose}
+                  className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : (
             <div className="space-y-6">
               {/* Report Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -174,19 +206,19 @@ const CaregiverReportModal: React.FC<CaregiverReportModalProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
                   <div className="flex items-center gap-2 mb-3">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                    <h4 className="font-semibold text-blue-900">
+                    <Calendar className="w-5 h-5 text-purple-600" />
+                    <h4 className="font-semibold text-purple-900">
                       Service Details
                     </h4>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-blue-700">
+                      <span className="text-sm text-purple-700">
                         Service Date:
                       </span>
-                      <span className="text-sm text-blue-900 font-medium">
+                      <span className="text-sm text-purple-900 font-medium">
                         {formatDate(reportDetails.service_date)}
                       </span>
                     </div>
@@ -196,14 +228,14 @@ const CaregiverReportModal: React.FC<CaregiverReportModalProps> = ({
 
               {/* Worker Details */}
               {reportDetails.worker_details && (
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                   <div className="flex items-center gap-2 mb-3">
-                    <User className="w-5 h-5 text-purple-600" />
-                    <h4 className="font-semibold text-purple-900">
+                    <User className="w-5 h-5 text-blue-600" />
+                    <h4 className="font-semibold text-blue-900">
                       Caregiver Details
                     </h4>
                   </div>
-                  <p className="text-sm text-purple-800 whitespace-pre-wrap leading-relaxed">
+                  <p className="text-sm text-blue-800 whitespace-pre-wrap leading-relaxed">
                     {reportDetails.worker_details}
                   </p>
                 </div>
@@ -282,7 +314,7 @@ const CaregiverReportModal: React.FC<CaregiverReportModalProps> = ({
                   </div>
                 )}
             </div>
-          ) : null}
+          )}
 
           {/* Footer */}
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">

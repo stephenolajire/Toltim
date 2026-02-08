@@ -515,7 +515,7 @@ const BedSideBooking: React.FC = () => {
                 ?
               </p>
               <div className="flex gap-3">
-                <button
+                {/* <button
                   onClick={() => {
                     setIsConfirmModalOpen(false);
                     setSelectedWorker(null);
@@ -523,7 +523,7 @@ const BedSideBooking: React.FC = () => {
                   className="flex-1 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
-                </button>
+                </button> */}
                 <button
                   onClick={handleConfirmAssignment}
                   disabled={Boolean(actionLoading)}

@@ -311,7 +311,7 @@ const PatientConfirmation: React.FC<PatientConfirmationProps> = ({
             <p className="text-sm text-gray-500 mt-1">
               Dear nurse, to record this session, a code has been sent to the
               patient's email address. Kindly request the patient to check their
-              email to proceed.
+              email to proceed. 
             </p>
           </div>
           <button

@@ -79,6 +79,9 @@ import SpecialtiesManagement from "./admin/pages/Specialization";
 import VerifyPayment from "./patient/VerifyPayment";
 import PatientReports from "./admin/pages/Reports";
 import WithdrawalPage from "./components/common/WithdrawalPage";
+import ReportsPage from "./admin/pages/ReportPage";
+import BedsideReportPage from "./admin/pages/BedSideReportPage";
+import CaregiverReportPage from "./admin/pages/CareGiverReportPage";
 
 const queryClient = new QueryClient();
 
@@ -105,7 +108,7 @@ const App: React.FC = () => {
               <Route index element={<LandingPage />} />
             </Route>
 
-            <Route path="/worker/withdrawal" element={<WithdrawalPage />}/>
+            <Route path="/worker/withdrawal" element={<WithdrawalPage />} />
 
             {/* AUTHENTICATION ROUTES */}
             <Route path="/login" element={<Login />} />
@@ -134,6 +137,19 @@ const App: React.FC = () => {
             >
               <Route index element={<Overview />} />
               <Route path="payment" element={<WalletComponent />} />
+              <Route
+                path="reports/:bookingId/procedure"
+                element={<ReportsPage />}
+              />
+              <Route
+                path="bedside-reports/:bookingId/inpatient"
+                element={<BedsideReportPage />}
+              />
+
+              <Route
+                path="caregiver-reports/:bookingId/caregiver"
+                element={<CaregiverReportPage />}
+              />
 
               {/* Users Management */}
               <Route path="users" element={<AdminUserLayout />}>

@@ -53,16 +53,14 @@ type StatusFilter =
   | "approved"
   | "rejected";
 
-
 const getSpecializationName = (
-  specialization: string | { id: string; name: string }
+  specialization: string | { id: string; name: string },
 ): string => {
   if (typeof specialization === "string") {
     return specialization;
   }
   return specialization?.name || "N/A";
 };
-
 
 const PendingNurseVerifications: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -101,8 +99,6 @@ const PendingNurseVerifications: React.FC = () => {
   const getFullName = (nurse: Nurse): string => {
     return `${nurse.first_name} ${nurse.last_name}`.trim();
   };
-
-
 
   // Helper function to count documents
   const getDocumentCount = (nurse: Nurse): number => {
@@ -153,12 +149,15 @@ const PendingNurseVerifications: React.FC = () => {
   const handleVerify = (nurseId: string): void => {
     updateKYC(nurseId);
     update && toast.success("KYC has been approved");
+    // Close modal after verification
+    closeModal();
   };
 
   const handleReject = (nurseId: string): void => {
-    // useNurseRejection(nurseId)
     rejectKYC(nurseId);
     isSuccess && toast.success("KYC has been rejected");
+    // Close modal after rejection
+    closeModal();
   };
 
   const closeModal = () => {
@@ -356,6 +355,8 @@ const PendingNurseVerifications: React.FC = () => {
         nurse={selectedNurse}
         isOpen={isModalOpen}
         onClose={closeModal}
+        onVerify={handleVerify}
+        onReject={handleReject}
       />
     </div>
   );

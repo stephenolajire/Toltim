@@ -474,7 +474,7 @@ const CaregiverBooking: React.FC = () => {
             </div>
 
             <div className="flex gap-3">
-              <button
+              {/* <button
                 onClick={() => {
                   setIsConfirmModalOpen(false);
                   setSelectedWorker(null);
@@ -482,7 +482,7 @@ const CaregiverBooking: React.FC = () => {
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
               >
                 Cancel
-              </button>
+              </button> */}
               <button
                 onClick={handleConfirmAssignment}
                 disabled={actionLoading === String(selectedBooking?.id)}

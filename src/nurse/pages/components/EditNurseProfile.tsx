@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, MapPin, Loader2, Camera, Upload } from "lucide-react";
+import { X, MapPin, Loader2, Camera, Upload, AlertCircle } from "lucide-react";
 import api from "../../../constant/api";
 import { useSpecialization } from "../../../constant/GlobalContext";
 import { toast } from "react-toastify";
@@ -22,6 +22,7 @@ interface ProfileData {
   location?: string;
   user_id?: string;
   active?: string;
+  account_number?: string;
 }
 
 interface Specialization {
@@ -52,7 +53,7 @@ export default function EditProfile({
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
-    profileData.profile_picture || null
+    profileData.profile_picture || null,
   );
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
@@ -103,7 +104,7 @@ export default function EditProfile({
 
   // Parse existing availability to get the first time slot (assuming uniform schedule)
   const parseAvailability = (
-    availability: any[]
+    availability: any[],
   ): { startTime: string; endTime: string } => {
     if (!availability || availability.length === 0) {
       return { startTime: "09:00", endTime: "17:00" };
@@ -116,7 +117,7 @@ export default function EditProfile({
 
     // Try to parse "Monday 9AM-5PM" or "Monday: 9:00 AM - 5:00 PM" format
     const withDayMatch = firstSlot.match(
-      /^(\w+)[:\s]+(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i
+      /^(\w+)[:\s]+(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i,
     );
 
     if (withDayMatch) {
@@ -128,7 +129,7 @@ export default function EditProfile({
 
     // Try to parse "10am-11am" format (without day)
     const withoutDayMatch = firstSlot.match(
-      /^(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i
+      /^(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i,
     );
 
     if (withoutDayMatch) {
@@ -142,7 +143,7 @@ export default function EditProfile({
   };
 
   const [weeklySchedule, setWeeklySchedule] = useState(
-    parseAvailability(profileData.availability || [])
+    parseAvailability(profileData.availability || []),
   );
 
   // Get initial specialization values as array of IDs
@@ -156,7 +157,7 @@ export default function EditProfile({
         .filter((id): id is number => typeof id === "number");
     }
     return [typeof spec === "number" ? spec : (spec as any)?.id].filter(
-      Boolean
+      Boolean,
     );
   };
 
@@ -168,6 +169,7 @@ export default function EditProfile({
           latitude: profileData.latitude || 0,
           longitude: profileData.longitude || 0,
           available: profileData.available ?? true,
+          account_number: profileData.account_number || "",
         }
       : {
           specialization: getInitialSpecializations(),
@@ -176,7 +178,8 @@ export default function EditProfile({
           languages: profileData.languages?.join(", ") || "",
           latitude: profileData.latitude || 0,
           longitude: profileData.longitude || 0,
-        }
+          account_number: profileData.account_number || "",
+        },
   );
 
   const updateProfileMutation = useMutation({
@@ -185,7 +188,7 @@ export default function EditProfile({
       if (isCHW) {
         const response = await api.patch(
           `/user/chw-profile/${profileData.id}/`,
-          data
+          data,
         );
         return response.data;
       } else {
@@ -196,18 +199,19 @@ export default function EditProfile({
             headers: {
               "Content-Type": "multipart/form-data",
             },
-          }
+          },
         );
         return response.data;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["useNurseProfile"] });
+      toast.success("Profile updated successfully!");
       onClose();
     },
     onError: (error: any) => {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile. Please try again.");
+      console.error(error.response.data);
+      toast.error(error.response.data.message);
     },
   });
 
@@ -234,7 +238,7 @@ export default function EditProfile({
         setLocationError("Unable to retrieve your location");
         setLoadingLocation(false);
         console.error("Error getting location:", error);
-      }
+      },
     );
   };
 
@@ -305,7 +309,7 @@ export default function EditProfile({
 
   const handleScheduleChange = (
     field: "startTime" | "endTime",
-    value: string
+    value: string,
   ) => {
     setWeeklySchedule((prev) => ({
       ...prev,
@@ -322,12 +326,22 @@ export default function EditProfile({
   };
 
   const handleSubmit = () => {
+    // Validate account number for both user types
+    if (
+      !formData.account_number ||
+      formData.account_number.trim().length !== 10
+    ) {
+      toast.error("Please enter a valid 10-digit VFD account number");
+      return;
+    }
+
     if (isCHW) {
       const chwData = {
         years_of_experience: formData.years_of_experience,
         latitude: formData.latitude,
         longitude: formData.longitude,
         available: formData.available,
+        account_number: formData.account_number.trim(),
       };
       updateProfileMutation.mutate(chwData);
     } else {
@@ -356,6 +370,7 @@ export default function EditProfile({
       formDataToSend.append("languages", JSON.stringify(languagesArray));
       formDataToSend.append("latitude", (formData.latitude || 0).toString());
       formDataToSend.append("longitude", (formData.longitude || 0).toString());
+      formDataToSend.append("account_number", formData.account_number.trim());
 
       if (selectedImage) {
         formDataToSend.append("profile_picture", selectedImage);
@@ -380,6 +395,46 @@ export default function EditProfile({
         </div>
 
         <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
+          {/* VFD Bank Notice - Shows for both user types */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-blue-900 mb-1">
+                Withdrawal Information
+              </p>
+              <p className="text-sm text-blue-700">
+                Our platform only supports withdrawals to VFD Bank accounts.
+                Please ensure you have a VFD Bank account before setting up
+                withdrawals.
+              </p>
+            </div>
+          </div>
+
+          {/* Account Number Field - Shows for both user types */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              VFD Bank Account Number <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="account_number"
+              value={formData.account_number}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                setFormData((prev) => ({
+                  ...prev,
+                  account_number: value,
+                }));
+              }}
+              maxLength={10}
+              placeholder="Enter your 10-digit VFD account number"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              This account will be used for withdrawals
+            </p>
+          </div>
+
           {isNurse && (
             <>
               <div>
@@ -462,7 +517,7 @@ export default function EditProfile({
                       <div className="mt-2 flex flex-wrap gap-2">
                         {(formData.specialization as number[]).map((specId) => {
                           const option = specializations.find(
-                            (opt) => opt.id === specId
+                            (opt) => opt.id === specId,
                           );
                           return option ? (
                             <span

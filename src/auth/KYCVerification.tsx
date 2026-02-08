@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Heart,
   Shield,
@@ -11,7 +11,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import api from "../constant/api";
-import {toast} from "react-toastify"
+import { toast } from "react-toastify";
 
 const KYCVerification = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -32,6 +32,13 @@ const KYCVerification = () => {
   const [cameraMode, setCameraMode] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
   const convertToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -47,63 +54,124 @@ const KYCVerification = () => {
 
   const startCamera = async () => {
     try {
+      // Stop any existing stream first
+      stopCamera();
+
+      // Request camera permissions
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: 640, height: 480 },
+        video: {
+          facingMode: "user",
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
         audio: false,
       });
 
+      // Set the stream and wait for video to be ready
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        
+        // Wait for video metadata to load
+        await new Promise<void>((resolve) => {
+          if (videoRef.current) {
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current?.play();
+              resolve();
+            };
+          }
+        });
+
+        setCameraMode(true);
+        toast.success("Camera started successfully");
       }
-      setCameraMode(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error accessing camera:", error);
-      toast.info(
-        "Unable to access camera. Please check permissions or use file upload."
-      );
+      
+      let errorMessage = "Unable to access camera. ";
+      
+      if (error.name === "NotAllowedError" || error.name === "PermissionDeniedError") {
+        errorMessage += "Please grant camera permissions in your browser settings.";
+      } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+        errorMessage += "No camera found on your device.";
+      } else if (error.name === "NotReadableError" || error.name === "TrackStartError") {
+        errorMessage += "Camera is already in use by another application.";
+      } else if (error.name === "OverconstrainedError") {
+        errorMessage += "Camera doesn't meet the required constraints.";
+      } else {
+        errorMessage += "Please check permissions or use file upload.";
+      }
+      
+      toast.error(errorMessage);
+      setCameraMode(false);
     }
   };
 
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
       streamRef.current = null;
     }
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    
     setCameraMode(false);
   };
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
-
-      if (!context) return;
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
-            const previewUrl = URL.createObjectURL(blob);
-
-            setFormData((prev) => ({
-              ...prev,
-              selfieImage: file,
-              selfiePreview: previewUrl,
-            }));
-
-            stopCamera();
-          }
-        },
-        "image/jpeg",
-        0.9
-      );
+    if (!videoRef.current || !canvasRef.current) {
+      toast.error("Camera not ready. Please try again.");
+      return;
     }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    // Check if video is actually playing
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+      toast.error("Video not ready. Please wait a moment.");
+      return;
+    }
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      toast.error("Unable to capture photo. Please try again.");
+      return;
+    }
+
+    // Set canvas dimensions to match video
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    
+    // Draw the video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to blob
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          const file = new File([blob], "selfie.jpg", { type: "image/jpeg" });
+          const previewUrl = URL.createObjectURL(blob);
+
+          setFormData((prev) => ({
+            ...prev,
+            selfieImage: file,
+            selfiePreview: previewUrl,
+          }));
+
+          stopCamera();
+          toast.success("Photo captured successfully!");
+        } else {
+          toast.error("Failed to capture photo. Please try again.");
+        }
+      },
+      "image/jpeg",
+      0.9
+    );
   };
 
   const handleNinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -117,12 +185,12 @@ const KYCVerification = () => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith("image/")) {
-        toast.info("Please select a valid image file");
+        toast.error("Please select a valid image file");
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        toast.info("Image size should be less than 5MB");
+        toast.error("Image size should be less than 5MB");
         return;
       }
 
@@ -139,11 +207,17 @@ const KYCVerification = () => {
   };
 
   const handleRemoveImage = () => {
+    // Revoke the object URL to free up memory
+    if (formData.selfiePreview) {
+      URL.revokeObjectURL(formData.selfiePreview);
+    }
+    
     setFormData((prev) => ({
       ...prev,
       selfieImage: null,
       selfiePreview: null,
     }));
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -158,7 +232,7 @@ const KYCVerification = () => {
     }
 
     if (!formData.selfieImage) {
-      toast.info("Please upload a selfie image");
+      toast.error("Please upload a selfie image");
       return;
     }
 
@@ -172,21 +246,26 @@ const KYCVerification = () => {
       };
 
       const response = await api.post("/user/kyc/", payload);
-      if (response.status === 200) {
+      
+      if (response.status === 200 || response.status === 201) {
         toast.success("KYC verification submitted successfully!");
+        
+        // Reset form
+        setFormData({
+          nin: "",
+          selfieImage: null,
+          selfiePreview: null,
+        });
       } else {
         toast.error("Failed to submit KYC verification. Please try again.");
       }
-
-
-      setFormData({
-        nin: "",
-        selfieImage: null,
-        selfiePreview: null,
-      });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting KYC:", error);
-      toast.error("Failed to submit KYC verification. Please try again.");
+      const errorMessage = 
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        "Failed to submit KYC verification. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -310,19 +389,24 @@ const KYCVerification = () => {
 
               {cameraMode && (
                 <div className="relative">
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full rounded-lg border-2 border-green-500"
-                  />
+                  <div className="relative rounded-lg overflow-hidden border-2 border-green-500 bg-black">
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      className="w-full h-auto"
+                      style={{ maxHeight: "400px" }}
+                    />
+                  </div>
                   <canvas ref={canvasRef} className="hidden" />
                   <div className="mt-3 flex gap-3">
                     <button
                       type="button"
                       onClick={capturePhoto}
-                      className="flex-1 bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-colors font-medium"
+                      className="flex-1 bg-green-600 text-white py-3 px-4 rounded-md hover:bg-green-700 transition-colors font-medium flex items-center justify-center gap-2"
                     >
+                      <Camera className="w-5 h-5" />
                       Capture Photo
                     </button>
                     <button

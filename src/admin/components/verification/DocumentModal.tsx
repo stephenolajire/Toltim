@@ -1,5 +1,13 @@
 import React from "react";
-import { Download, ExternalLink, FileText, Image, X } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  FileText,
+  Image,
+  X,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 
 interface Nurse {
   id: string;
@@ -33,12 +41,16 @@ interface DocumentModalProps {
   nurse: Nurse | null;
   isOpen: boolean;
   onClose: () => void;
+  onVerify: (nurseId: string) => void;
+  onReject: (nurseId: string) => void;
 }
 
 const DocumentModal: React.FC<DocumentModalProps> = ({
   nurse,
   isOpen,
   onClose,
+  onVerify,
+  onReject,
 }) => {
   if (!isOpen || !nurse) return null;
 
@@ -87,13 +99,17 @@ const DocumentModal: React.FC<DocumentModalProps> = ({
   };
 
   const getSpecializationName = (
-    specialization: string | { id: string; name: string }
+    specialization: string | { id: string; name: string },
   ): string => {
     if (typeof specialization === "string") {
       return specialization;
     }
     return specialization?.name || "N/A";
   };
+
+  // Check if verification actions should be shown
+  const canVerify = nurse.status === "pending";
+  const canReject = nurse.status !== "approved" && nurse.status !== "rejected";
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -320,7 +336,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({
                               const target = e.target as HTMLImageElement;
                               target.style.display = "none";
                               target.nextElementSibling?.classList.remove(
-                                "hidden"
+                                "hidden",
                               );
                             }}
                           />
@@ -352,7 +368,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({
                         onClick={() =>
                           handleDownload(
                             doc.url,
-                            getFileName(doc.url, doc.type)
+                            getFileName(doc.url, doc.type),
                           )
                         }
                         className="flex-1 bg-green-50 text-green-700 px-3 py-1.5 rounded text-xs font-medium hover:bg-green-100 transition-colors flex items-center justify-center gap-1"
@@ -369,7 +385,27 @@ const DocumentModal: React.FC<DocumentModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+        <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center gap-3">
+          <div className="flex gap-3">
+            {canVerify && (
+              <button
+                onClick={() => onVerify(nurse.id)}
+                className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Approve Verification
+              </button>
+            )}
+            {canReject && (
+              <button
+                onClick={() => onReject(nurse.id)}
+                className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium"
+              >
+                <XCircle className="w-4 h-4" />
+                Reject Application
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -382,7 +418,7 @@ const DocumentModal: React.FC<DocumentModalProps> = ({
   );
 };
 
-// Helper function to format status for display (add this if not already present)
+// Helper function to format status for display
 const formatStatusForDisplay = (status: string): string => {
   return status
     .split("_")
@@ -390,7 +426,7 @@ const formatStatusForDisplay = (status: string): string => {
     .join(" ");
 };
 
-// Helper function for status badge (add this if not already present)
+// Helper function for status badge
 const getStatusBadge = (status: string): string => {
   const baseClasses = "px-3 py-1 rounded-full text-xs font-medium";
   switch (status) {

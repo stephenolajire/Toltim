@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   X,
@@ -7,8 +7,6 @@ import {
   Calendar,
   Image as ImageIcon,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import api from "../constant/api";
 
@@ -44,8 +42,8 @@ interface BedsideReportDetails {
   report_type: string;
   treatment_photos?: TreatmentPhoto[];
   notes: string;
-  treatment_record: TreatmentRecord | string;
-  worker_details: WorkerDetails | string;
+  treatment_record: TreatmentRecord | string | null;
+  worker_details: WorkerDetails | string | null;
 }
 
 interface ReportResponse {
@@ -58,6 +56,7 @@ interface ReportResponse {
 interface BedsideReportModalProps {
   bookingId: string;
   bookingType: string;
+  reportId: string;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -65,32 +64,29 @@ interface BedsideReportModalProps {
 const BedsideReportModal: React.FC<BedsideReportModalProps> = ({
   bookingId,
   bookingType,
+  reportId,
   isOpen,
   onClose,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Fetch report details with pagination
+  // Fetch the specific report by finding it in the results
   const {
     data: reportResponse,
     isLoading,
     isError,
   } = useQuery<ReportResponse>({
-    queryKey: ["bedside-report", bookingId, bookingType, currentPage],
+    queryKey: ["bedside-report-detail", bookingId, bookingType, reportId],
     queryFn: async () => {
-      const res = await api.get(
-        `admin/reports/${bookingId}/${bookingType}/?page=${currentPage}`,
-      );
+      const res = await api.get(`admin/reports/${bookingId}/${bookingType}/`);
       console.log("Fetched bedside report details:", res.data);
       return res.data;
     },
-    enabled: isOpen && !!bookingId && !!bookingType,
+    enabled: isOpen && !!bookingId && !!bookingType && !!reportId,
   });
 
-  const reportDetails = reportResponse?.results?.[0];
-  const totalPages = reportResponse?.count
-    ? Math.ceil(reportResponse.count / 1)
-    : 1;
+  // Find the specific report from the results
+  const reportDetails = reportResponse?.results?.find(
+    (report) => report.id === reportId,
+  );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -111,19 +107,13 @@ const BedsideReportModal: React.FC<BedsideReportModalProps> = ({
     });
   };
 
-  const handlePreviousPage = () => {
-    if (reportResponse?.previous) {
-      setCurrentPage((prev) => prev - 1);
+  const renderTreatmentRecord = (record: TreatmentRecord | string | null) => {
+    if (!record) {
+      return (
+        <p className="text-gray-500 italic">No treatment record available</p>
+      );
     }
-  };
 
-  const handleNextPage = () => {
-    if (reportResponse?.next) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const renderTreatmentRecord = (record: TreatmentRecord | string) => {
     if (typeof record === "string") {
       return <p className="text-gray-700 whitespace-pre-wrap">{record}</p>;
     }
@@ -214,7 +204,13 @@ const BedsideReportModal: React.FC<BedsideReportModalProps> = ({
     );
   };
 
-  const renderWorkerDetails = (worker: WorkerDetails | string) => {
+  const renderWorkerDetails = (worker: WorkerDetails | string | null) => {
+    if (!worker) {
+      return (
+        <p className="text-gray-500 italic">No worker details available</p>
+      );
+    }
+
     if (typeof worker === "string") {
       return <p className="text-gray-700 whitespace-pre-wrap">{worker}</p>;
     }
@@ -307,7 +303,25 @@ const BedsideReportModal: React.FC<BedsideReportModalProps> = ({
                 </button>
               </div>
             </div>
-          ) : reportDetails ? (
+          ) : !reportDetails ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-600 text-lg font-medium">
+                  Report not found
+                </p>
+                <p className="text-gray-500 text-sm mt-2">
+                  The requested report could not be found
+                </p>
+                <button
+                  onClick={onClose}
+                  className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          ) : (
             <div className="space-y-6">
               {/* Report Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -447,43 +461,8 @@ const BedsideReportModal: React.FC<BedsideReportModalProps> = ({
                     </div>
                   </div>
                 )}
-
-              {/* Pagination */}
-              {reportResponse && reportResponse.count > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div className="text-sm text-gray-600">
-                    Showing report {currentPage} of {totalPages}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handlePreviousPage}
-                      disabled={!reportResponse.previous}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                        reportResponse.previous
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Previous
-                    </button>
-                    <button
-                      onClick={handleNextPage}
-                      disabled={!reportResponse.next}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                        reportResponse.next
-                          ? "bg-green-600 text-white hover:bg-green-700"
-                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
-          ) : null}
+          )}
 
           {/* Footer */}
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-gray-200">
