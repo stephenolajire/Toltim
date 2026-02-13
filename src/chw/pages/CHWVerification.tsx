@@ -2,17 +2,17 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import {
   FileText,
-  Briefcase,
   GraduationCap,
-  MapPin,
   Phone,
   User,
   CheckCircle,
   Loader2,
   AlertCircle,
   Image as ImageIcon,
+  FileCheck,
 } from "lucide-react";
 import api from "../../constant/api";
+import { useNavigate } from "react-router-dom";
 
 interface FileUpload {
   file: File | null;
@@ -22,29 +22,25 @@ interface FileUpload {
 export default function CHWVerification() {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const navigate = useNavigate()
 
   // Form data state
   const [formData, setFormData] = useState({
-    specialization: "",
     institution: "",
     year_of_graduation: new Date().getFullYear(),
     year_of_experience: "",
-    workplace: "",
-    work_address: "",
     biography: "",
     emergency_contact_details: "",
   });
 
   // File uploads state
   const [files, setFiles] = useState<{
-    cv_document: FileUpload;
-    employment_letter: FileUpload;
+    utility_bill: FileUpload;
     certificate_document: FileUpload;
     id_card: FileUpload;
     photo: FileUpload;
   }>({
-    cv_document: { file: null, preview: null },
-    employment_letter: { file: null, preview: null },
+    utility_bill: { file: null, preview: null },
     certificate_document: { file: null, preview: null },
     id_card: { file: null, preview: null },
     photo: { file: null, preview: null },
@@ -61,18 +57,19 @@ export default function CHWVerification() {
     },
     onSuccess: () => {
       setSubmitSuccess(true);
+      navigate("/chw")
     },
     onError: (error: any) => {
       console.error("Verification error:", error);
       alert(
         error.response?.data?.message ||
-          "Failed to submit verification. Please try again."
+          "Failed to submit verification. Please try again.",
       );
     },
   });
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -83,7 +80,7 @@ export default function CHWVerification() {
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    fieldName: keyof typeof files
+    fieldName: keyof typeof files,
   ) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -112,9 +109,10 @@ export default function CHWVerification() {
   const handleSubmit = () => {
     // Validate required fields
     if (
-      !formData.specialization ||
       !formData.institution ||
-      !formData.workplace
+      !formData.year_of_experience ||
+      !formData.biography ||
+      !formData.emergency_contact_details
     ) {
       alert("Please fill in all required fields");
       return;
@@ -122,7 +120,7 @@ export default function CHWVerification() {
 
     // Validate required files
     if (
-      !files.cv_document.file ||
+      !files.utility_bill.file ||
       !files.certificate_document.file ||
       !files.id_card.file ||
       !files.photo.file
@@ -135,30 +133,25 @@ export default function CHWVerification() {
     const formDataToSend = new FormData();
 
     // Append text fields
-    formDataToSend.append("specialization", formData.specialization);
     formDataToSend.append("institution", formData.institution);
     formDataToSend.append(
       "year_of_graduation",
-      formData.year_of_graduation.toString()
+      formData.year_of_graduation.toString(),
     );
     formDataToSend.append("year_of_experience", formData.year_of_experience);
-    formDataToSend.append("workplace", formData.workplace);
-    formDataToSend.append("work_address", formData.work_address);
     formDataToSend.append("biography", formData.biography);
     formDataToSend.append(
       "emergency_contact_details",
-      formData.emergency_contact_details
+      formData.emergency_contact_details,
     );
 
     // Append files
-    if (files.cv_document.file)
-      formDataToSend.append("cv_document", files.cv_document.file);
-    if (files.employment_letter.file)
-      formDataToSend.append("employment_letter", files.employment_letter.file);
+    if (files.utility_bill.file)
+      formDataToSend.append("utility_bill", files.utility_bill.file);
     if (files.certificate_document.file)
       formDataToSend.append(
         "certificate_document",
-        files.certificate_document.file
+        files.certificate_document.file,
       );
     if (files.id_card.file)
       formDataToSend.append("id_card", files.id_card.file);
@@ -248,7 +241,7 @@ export default function CHWVerification() {
             days.
           </p>
           <button
-            onClick={() => (window.location.href = "/nurse")}
+            onClick={() => (window.location.href = "/chw")}
             className="w-full px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
           >
             Go to Dashboard
@@ -260,8 +253,7 @@ export default function CHWVerification() {
 
   const steps = [
     { number: 1, title: "Personal Info", icon: User },
-    { number: 2, title: "Professional Details", icon: Briefcase },
-    { number: 3, title: "Documents", icon: FileText },
+    { number: 2, title: "Documents", icon: FileText },
   ];
 
   return (
@@ -331,31 +323,49 @@ export default function CHWVerification() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Specialization <span className="text-red-500">*</span>
+                    <div className="flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-green-600" />
+                      Institution <span className="text-red-500">*</span>
+                    </div>
                   </label>
                   <input
                     type="text"
-                    name="specialization"
-                    value={formData.specialization}
+                    name="institution"
+                    value={formData.institution}
                     onChange={handleInputChange}
-                    placeholder="e.g., Community Health, Maternal Care"
+                    placeholder="Name of training institution"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Years of Experience <span className="text-red-500">*</span>
+                    Year of Graduation <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="text"
-                    name="year_of_experience"
-                    value={formData.year_of_experience}
+                    type="number"
+                    name="year_of_graduation"
+                    value={formData.year_of_graduation}
                     onChange={handleInputChange}
-                    placeholder="e.g., 5 years"
+                    min="1950"
+                    max={new Date().getFullYear()}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Years of Experience <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="year_of_experience"
+                  value={formData.year_of_experience}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 5 years"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                />
               </div>
 
               <div>
@@ -392,90 +402,8 @@ export default function CHWVerification() {
             </div>
           )}
 
-          {/* Step 2: Professional Details */}
+          {/* Step 2: Documents */}
           {currentStep === 2 && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Briefcase className="w-6 h-6 text-blue-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Professional Details
-                </h2>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <div className="flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-green-600" />
-                      Institution <span className="text-red-500">*</span>
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="institution"
-                    value={formData.institution}
-                    onChange={handleInputChange}
-                    placeholder="Name of training institution"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Year of Graduation <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    name="year_of_graduation"
-                    value={formData.year_of_graduation}
-                    onChange={handleInputChange}
-                    min="1950"
-                    max={new Date().getFullYear()}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-green-600" />
-                    Current Workplace <span className="text-red-500">*</span>
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  name="workplace"
-                  value={formData.workplace}
-                  onChange={handleInputChange}
-                  placeholder="e.g., City Health Center, Private Practice"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-green-600" />
-                    Work Address <span className="text-red-500">*</span>
-                  </div>
-                </label>
-                <textarea
-                  name="work_address"
-                  value={formData.work_address}
-                  onChange={handleInputChange}
-                  rows={3}
-                  placeholder="Full work address including city and state"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none resize-none"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Documents */}
-          {currentStep === 3 && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
@@ -503,11 +431,11 @@ export default function CHWVerification() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <FileUploadBox
-                  label="CV/Resume"
-                  fieldName="cv_document"
-                  accept=".pdf,.doc,.docx"
+                  label="Utility Bill"
+                  fieldName="utility_bill"
+                  accept=".pdf,.jpg,.jpeg,.png"
                   required
-                  icon={FileText}
+                  icon={FileCheck}
                 />
 
                 <FileUploadBox
@@ -533,15 +461,6 @@ export default function CHWVerification() {
                   required
                   icon={ImageIcon}
                 />
-
-                <div className="md:col-span-2">
-                  <FileUploadBox
-                    label="Employment Letter (Optional)"
-                    fieldName="employment_letter"
-                    accept=".pdf,.doc,.docx"
-                    icon={Briefcase}
-                  />
-                </div>
               </div>
             </div>
           )}
@@ -559,7 +478,7 @@ export default function CHWVerification() {
               <div></div>
             )}
 
-            {currentStep < 3 ? (
+            {currentStep < 2 ? (
               <button
                 onClick={() => setCurrentStep(currentStep + 1)}
                 className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"

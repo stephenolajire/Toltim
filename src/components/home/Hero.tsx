@@ -114,7 +114,7 @@ const HeroSection: React.FC = () => {
                     <div className="flex items-start gap-4 w-full">
                       <div className="relative">
                         <img
-                          src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=80&h=80&fit=crop"
+                          src="/thumbnail.png"
                           alt="Nurse Sarah"
                           className="w-full max-w-16 h-16 rounded-xl object-cover border-2 border-white shadow-md"
                         />
@@ -162,7 +162,7 @@ const HeroSection: React.FC = () => {
                     <div className="flex items-start gap-4 w-full">
                       <div className="relative">
                         <img
-                          src="https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=80&h=80&fit=crop"
+                          src="thumbnails.png"
                           alt="Nurse Aisha"
                           className="w-full max-w-16 h-16 rounded-xl object-cover border-2 border-white shadow-md"
                         />
@@ -265,7 +265,7 @@ const HeroSection: React.FC = () => {
                 <div className="absolute top-1/2 -right-12 transform -translate-y-1/2 bg-white rounded-2xl shadow-xl p-4 w-full max-w-56 animate-float border border-gray-100">
                   <div className="flex items-center gap-2 mb-2 w-full">
                     <img
-                      src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop"
+                      src="thumbnail.png"
                       alt="Patient"
                       className="w-full max-w-10 h-10 rounded-full object-cover"
                     />

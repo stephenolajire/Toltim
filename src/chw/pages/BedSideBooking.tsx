@@ -281,7 +281,7 @@ const BedsideDashboard: React.FC = () => {
               Failed to load bedside care requests
             </h3>
             <p className="text-red-700">
-              {error?.message || "Please check your connection and try again."}
+              {error.message || "Please check your connection and try again."}
             </p>
           </div>
         </div>

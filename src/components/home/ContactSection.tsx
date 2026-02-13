@@ -44,19 +44,19 @@ const ContactSection: React.FC = () => {
     {
       icon: Phone,
       title: "Call Us",
-      detail: "+234 (0) 803 456 7890",
+      detail: "+234 (0) 708 556 3465",
       subtext: "Mon-Fri 8am-6pm, Sat 9am-2pm",
     },
     {
       icon: Mail,
       title: "Email Us",
-      detail: "support@healthcare.com",
+      detail: "care@toltimedcare.com.ng",
       subtext: "We'll respond within 24 hours",
     },
     {
       icon: MapPin,
       title: "Visit Us",
-      detail: "Port Harcourt, Rivers State",
+      detail: "Along Akala express Ibadan Oluyole Ext. Oyo State.",
       subtext: "Nigeria",
     },
   ];

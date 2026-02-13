@@ -8,6 +8,7 @@ import {
   AlertTriangle,
   FileText,
   Download,
+  Loader2,
 } from "lucide-react";
 import { useCHWVerification } from "../../constant/GlobalContext";
 import Error from "../../components/Error";
@@ -22,25 +23,21 @@ interface CHWDocument {
   first_name: string;
   last_name: string;
   email_address: string;
-  specialization: string;
+  institution: string;
+  year_of_graduation: number;
   year_of_experience: string;
+  biography: string;
+  emergency_contact_details: string;
+  utility_bill: string;
+  certificate_document: string;
+  id_card: string;
+  photo: string;
   status:
     | "pending"
     | "approved"
     | "rejected"
     | "under_review"
     | "documents_missing";
-  workplace: string;
-  institution: string;
-  year_of_graduation: number;
-  biography: string;
-  work_address: string;
-  emergency_contact_details: string;
-  certificate_document: string;
-  cv_document: string;
-  employment_letter: string;
-  id_card: string;
-  photo: string;
 }
 
 type StatusFilter =
@@ -54,21 +51,55 @@ type StatusFilter =
 interface DocumentModalProps {
   chw: CHWDocument | null;
   onClose: () => void;
+  onApprove: (chwId: string) => void;
+  onReject: (chwId: string) => void;
+  isApproving: boolean;
+  isRejecting: boolean;
 }
 
-const DocumentModal: React.FC<DocumentModalProps> = ({ chw, onClose }) => {
+const DocumentModal: React.FC<DocumentModalProps> = ({
+  chw,
+  onClose,
+  onApprove,
+  onReject,
+  isApproving,
+  isRejecting,
+}) => {
   if (!chw) return null;
 
   const documents = [
+    { name: "Utility Bill", url: chw.utility_bill, icon: FileText },
     { name: "Certificate", url: chw.certificate_document, icon: FileText },
-    { name: "CV/Resume", url: chw.cv_document, icon: FileText },
-    { name: "Employment Letter", url: chw.employment_letter, icon: FileText },
     { name: "ID Card", url: chw.id_card, icon: FileText },
     { name: "Photo", url: chw.photo, icon: FileText },
   ];
 
   const handleDocumentClick = (url: string) => {
-    window.open(url, "_blank");
+    if (url && url.trim() !== "") {
+      window.open(url, "_blank");
+    } else {
+      toast.error("Document not available");
+    }
+  };
+
+  const handleApprove = () => {
+    if (
+      window.confirm(
+        `Are you sure you want to approve ${chw.first_name} ${chw.last_name}?`,
+      )
+    ) {
+      onApprove(chw.id);
+    }
+  };
+
+  const handleReject = () => {
+    if (
+      window.confirm(
+        `Are you sure you want to reject ${chw.first_name} ${chw.last_name}?`,
+      )
+    ) {
+      onReject(chw.id);
+    }
   };
 
   return (
@@ -91,31 +122,13 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ chw, onClose }) => {
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-240px)]">
           {/* CHW Details */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Personal Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Specialization</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {chw.specialization}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Experience</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {chw.year_of_experience} years
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Workplace</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {chw.workplace}
-                </p>
-              </div>
               <div>
                 <p className="text-sm text-gray-600">Institution</p>
                 <p className="text-sm font-medium text-gray-900">
@@ -129,15 +142,15 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ chw, onClose }) => {
                 </p>
               </div>
               <div>
+                <p className="text-sm text-gray-600">Years of Experience</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {chw.year_of_experience}
+                </p>
+              </div>
+              <div>
                 <p className="text-sm text-gray-600">Emergency Contact</p>
                 <p className="text-sm font-medium text-gray-900">
                   {chw.emergency_contact_details}
-                </p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-sm text-gray-600">Work Address</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {chw.work_address}
                 </p>
               </div>
               <div className="md:col-span-2">
@@ -159,7 +172,12 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ chw, onClose }) => {
                 <button
                   key={index}
                   onClick={() => handleDocumentClick(doc.url)}
-                  className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-blue-500 transition-all"
+                  disabled={!doc.url || doc.url.trim() === ""}
+                  className={`flex items-center gap-3 p-4 border border-gray-200 rounded-lg transition-all ${
+                    doc.url && doc.url.trim() !== ""
+                      ? "hover:bg-gray-50 hover:border-blue-500 cursor-pointer"
+                      : "opacity-50 cursor-not-allowed bg-gray-50"
+                  }`}
                 >
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <doc.icon className="w-5 h-5 text-blue-600" />
@@ -169,10 +187,14 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ chw, onClose }) => {
                       {doc.name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Click to view/download
+                      {doc.url && doc.url.trim() !== ""
+                        ? "Click to view/download"
+                        : "Not uploaded"}
                     </p>
                   </div>
-                  <Download className="w-4 h-4 text-gray-400" />
+                  {doc.url && doc.url.trim() !== "" && (
+                    <Download className="w-4 h-4 text-gray-400" />
+                  )}
                 </button>
               ))}
             </div>
@@ -180,13 +202,51 @@ const DocumentModal: React.FC<DocumentModalProps> = ({ chw, onClose }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between gap-3 p-6 border-t border-gray-200 bg-gray-50">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             Close
           </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleReject}
+              disabled={isRejecting || isApproving}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isRejecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Rejecting...
+                </>
+              ) : (
+                <>
+                  <X className="w-4 h-4" />
+                  Reject
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={handleApprove}
+              disabled={isApproving || isRejecting}
+              className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isApproving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-4 h-4" />
+                  Approve
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -203,6 +263,8 @@ const PendingCHWVerifications: React.FC = () => {
 
   const chws: CHWDocument[] = chwData?.results || [];
 
+  console.log(chws)
+
   // Mutation for approving CHW
   const approveMutation = useMutation({
     mutationFn: async (chwId: string) => {
@@ -214,6 +276,7 @@ const PendingCHWVerifications: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["useCHWVerification"] });
       toast.success("CHW approved successfully!");
+      setSelectedCHW(null); // Close modal after success
     },
     onError: (error: any) => {
       console.error("Error approving CHW:", error);
@@ -232,6 +295,7 @@ const PendingCHWVerifications: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["useCHWVerification"] });
       toast.success("CHW rejected successfully!");
+      setSelectedCHW(null); // Close modal after success
     },
     onError: (error: any) => {
       console.error("Error rejecting CHW:", error);
@@ -274,7 +338,7 @@ const PendingCHWVerifications: React.FC = () => {
       const matchesSearch =
         fullName.includes(searchTerm.toLowerCase()) ||
         chw.email_address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        chw.specialization.toLowerCase().includes(searchTerm.toLowerCase());
+        chw.institution.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         statusFilter === "all" || chw.status === statusFilter;
@@ -297,24 +361,19 @@ const PendingCHWVerifications: React.FC = () => {
     setSelectedCHW(chw);
   };
 
-  const handleVerify = (chwId: string): void => {
-    if (window.confirm("Are you sure you want to approve this CHW?")) {
-      approveMutation.mutate(chwId);
-    }
+  const handleApprove = (chwId: string): void => {
+    approveMutation.mutate(chwId);
   };
 
   const handleReject = (chwId: string): void => {
-    if (window.confirm("Are you sure you want to reject this CHW?")) {
-      rejectMutation.mutate(chwId);
-    }
+    rejectMutation.mutate(chwId);
   };
 
   // Count documents for a CHW
   const countDocuments = (chw: CHWDocument): number => {
     const docs = [
+      chw.utility_bill,
       chw.certificate_document,
-      chw.cv_document,
-      chw.employment_letter,
       chw.id_card,
       chw.photo,
     ];
@@ -326,7 +385,7 @@ const PendingCHWVerifications: React.FC = () => {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900 mb-2">
-          Pending CHW Verifications
+          CHW Verifications
         </h1>
         <p className="text-gray-600">
           Review and verify registered CHWs awaiting approval
@@ -352,7 +411,7 @@ const PendingCHWVerifications: React.FC = () => {
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
             className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           >
-            <option value="all">Filter by status</option>
+            <option value="all">All Status</option>
             <option value="pending">Pending</option>
             <option value="under_review">Under Review</option>
             <option value="documents_missing">Documents Missing</option>
@@ -371,10 +430,10 @@ const PendingCHWVerifications: React.FC = () => {
               <AlertTriangle className="w-16 h-16 text-gray-400" />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              No Pending CHW Verifications
+              No CHW Verifications
             </h2>
             <p className="text-gray-600 text-center max-w-md">
-              All CHW verification requests have been processed.
+              There are no CHW verification requests at this time.
             </p>
           </div>
         </div>
@@ -394,7 +453,7 @@ const PendingCHWVerifications: React.FC = () => {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Specialization
+                    Institution
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Experience
@@ -423,13 +482,13 @@ const PendingCHWVerifications: React.FC = () => {
                       {chw.email_address}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {chw.specialization}
+                      {chw.institution}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {chw.year_of_experience} years
+                      {chw.year_of_experience}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {countDocuments(chw)} docs
+                      {countDocuments(chw)}/4 docs
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={getStatusBadge(chw.status)}>
@@ -437,31 +496,13 @@ const PendingCHWVerifications: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleView(chw)}
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                          title="View details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleVerify(chw.id)}
-                          disabled={approveMutation.isPending}
-                          className="p-1 text-gray-400 hover:text-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Verify CHW"
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleReject(chw.id)}
-                          disabled={rejectMutation.isPending}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Reject application"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleView(chw)}
+                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                        title="View details"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -488,7 +529,14 @@ const PendingCHWVerifications: React.FC = () => {
 
       {/* Document Modal */}
       {selectedCHW && (
-        <DocumentModal chw={selectedCHW} onClose={() => setSelectedCHW(null)} />
+        <DocumentModal
+          chw={selectedCHW}
+          onClose={() => setSelectedCHW(null)}
+          onApprove={handleApprove}
+          onReject={handleReject}
+          isApproving={approveMutation.isPending}
+          isRejecting={rejectMutation.isPending}
+        />
       )}
     </div>
   );
