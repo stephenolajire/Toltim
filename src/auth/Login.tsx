@@ -43,17 +43,23 @@ const Login: React.FC = () => {
       password: "",
     },
     validationSchema: loginSchema,
+
     onSubmit: async (values, { setSubmitting, setStatus }) => {
       try {
         setStatus(null);
+
         const response = await api.post("user/login/", {
           email_address: values.email,
           password: values.password,
         });
+
+        const { access, refresh, role, is_nin_verified } = response.data;
+
         console.log("Login successfully:", response.data);
-        localStorage.setItem("accessToken", response.data.access);
-        localStorage.setItem("refreshToken", response.data.refresh);
-        localStorage.setItem("userType", response.data.role);
+
+        localStorage.setItem("accessToken", access);
+        localStorage.setItem("refreshToken", refresh);
+        localStorage.setItem("userType", role);
 
         setStatus({
           type: "success",
@@ -63,18 +69,32 @@ const Login: React.FC = () => {
         toast.success("Login successfully");
 
         setTimeout(() => {
+          // FIRST: force KYC if NIN is not verified
+          if (is_nin_verified === false) {
+            navigate("/kyc", { replace: true });
+            return;
+          }
+
+          // ELSE: normal role routing
           if (from) {
             navigate(from, { replace: true });
           } else {
-            if (response.data.role === "patient") {
-              navigate("/patient", { replace: true });
-            } else if (response.data.role === "nurse") {
-              navigate("/nurse", { replace: true });
-              localStorage.setItem("kyc", "pending");
-            } else if (response.data.role === "chw") {
-              navigate("/chw", { replace: true });
-            } else {
-              navigate("/admin", { replace: true });
+            switch (role) {
+              case "patient":
+                navigate("/patient", { replace: true });
+                break;
+
+              case "nurse":
+                navigate("/nurse", { replace: true });
+                localStorage.setItem("kyc", "pending");
+                break;
+
+              case "chw":
+                navigate("/chw", { replace: true });
+                break;
+
+              default:
+                navigate("/admin", { replace: true });
             }
           }
         }, 2000);
@@ -90,6 +110,7 @@ const Login: React.FC = () => {
       }
     },
   });
+
 
   const {
     values,
