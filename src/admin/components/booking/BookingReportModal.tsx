@@ -61,7 +61,6 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch report details with pagination
   const {
     data: reportResponse,
     isLoading,
@@ -70,9 +69,8 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
     queryKey: ["booking-report", bookingId, bookingType, currentPage],
     queryFn: async () => {
       const res = await api.get(
-        `admin/reports/${bookingId}/${bookingType}/?page=${currentPage}`,
+        `admin/reports/${bookingId}/${bookingType}/?page=${currentPage}`
       );
-      console.log("Fetched report details:", res.data);
       return res.data;
     },
     enabled: isOpen && !!bookingId && !!bookingType,
@@ -216,17 +214,17 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
           <img
             src={worker.profile_picture}
             alt={worker.full_name}
-            className="w-16 h-16 rounded-full object-cover border-2 border-green-200"
+            className="w-16 h-16 rounded-full object-cover border-2 border-green-200 flex-shrink-0"
           />
         )}
-        <div className="flex-1">
-          <p className="text-gray-900 font-medium text-lg">
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-900 font-medium text-lg truncate">
             {worker.full_name}
           </p>
           <p className="text-gray-600 capitalize text-sm mt-1">
             Role: {worker.role}
           </p>
-          <p className="text-gray-500 text-xs mt-1 font-mono">
+          <p className="text-gray-500 text-xs mt-1 font-mono break-all">
             ID: {worker.id}
           </p>
         </div>
@@ -237,18 +235,27 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
   if (!isOpen) return null;
 
   return (
+    // ── Outer backdrop ──────────────────────────────────────────────────────
     <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-50">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay */}
-        <div
-          className="fixed inset-0 transition-opacity"
-          onClick={onClose}
-        ></div>
+      <div className="flex items-start justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 
-        {/* Modal panel */}
-        <div className="inline-block w-full max-w-5xl px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6">
+        {/* Backdrop click-to-close — pointer-events-none prevents it from
+            blocking scroll events on mobile */}
+        <div
+          className="fixed inset-0 transition-opacity pointer-events-none"
+          aria-hidden="true"
+        />
+
+        {/* Invisible block used by browsers to vertically centre on sm+ */}
+        <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">
+          &#8203;
+        </span>
+
+        {/* ── Modal panel ─────────────────────────────────────────────────── */}
+        <div className="inline-block w-full max-w-5xl px-4 pt-5 pb-4 overflow-y-auto text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:p-6 max-h-[90vh]">
+
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-start justify-between mb-6">
             <div>
               <h3 className="text-2xl font-semibold text-gray-900">
                 Booking Report
@@ -259,7 +266,7 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 ml-4"
             >
               <svg
                 className="w-6 h-6"
@@ -281,7 +288,7 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
                 <p className="mt-4 text-gray-500">Loading report details...</p>
               </div>
             </div>
@@ -314,6 +321,7 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
             </div>
           ) : reportDetails ? (
             <div className="space-y-6">
+
               {/* Report Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -321,19 +329,19 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
                     Report Information
                   </h4>
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2 flex-wrap">
                       <span className="text-gray-600">Report ID:</span>
-                      <span className="text-gray-900 font-mono text-sm">
+                      <span className="text-gray-900 font-mono text-sm break-all">
                         {reportDetails.id}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2 flex-wrap">
                       <span className="text-gray-600">Report Type:</span>
                       <span className="text-gray-900 capitalize">
                         {reportDetails.report_type}
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2 flex-wrap">
                       <span className="text-gray-600">Booking Code:</span>
                       <span className="text-gray-900">
                         {reportDetails.booking_code}
@@ -347,7 +355,7 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
                     Service Details
                   </h4>
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-2 flex-wrap">
                       <span className="text-gray-600">Service Date:</span>
                       <span className="text-gray-900">
                         {formatDate(reportDetails.service_date)}
@@ -410,7 +418,6 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
                               Uploaded: {formatDateTime(photo.uploaded_at)}
                             </p>
                           </div>
-                          {/* Enlarge on hover overlay */}
                           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity flex items-center justify-center opacity-0 group-hover:opacity-100">
                             <a
                               href={photo.photo_url}
@@ -429,7 +436,7 @@ const BookingReportModal: React.FC<BookingReportModalProps> = ({
 
               {/* Pagination */}
               {reportResponse && reportResponse.count > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-between pt-4 border-t flex-wrap gap-3">
                   <div className="text-sm text-gray-600">
                     Showing report {currentPage} of {totalPages}
                   </div>
