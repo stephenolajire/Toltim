@@ -18,6 +18,7 @@ import { useWalletTransactions } from "../constant/GlobalContext";
 import Loading from "../components/common/Loading";
 import Error from "../components/Error";
 import WalletBalance from "../components/Wallet";
+import PaymentStat from "../admin/components/payment/PaymentStat";
 
 const WalletComponent = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,7 +127,9 @@ const WalletComponent = () => {
 
     const matchesSearch =
       searchQuery === "" ||
-      transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      transaction.description
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       transaction.reference.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
@@ -146,7 +149,6 @@ const WalletComponent = () => {
     }).format(numAmount);
   };
 
-  // ── Credit = green-500, Debit = red ──────────────────────────────────────
   const isCredit = (direction: string) => direction === "credit";
 
   const getTransactionIcon = (direction: string) => {
@@ -161,7 +163,6 @@ const WalletComponent = () => {
 
   const getIconBg = (direction: string) =>
     isCredit(direction) ? "bg-green-100" : "bg-red-100";
-  // ─────────────────────────────────────────────────────────────────────────
 
   const getCategoryBadgeColor = (category: string) => {
     const colors: Record<string, string> = {
@@ -172,7 +173,9 @@ const WalletComponent = () => {
       refund: "bg-teal-100 text-teal-800 border border-teal-200",
       general: "bg-gray-100 text-gray-800 border border-gray-200",
     };
-    return colors[category] || "bg-gray-100 text-gray-800 border border-gray-200";
+    return (
+      colors[category] || "bg-gray-100 text-gray-800 border border-gray-200"
+    );
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -190,6 +193,7 @@ const WalletComponent = () => {
       className={`${themeConfig.class} min-h-screen bg-gradient-to-br ${themeConfig.bgGradient} pb-8`}
     >
       {role === "admin" && <WalletBalance />}
+      {role === "admin" && <PaymentStat />}
 
       <div className="w-full mx-auto">
         {/* Filters */}
@@ -304,7 +308,9 @@ const WalletComponent = () => {
 
                     <div className="flex items-center gap-3 ml-4">
                       <div className="text-right">
-                        <p className={`text-xl font-bold mb-2 ${getAmountColor(direction)}`}>
+                        <p
+                          className={`text-xl font-bold mb-2 ${getAmountColor(direction)}`}
+                        >
                           {isCredit(direction) ? "+" : "-"}
                           {formatCurrency(transaction.amount)}
                         </p>
@@ -347,7 +353,9 @@ const WalletComponent = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <p className={`text-base font-bold flex-shrink-0 ${getAmountColor(direction)}`}>
+                        <p
+                          className={`text-base font-bold flex-shrink-0 ${getAmountColor(direction)}`}
+                        >
                           {isCredit(direction) ? "+" : "-"}
                           {formatCurrency(transaction.amount)}
                         </p>
@@ -379,98 +387,110 @@ const WalletComponent = () => {
                   </div>
 
                   {/* Expanded Metadata */}
-                  {isExpanded && metadata && Object.keys(metadata).length > 0 && (
-                    <div className="px-5 pb-5 border-t border-gray-100">
-                      <div className="pt-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                          Transaction Details
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {metadata.booking_id && (
-                            <div className="flex items-start gap-2 text-sm">
-                              <ClipboardList className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-gray-500">Booking ID:</span>
-                                <span className="ml-2 text-gray-900 font-medium">
-                                  {metadata.booking_id}
-                                </span>
+                  {isExpanded &&
+                    metadata &&
+                    Object.keys(metadata).length > 0 && (
+                      <div className="px-5 pb-5 border-t border-gray-100">
+                        <div className="pt-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                            Transaction Details
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {metadata.booking_id && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <ClipboardList className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Booking ID:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.booking_id}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {metadata.booking_ref && (
-                            <div className="flex items-start gap-2 text-sm">
-                              <Receipt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-gray-500">Booking Ref:</span>
-                                <span className="ml-2 text-gray-900 font-medium">
-                                  {metadata.booking_ref}
-                                </span>
+                            )}
+                            {metadata.booking_ref && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Receipt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Booking Ref:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.booking_ref}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {metadata.role && (
-                            <div className="flex items-start gap-2 text-sm">
-                              <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-gray-500">Role:</span>
-                                <span className="ml-2 text-gray-900 font-medium capitalize">
-                                  {metadata.role}
-                                </span>
+                            )}
+                            {metadata.role && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">Role:</span>
+                                  <span className="ml-2 text-gray-900 font-medium capitalize">
+                                    {metadata.role}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {metadata.service_date && (
-                            <div className="flex items-start gap-2 text-sm">
-                              <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-gray-500">Service Date:</span>
-                                <span className="ml-2 text-gray-900 font-medium">
-                                  {new Date(metadata.service_date).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                    year: "numeric",
-                                  })}
-                                </span>
+                            )}
+                            {metadata.service_date && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Service Date:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {new Date(
+                                      metadata.service_date,
+                                    ).toLocaleDateString("en-US", {
+                                      month: "short",
+                                      day: "numeric",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {metadata.doctor && (
-                            <div className="flex items-start gap-2 text-sm">
-                              <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-gray-500">Doctor:</span>
-                                <span className="ml-2 text-gray-900 font-medium">
-                                  {metadata.doctor}
-                                </span>
+                            )}
+                            {metadata.doctor && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">Doctor:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.doctor}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {metadata.hospital && (
-                            <div className="flex items-start gap-2 text-sm">
-                              <Hospital className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-gray-500">Hospital:</span>
-                                <span className="ml-2 text-gray-900 font-medium">
-                                  {metadata.hospital}
-                                </span>
+                            )}
+                            {metadata.hospital && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <Hospital className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">
+                                    Hospital:
+                                  </span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.hospital}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {metadata.source && (
-                            <div className="flex items-start gap-2 text-sm">
-                              <CreditCard className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <span className="text-gray-500">Source:</span>
-                                <span className="ml-2 text-gray-900 font-medium">
-                                  {metadata.source}
-                                </span>
+                            )}
+                            {metadata.source && (
+                              <div className="flex items-start gap-2 text-sm">
+                                <CreditCard className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <span className="text-gray-500">Source:</span>
+                                  <span className="ml-2 text-gray-900 font-medium">
+                                    {metadata.source}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               );
             })}
@@ -482,7 +502,9 @@ const WalletComponent = () => {
               <div
                 className={`w-20 h-20 ${themeConfig.iconBg} rounded-2xl flex items-center justify-center mx-auto mb-4`}
               >
-                <Receipt className={`w-10 h-10 ${themeConfig.iconColor} opacity-50`} />
+                <Receipt
+                  className={`w-10 h-10 ${themeConfig.iconColor} opacity-50`}
+                />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 No transactions found
