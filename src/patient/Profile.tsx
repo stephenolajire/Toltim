@@ -43,9 +43,10 @@ interface ProfileData {
   city: string;
   state: string;
   zipcode: string;
+  nin: string | null;
   medical_information: MedicalInformation;
   preferences: Preferences;
-  emergency_contacts: EmergencyContact[];
+  emergency_contact: EmergencyContact;
   profile_picture: string;
 }
 
@@ -165,8 +166,32 @@ const PatientProfile: React.FC = () => {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <img src={profileData.profile_picture} alt={`${profileData.first_name} ${profileData.last_name}`} className="w-24 h-24 rounded-full object-cover" />
+            <div className="flex items-center gap-4">
+              {profileData.profile_picture ? (
+                <img
+                  src={profileData.profile_picture}
+                  alt={`${profileData.first_name} ${profileData.last_name}`}
+                  className="w-20 h-20 rounded-full object-cover ring-4 ring-primary-100 shadow-sm"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-50 rounded-full flex items-center justify-center ring-4 ring-primary-100 shadow-sm">
+                  <User className="w-10 h-10 text-primary-600" />
+                </div>
+              )}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {profileData.first_name} {profileData.last_name}
+                </h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {profileData.phone_number}
+                </p>
+                <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-emerald-50 rounded-full w-fit">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-semibold text-emerald-700">
+                    Active Patient
+                  </span>
+                </div>
+              </div>
             </div>
             <button
               onClick={handleEditProfile}
@@ -176,88 +201,6 @@ const PatientProfile: React.FC = () => {
               Edit Profile
             </button>
           </div>
-
-          {/* Profile Picture Section */}
-          {/* <div className="flex items-center gap-6 mb-6 pb-6 border-b border-gray-100">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-50 rounded-2xl flex items-center justify-center ring-4 ring-primary-100 ring-offset-2 shadow-sm">
-                <User className="w-12 h-12 text-primary-600" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full border-4 border-white flex items-center justify-center">
-                <Activity className="w-3.5 h-3.5 text-white" />
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {profileData.first_name} {profileData.last_name}
-              </h2>
-              
-              <div className="flex items-center gap-2 mt-2 px-3 py-1.5 bg-emerald-50 rounded-full w-fit">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-sm font-semibold text-emerald-700">
-                  Active Patient
-                </span>
-              </div>
-            </div>
-          </div> */}
-
-          {/* Quick Stats */}
-          {/* <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-gradient-to-br from-primary-50 to-primary-100/50 p-4 rounded-xl border border-primary-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center shadow-sm">
-                  <Calendar className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600">Age</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {calculateAge(profileData.date_of_birth)} years
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-red-50 to-red-100/50 p-4 rounded-xl border border-red-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow-sm">
-                  <Heart className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600">
-                    Blood Type
-                  </p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {profileData.blood_type || "Not set"}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 p-4 rounded-xl border border-purple-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center shadow-sm">
-                  <Clock className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600">
-                    Last Visit
-                  </p>
-                  <p className="text-lg font-bold text-gray-900">
-                    Dec 15, 2024
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 p-4 rounded-xl border border-amber-200">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center shadow-sm">
-                  <FileText className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-600">Records</p>
-                  <p className="text-lg font-bold text-gray-900">24 entries</p>
-                </div>
-              </div>
-            </div>
-          </div> */}
         </div>
 
         {/* Tabs */}
@@ -286,6 +229,7 @@ const PatientProfile: React.FC = () => {
         <div className="p-6">
           {activeTab === "personal" && (
             <div>
+              {/* Personal Info */}
               <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
                 <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
                   <User className="w-4 h-4 text-primary-600" />
@@ -310,14 +254,6 @@ const PatientProfile: React.FC = () => {
                   </label>
                   <p className="text-gray-900 font-medium text-base">
                     {profileData.last_name || "Not specified"}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                    Email Address
-                  </label>
-                  <p className="text-gray-900 font-medium text-base">
-                    {profileData.email_address || "Not specified"}
                   </p>
                 </div>
                 <div>
@@ -352,8 +288,17 @@ const PatientProfile: React.FC = () => {
                     {profileData.blood_type || "Not specified"}
                   </p>
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    NIN
+                  </label>
+                  <p className="text-gray-900 font-medium text-base">
+                    {profileData.nin || "Not provided"}
+                  </p>
+                </div>
               </div>
 
+              {/* Address */}
               <div className="flex items-center gap-2 mt-10 mb-6 pb-4 border-b border-gray-200">
                 <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
                   <MapPin className="w-4 h-4 text-emerald-600" />
@@ -398,6 +343,7 @@ const PatientProfile: React.FC = () => {
                 </div>
               </div>
 
+              {/* Emergency Contact */}
               <div className="flex items-center gap-2 mt-10 mb-6 pb-4 border-b border-gray-200">
                 <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
                   <AlertCircle className="w-4 h-4 text-red-600" />
@@ -413,7 +359,7 @@ const PatientProfile: React.FC = () => {
                     Contact Name
                   </label>
                   <p className="text-gray-900 font-medium text-base">
-                    {profileData.emergency_contacts[0]?.name || "Not specified"}
+                    {profileData.emergency_contact?.name || "Not specified"}
                   </p>
                 </div>
                 <div>
@@ -421,7 +367,7 @@ const PatientProfile: React.FC = () => {
                     Phone Number
                   </label>
                   <p className="text-gray-900 font-medium text-base">
-                    {profileData.emergency_contacts[0]?.phone_number ||
+                    {profileData.emergency_contact?.phone_number ||
                       "Not specified"}
                   </p>
                 </div>
@@ -430,10 +376,11 @@ const PatientProfile: React.FC = () => {
                     Relationship
                   </label>
                   <p className="text-gray-900 font-medium text-base">
-                    {formatRelationship(
-                      profileData.emergency_contacts[0]?.relationship ||
-                        "Not specified"
-                    )}
+                    {profileData.emergency_contact?.relationship
+                      ? formatRelationship(
+                          profileData.emergency_contact.relationship,
+                        )
+                      : "Not specified"}
                   </p>
                 </div>
               </div>
@@ -458,7 +405,7 @@ const PatientProfile: React.FC = () => {
                   </label>
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <p className="text-gray-900 font-medium text-base whitespace-pre-wrap">
-                      {profileData.medical_information.known_allergies ||
+                      {profileData.medical_information?.known_allergies ||
                         "No known allergies"}
                     </p>
                   </div>
@@ -469,7 +416,7 @@ const PatientProfile: React.FC = () => {
                   </label>
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <p className="text-gray-900 font-medium text-base whitespace-pre-wrap">
-                      {profileData.medical_information.current_medications ||
+                      {profileData.medical_information?.current_medications ||
                         "No current medications"}
                     </p>
                   </div>
@@ -480,7 +427,7 @@ const PatientProfile: React.FC = () => {
                   </label>
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <p className="text-gray-900 font-medium text-base whitespace-pre-wrap">
-                      {profileData.medical_information.medical_history ||
+                      {profileData.medical_information?.medical_history ||
                         "No medical history recorded"}
                     </p>
                   </div>
@@ -490,7 +437,7 @@ const PatientProfile: React.FC = () => {
                     Primary Physician
                   </label>
                   <p className="text-gray-900 font-medium text-base">
-                    {profileData.medical_information.primary_physician ||
+                    {profileData.medical_information?.primary_physician ||
                       "Not specified"}
                   </p>
                 </div>
@@ -515,7 +462,9 @@ const PatientProfile: React.FC = () => {
                     Preferred Language
                   </label>
                   <p className="text-gray-900 font-medium text-base">
-                    {formatLanguage(profileData.preferences.preferred_language)}
+                    {formatLanguage(
+                      profileData.preferences?.preferred_language,
+                    )}
                   </p>
                 </div>
                 <div>
@@ -524,7 +473,7 @@ const PatientProfile: React.FC = () => {
                   </label>
                   <p className="text-gray-900 font-medium text-base">
                     {formatCommunicationPreference(
-                      profileData.preferences.communication_preference
+                      profileData.preferences?.communication_preference,
                     )}
                   </p>
                 </div>
@@ -534,12 +483,12 @@ const PatientProfile: React.FC = () => {
                   </label>
                   <div
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm ${
-                      profileData.preferences.appointment_reminders
+                      profileData.preferences?.appointment_reminders
                         ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                         : "bg-gray-100 text-gray-700 border border-gray-200"
                     }`}
                   >
-                    {profileData.preferences.appointment_reminders
+                    {profileData.preferences?.appointment_reminders
                       ? "Enabled"
                       : "Disabled"}
                   </div>
