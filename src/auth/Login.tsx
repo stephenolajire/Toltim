@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Heart,
+  // Heart,
   Loader,
   AlertCircle,
   CheckCircle,
@@ -180,8 +180,12 @@ const Login: React.FC = () => {
 
                 {/* Center Icon */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-full max-w-32 h-32 bg-white rounded-full flex items-center justify-center shadow-2xl">
-                    <Heart className="w-full max-w-16 h-16 text-primary-600" />
+                  <div className="w-full max-w-20 h-20 bg-white rounded-full flex items-center justify-center">
+                    <img
+                      className="h-20 w-20"
+                      src="/Icon1 .png"
+                      alt="Toltim logo"
+                    />
                   </div>
                 </div>
               </div>
@@ -272,7 +276,7 @@ const Login: React.FC = () => {
             {/* Logo & Header */}
             <div className="mb-8">
               <div className="flex items-center justify-center mb-6">
-                <img className="h-30 w-30" src="/Icon1 .png"/>
+                <img className="h-30 w-30" src="/Icon1 .png" />
               </div>
               <h1 className="text-h3 text-center text-gray-900 mb-2">
                 Welcome Back

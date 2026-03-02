@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import Webcam from "react-webcam";
 import {
-  Heart,
+  // Heart,
   Shield,
   User,
   ArrowLeft,
@@ -205,9 +205,8 @@ const KYCVerification = () => {
         </div>
 
         <div>
-          <div className="flex items-center justify-center">
-            <Heart className="text-green-600 text-3xl md:text-4xl" />
-            <span className="text-xl font-bold ml-2">Toltimed</span>
+          <div className="flex justify-center">
+            <img className="h-20 w-20" src="/Icon1 .png" alt="Toltim logo" />
           </div>
 
           <div className="flex justify-center mt-4">

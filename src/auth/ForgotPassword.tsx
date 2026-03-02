@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Heart, Mail, ArrowLeft, Phone } from "lucide-react";
+import {  Mail, ArrowLeft, Phone } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { Loader } from "lucide-react";
@@ -157,9 +157,8 @@ const ForgotPassword: React.FC = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 md:px-0 py-4">
       <div className="max-w-lg w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
         <div>
-          <div className="flex items-center justify-center">
-            <Heart className="text-green-600 text-3xl md:text-4xl" />
-            <span className="text-xl font-bold ml-2">Toltimed</span>
+          <div className="flex justify-center">
+            <img className="h-20 w-20" src="/Icon1 .png" alt="Toltim logo" />
           </div>
           <h2 className="mt-3 text-center text-3xl text-gray-900">
             Forgot Password?

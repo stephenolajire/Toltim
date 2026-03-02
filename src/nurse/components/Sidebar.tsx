@@ -1,7 +1,6 @@
 import {
   Home,
   Shield,
-  Stethoscope,
   User,
   Wallet,
   Calendar,
@@ -67,7 +66,7 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
       <div>
         <div className="flex space-x-3 items-center pb-10">
           <div>
-            <Stethoscope className="text-green-500" />
+            <img className="h-20 w-20" src="/Icon1 .png" alt="Toltim logo" />
           </div>
           <div>
             <h3 className="text-green-500 text-2xl font-bold">Toltim</h3>
@@ -81,7 +80,9 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
             {adminLinks.map((nav) => (
               <NavLink
                 className={({ isActive }) =>
-                  isActive ? "text-green-500 font-bold capitalize" : "text-gray-500 capitalize"
+                  isActive
+                    ? "text-green-500 font-bold capitalize"
+                    : "text-gray-500 capitalize"
                 }
                 key={nav.name}
                 to={nav.href}
@@ -98,7 +99,9 @@ const Sidebar: React.FC<SidebarProp> = ({ close }) => {
       </div>
 
       <div>
-        <button onClick={handleLogout} className="text-red-500">Logout</button>
+        <button onClick={handleLogout} className="text-red-500">
+          Logout
+        </button>
       </div>
     </div>
   );
