@@ -2,8 +2,6 @@ import React, { useState, useMemo } from "react";
 import {
   Search,
   Eye,
-  CheckCircle,
-  X,
   Filter,
   AlertTriangle,
   Loader2,
@@ -306,7 +304,7 @@ const PendingNurseVerifications: React.FC = () => {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        {nurse.status === "pending" && (
+                        {/* {nurse.status === "pending" && (
                           <button
                             onClick={() => handleVerify(nurse.id)}
                             className="p-1 text-gray-400 hover:text-green-600 transition-colors"
@@ -324,7 +322,7 @@ const PendingNurseVerifications: React.FC = () => {
                             >
                               <X className="w-4 h-4" />
                             </button>
-                          )}
+                          )} */}
                       </div>
                     </td>
                   </tr>
