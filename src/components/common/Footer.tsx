@@ -108,7 +108,7 @@ const Footer: React.FC = () => {
                   href="mailto:support@toltimed.com"
                   className="text-body-sm hover:text-primary-500 transition-colors"
                 >
-                  support@toltimed.com
+                  care@toltimedcare.com.ng
                 </a>
               </div>
               <div className="flex items-start gap-3">
