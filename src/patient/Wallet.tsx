@@ -32,7 +32,6 @@ const WalletComponent = () => {
 
   const role = localStorage.getItem("userType");
 
-  // Toggle transaction expansion
   const toggleExpansion = (transactionId: string) => {
     setExpandedTransactions((prev) => {
       const newSet = new Set(prev);
@@ -45,7 +44,6 @@ const WalletComponent = () => {
     });
   };
 
-  // Theme configuration based on role
   const themeConfig = useMemo(() => {
     const configs = {
       patient: {
@@ -96,17 +94,9 @@ const WalletComponent = () => {
     return configs[role as keyof typeof configs] || configs.patient;
   }, [role]);
 
-  if (isLoading) {
-    return <Loading />;
-  }
-
-  if (error) {
-    return <Error />;
-  }
-
-  if (!data) {
-    return <Loading />;
-  }
+  if (isLoading) return <Loading />;
+  if (error) return <Error />;
+  if (!data) return <Loading />;
 
   const transactions = data.results;
 
@@ -124,9 +114,7 @@ const WalletComponent = () => {
 
   const parseMetadata = (metadataString: string | object) => {
     try {
-      if (typeof metadataString === "object") {
-        return metadataString;
-      }
+      if (typeof metadataString === "object") return metadataString;
       return JSON.parse(metadataString || "{}");
     } catch {
       return {};
@@ -138,9 +126,7 @@ const WalletComponent = () => {
 
     const matchesSearch =
       searchQuery === "" ||
-      transaction.description
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
+      transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       transaction.reference.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
@@ -160,30 +146,37 @@ const WalletComponent = () => {
     }).format(numAmount);
   };
 
-  const getTransactionIcon = (type: string) => {
-    if (type === "credit") {
-      return <ArrowDownLeft className="w-5 h-5 text-emerald-600" />;
+  // ── Credit = green-500, Debit = red ──────────────────────────────────────
+  const isCredit = (direction: string) => direction === "credit";
+
+  const getTransactionIcon = (direction: string) => {
+    if (isCredit(direction)) {
+      return <ArrowDownLeft className="w-5 h-5 text-green-500" />;
     }
-    return <ArrowUpRight className="w-5 h-5 text-red-600" />;
+    return <ArrowUpRight className="w-5 h-5 text-red-500" />;
   };
+
+  const getAmountColor = (direction: string) =>
+    isCredit(direction) ? "text-green-500" : "text-red-500";
+
+  const getIconBg = (direction: string) =>
+    isCredit(direction) ? "bg-green-100" : "bg-red-100";
+  // ─────────────────────────────────────────────────────────────────────────
 
   const getCategoryBadgeColor = (category: string) => {
     const colors: Record<string, string> = {
       caregiver: "bg-blue-100 text-blue-800 border border-blue-200",
       "in-patient": "bg-purple-100 text-purple-800 border border-purple-200",
       procedures: "bg-pink-100 text-pink-800 border border-pink-200",
-      funding: "bg-emerald-100 text-emerald-800 border border-emerald-200",
+      funding: "bg-green-100 text-green-800 border border-green-200",
       refund: "bg-teal-100 text-teal-800 border border-teal-200",
       general: "bg-gray-100 text-gray-800 border border-gray-200",
     };
-    return (
-      colors[category] || "bg-gray-100 text-gray-800 border border-gray-200"
-    );
+    return colors[category] || "bg-gray-100 text-gray-800 border border-gray-200";
   };
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString("en-US", {
+    return new Date(timestamp).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -268,23 +261,20 @@ const WalletComponent = () => {
               const metadata = parseMetadata(transaction.metadata);
               const category = getTransactionCategory(transaction);
               const isExpanded = expandedTransactions.has(transaction.id);
+              const { direction } = transaction;
 
               return (
                 <div
                   key={transaction.id}
                   className="border border-gray-200 rounded-xl hover:shadow-md hover:border-gray-300 transition-all duration-200"
                 >
-                  {/* Main Transaction Row - Desktop View */}
+                  {/* Desktop View */}
                   <div className="hidden md:flex items-start justify-between p-5">
                     <div className="flex items-start gap-4 flex-1">
                       <div
-                        className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
-                          transaction.direction === "credit"
-                            ? "bg-emerald-100"
-                            : "bg-red-100"
-                        }`}
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${getIconBg(direction)}`}
                       >
-                        {getTransactionIcon(transaction.direction)}
+                        {getTransactionIcon(direction)}
                       </div>
 
                       <div className="flex-1 min-w-0">
@@ -293,9 +283,7 @@ const WalletComponent = () => {
                             {transaction.description}
                           </h3>
                           <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryBadgeColor(
-                              category,
-                            )}`}
+                            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryBadgeColor(category)}`}
                           >
                             {category.replace("-", " ")}
                           </span>
@@ -316,17 +304,11 @@ const WalletComponent = () => {
 
                     <div className="flex items-center gap-3 ml-4">
                       <div className="text-right">
-                        <p
-                          className={`text-xl font-bold mb-2 ${
-                            transaction.direction === "credit"
-                              ? "text-emerald-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {transaction.direction === "credit" ? "+" : "-"}
+                        <p className={`text-xl font-bold mb-2 ${getAmountColor(direction)}`}>
+                          {isCredit(direction) ? "+" : "-"}
                           {formatCurrency(transaction.amount)}
                         </p>
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
                           <CheckCircle className="w-3.5 h-3.5" />
                           Completed
                         </span>
@@ -346,18 +328,14 @@ const WalletComponent = () => {
                     </div>
                   </div>
 
-                  {/* Main Transaction Row - Mobile View */}
+                  {/* Mobile View */}
                   <div className="md:hidden p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${
-                            transaction.direction === "credit"
-                              ? "bg-emerald-100"
-                              : "bg-red-100"
-                          }`}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${getIconBg(direction)}`}
                         >
-                          {getTransactionIcon(transaction.direction)}
+                          {getTransactionIcon(direction)}
                         </div>
                         <div className="min-w-0 flex-1">
                           <h3 className="font-semibold text-gray-900 text-sm truncate">
@@ -369,14 +347,8 @@ const WalletComponent = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <p
-                          className={`text-base font-bold flex-shrink-0 ${
-                            transaction.direction === "credit"
-                              ? "text-emerald-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {transaction.direction === "credit" ? "+" : "-"}
+                        <p className={`text-base font-bold flex-shrink-0 ${getAmountColor(direction)}`}>
+                          {isCredit(direction) ? "+" : "-"}
                           {formatCurrency(transaction.amount)}
                         </p>
                         <button
@@ -395,124 +367,110 @@ const WalletComponent = () => {
 
                     <div className="flex flex-wrap gap-2 items-center">
                       <span
-                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryBadgeColor(
-                          category,
-                        )}`}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryBadgeColor(category)}`}
                       >
                         {category.replace("-", " ")}
                       </span>
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">
                         <CheckCircle className="w-3.5 h-3.5" />
                         Completed
                       </span>
                     </div>
                   </div>
 
-                  {/* Expanded Metadata Section */}
-                  {isExpanded &&
-                    metadata &&
-                    Object.keys(metadata).length > 0 && (
-                      <div className="px-5 pb-5 border-t border-gray-100">
-                        <div className="pt-4">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-3">
-                            Transaction Details
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {metadata.booking_id && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <ClipboardList className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <span className="text-gray-500">
-                                    Booking ID:
-                                  </span>
-                                  <span className="ml-2 text-gray-900 font-medium">
-                                    {metadata.booking_id}
-                                  </span>
-                                </div>
+                  {/* Expanded Metadata */}
+                  {isExpanded && metadata && Object.keys(metadata).length > 0 && (
+                    <div className="px-5 pb-5 border-t border-gray-100">
+                      <div className="pt-4">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                          Transaction Details
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {metadata.booking_id && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <ClipboardList className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-gray-500">Booking ID:</span>
+                                <span className="ml-2 text-gray-900 font-medium">
+                                  {metadata.booking_id}
+                                </span>
                               </div>
-                            )}
-                            {metadata.booking_ref && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <Receipt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <span className="text-gray-500">
-                                    Booking Ref:
-                                  </span>
-                                  <span className="ml-2 text-gray-900 font-medium">
-                                    {metadata.booking_ref}
-                                  </span>
-                                </div>
+                            </div>
+                          )}
+                          {metadata.booking_ref && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <Receipt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-gray-500">Booking Ref:</span>
+                                <span className="ml-2 text-gray-900 font-medium">
+                                  {metadata.booking_ref}
+                                </span>
                               </div>
-                            )}
-                            {metadata.role && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <span className="text-gray-500">Role:</span>
-                                  <span className="ml-2 text-gray-900 font-medium capitalize">
-                                    {metadata.role}
-                                  </span>
-                                </div>
+                            </div>
+                          )}
+                          {metadata.role && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-gray-500">Role:</span>
+                                <span className="ml-2 text-gray-900 font-medium capitalize">
+                                  {metadata.role}
+                                </span>
                               </div>
-                            )}
-                            {metadata.service_date && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <span className="text-gray-500">
-                                    Service Date:
-                                  </span>
-                                  <span className="ml-2 text-gray-900 font-medium">
-                                    {new Date(
-                                      metadata.service_date,
-                                    ).toLocaleDateString("en-US", {
-                                      month: "short",
-                                      day: "numeric",
-                                      year: "numeric",
-                                    })}
-                                  </span>
-                                </div>
+                            </div>
+                          )}
+                          {metadata.service_date && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-gray-500">Service Date:</span>
+                                <span className="ml-2 text-gray-900 font-medium">
+                                  {new Date(metadata.service_date).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    year: "numeric",
+                                  })}
+                                </span>
                               </div>
-                            )}
-                            {metadata.doctor && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <span className="text-gray-500">Doctor:</span>
-                                  <span className="ml-2 text-gray-900 font-medium">
-                                    {metadata.doctor}
-                                  </span>
-                                </div>
+                            </div>
+                          )}
+                          {metadata.doctor && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <User className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-gray-500">Doctor:</span>
+                                <span className="ml-2 text-gray-900 font-medium">
+                                  {metadata.doctor}
+                                </span>
                               </div>
-                            )}
-                            {metadata.hospital && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <Hospital className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <span className="text-gray-500">
-                                    Hospital:
-                                  </span>
-                                  <span className="ml-2 text-gray-900 font-medium">
-                                    {metadata.hospital}
-                                  </span>
-                                </div>
+                            </div>
+                          )}
+                          {metadata.hospital && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <Hospital className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-gray-500">Hospital:</span>
+                                <span className="ml-2 text-gray-900 font-medium">
+                                  {metadata.hospital}
+                                </span>
                               </div>
-                            )}
-                            {metadata.source && (
-                              <div className="flex items-start gap-2 text-sm">
-                                <CreditCard className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <span className="text-gray-500">Source:</span>
-                                  <span className="ml-2 text-gray-900 font-medium">
-                                    {metadata.source}
-                                  </span>
-                                </div>
+                            </div>
+                          )}
+                          {metadata.source && (
+                            <div className="flex items-start gap-2 text-sm">
+                              <CreditCard className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <span className="text-gray-500">Source:</span>
+                                <span className="ml-2 text-gray-900 font-medium">
+                                  {metadata.source}
+                                </span>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -524,9 +482,7 @@ const WalletComponent = () => {
               <div
                 className={`w-20 h-20 ${themeConfig.iconBg} rounded-2xl flex items-center justify-center mx-auto mb-4`}
               >
-                <Receipt
-                  className={`w-10 h-10 ${themeConfig.iconColor} opacity-50`}
-                />
+                <Receipt className={`w-10 h-10 ${themeConfig.iconColor} opacity-50`} />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 No transactions found
