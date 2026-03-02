@@ -83,7 +83,7 @@ const Footer: React.FC = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2 w-full">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img className="h-20" src="/log.png"/>
+              <img className="h-20" src="/log.png" />
             </Link>
             <p className="text-body-sm text-gray-400 mb-6 w-full max-w-sm">
               Connecting families with certified healthcare professionals for
@@ -114,7 +114,7 @@ const Footer: React.FC = () => {
               <div className="flex items-start gap-3">
                 <MapPin className="w-full max-w-5 h-5 text-primary-500 flex-shrink-0 mt-1" />
                 <span className="text-body-sm">
-                  123 Healthcare Avenue, Port Harcourt, Rivers State, Nigeria
+                  Along Akala express Ibadan Oluyole Ext. Oyo State.
                 </span>
               </div>
             </div>
