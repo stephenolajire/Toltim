@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, MapPin, Loader2, Camera, Upload, AlertCircle } from "lucide-react";
+import {
+  X,
+  MapPin,
+  Loader2,
+  Camera,
+  Upload,
+  AlertCircle,
+  CreditCard,
+} from "lucide-react";
 import api from "../../../constant/api";
 import { useSpecialization } from "../../../constant/GlobalContext";
 import { toast } from "react-toastify";
@@ -57,88 +65,69 @@ export default function EditProfile({
   );
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
-  // Fetch specializations from the API
   const { data: specializationsData, isLoading: isLoadingSpecializations } =
     useSpecialization();
   const specializations: Specialization[] = specializationsData?.results || [];
 
-  // Get user role
   const userRole = localStorage.getItem("userType") || "nurse";
   const isCHW = userRole === "chw";
   const isNurse = userRole === "nurse";
 
-  // Convert time string (e.g., "9:00 AM" or "9AM") to 24-hour format (e.g., "09:00")
   const convertTo24Hour = (time: string): string => {
     if (!time || typeof time !== "string") return "09:00";
-
     const match = time.match(/(\d+):?(\d*)?\s*(AM|PM)/i);
     if (!match) return "09:00";
-
     let hours = parseInt(match[1]);
     const minutes = match[2] || "00";
     const period = match[3].toUpperCase();
-
     if (period === "PM" && hours !== 12) {
       hours += 12;
     } else if (period === "AM" && hours === 12) {
       hours = 0;
     }
-
     return `${hours.toString().padStart(2, "0")}:${minutes.padStart(2, "0")}`;
   };
 
-  // Convert 24-hour format (e.g., "09:00") to 12-hour format (e.g., "9:00 AM")
   const convertTo12Hour = (time: string): string => {
     const [hours, minutes] = time.split(":");
     let hour = parseInt(hours);
     const period = hour >= 12 ? "PM" : "AM";
-
     if (hour === 0) {
       hour = 12;
     } else if (hour > 12) {
       hour -= 12;
     }
-
     return `${hour}:${minutes} ${period}`;
   };
 
-  // Parse existing availability to get the first time slot (assuming uniform schedule)
   const parseAvailability = (
     availability: any[],
   ): { startTime: string; endTime: string } => {
     if (!availability || availability.length === 0) {
       return { startTime: "09:00", endTime: "17:00" };
     }
-
     const firstSlot = availability[0];
     if (!firstSlot || typeof firstSlot !== "string") {
       return { startTime: "09:00", endTime: "17:00" };
     }
-
-    // Try to parse "Monday 9AM-5PM" or "Monday: 9:00 AM - 5:00 PM" format
     const withDayMatch = firstSlot.match(
       /^(\w+)[:\s]+(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i,
     );
-
     if (withDayMatch) {
       return {
         startTime: convertTo24Hour(withDayMatch[2]),
         endTime: convertTo24Hour(withDayMatch[3]),
       };
     }
-
-    // Try to parse "10am-11am" format (without day)
     const withoutDayMatch = firstSlot.match(
       /^(\d+(?::\d+)?\s*(?:AM|PM))\s*[-–]\s*(\d+(?::\d+)?\s*(?:AM|PM))$/i,
     );
-
     if (withoutDayMatch) {
       return {
         startTime: convertTo24Hour(withoutDayMatch[1]),
         endTime: convertTo24Hour(withoutDayMatch[2]),
       };
     }
-
     return { startTime: "09:00", endTime: "17:00" };
   };
 
@@ -146,12 +135,10 @@ export default function EditProfile({
     parseAvailability(profileData.availability || []),
   );
 
-  // Get initial specialization values as array of IDs
   const getInitialSpecializations = (): number[] => {
     const spec = profileData.specialization;
     if (!spec) return [];
     if (Array.isArray(spec)) {
-      // Filter to ensure only numbers, not objects
       return spec
         .map((item) => (typeof item === "number" ? item : (item as any)?.id))
         .filter((id): id is number => typeof id === "number");
@@ -161,7 +148,6 @@ export default function EditProfile({
     );
   };
 
-  // Initialize form data based on role
   const [formData, setFormData] = useState(
     isCHW
       ? {
@@ -218,13 +204,11 @@ export default function EditProfile({
   const getUserLocation = () => {
     setLoadingLocation(true);
     setLocationError(null);
-
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser");
       setLoadingLocation(false);
       return;
     }
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setFormData((prev) => ({
@@ -248,33 +232,21 @@ export default function EditProfile({
 
   const handleInputChange = (e: any) => {
     const { name, value, type } = e.target;
-
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({
-        ...prev,
-        [name]: checked,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: checked }));
     } else if (type === "number") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: parseFloat(value) || 0,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: parseFloat(value) || 0 }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // Handle specialization checkbox changes
   const handleSpecializationChange = (id: number) => {
     setFormData((prev: any) => {
       const currentSpecs = prev.specialization as number[];
       const isSelected = currentSpecs.includes(id);
       console.log(id);
-
       return {
         ...prev,
         specialization: isSelected
@@ -291,14 +263,11 @@ export default function EditProfile({
         toast.error("Please select a valid image file");
         return;
       }
-
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Image size should be less than 5MB");
         return;
       }
-
       setSelectedImage(file);
-
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -311,27 +280,21 @@ export default function EditProfile({
     field: "startTime" | "endTime",
     value: string,
   ) => {
-    setWeeklySchedule((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setWeeklySchedule((prev) => ({ ...prev, [field]: value }));
   };
 
   const formatAvailabilityForSubmission = (): string[] => {
     const startTime12 = convertTo12Hour(weeklySchedule.startTime);
     const endTime12 = convertTo12Hour(weeklySchedule.endTime);
-
-    // Create availability for all days with the same time
     return DAYS_OF_WEEK.map((day) => `${day} ${startTime12}-${endTime12}`);
   };
 
   const handleSubmit = () => {
-    // Validate account number for both user types
     if (
       !formData.account_number ||
       formData.account_number.trim().length !== 10
     ) {
-      toast.error("Please enter a valid 10-digit VFD account number");
+      toast.error("Please enter a valid 10-digit account number");
       return;
     }
 
@@ -346,13 +309,10 @@ export default function EditProfile({
       updateProfileMutation.mutate(chwData);
     } else {
       const formDataToSend = new FormData();
-
-      // Send specialization as JSON array
       (formData.specialization || []).forEach((specId) => {
         formDataToSend.append("specialization", specId.toString());
       });
       formDataToSend.append("biography", formData.biography || "");
-
       const servicesArray = (formData.services || "")
         .split(",")
         .map((s) => s.trim())
@@ -361,21 +321,16 @@ export default function EditProfile({
         .split(",")
         .map((l) => l.trim())
         .filter((l) => l.length > 0);
-
-      // Format availability from weekly schedule (applies to all days)
       const availabilityArray = formatAvailabilityForSubmission();
-
       formDataToSend.append("services", JSON.stringify(servicesArray));
       formDataToSend.append("availability", JSON.stringify(availabilityArray));
       formDataToSend.append("languages", JSON.stringify(languagesArray));
       formDataToSend.append("latitude", (formData.latitude || 0).toString());
       formDataToSend.append("longitude", (formData.longitude || 0).toString());
       formDataToSend.append("account_number", formData.account_number.trim());
-
       if (selectedImage) {
         formDataToSend.append("profile_picture", selectedImage);
       }
-
       updateProfileMutation.mutate(formDataToSend);
     }
   };
@@ -395,48 +350,9 @@ export default function EditProfile({
         </div>
 
         <div className="p-6 space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-          {/* VFD Bank Notice - Shows for both user types */}
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 flex gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-semibold text-blue-900 mb-1">
-                Withdrawal Information
-              </p>
-              <p className="text-sm text-blue-700">
-                Our platform only supports withdrawals to VFD Bank accounts.
-                Please ensure you have a VFD Bank account before setting up
-                withdrawals.
-              </p>
-            </div>
-          </div>
-
-          {/* Account Number Field - Shows for both user types */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              VFD Bank Account Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="account_number"
-              value={formData.account_number}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-                setFormData((prev) => ({
-                  ...prev,
-                  account_number: value,
-                }));
-              }}
-              maxLength={10}
-              placeholder="Enter your 10-digit VFD account number"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              This account will be used for withdrawals
-            </p>
-          </div>
-
           {isNurse && (
             <>
+              {/* Profile Picture */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Profile Picture
@@ -455,7 +371,6 @@ export default function EditProfile({
                       </div>
                     )}
                   </div>
-
                   <div>
                     <label
                       htmlFor="profile-picture-input"
@@ -478,6 +393,7 @@ export default function EditProfile({
                 </div>
               </div>
 
+              {/* Specialization */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Specialization (Select one or more)
@@ -543,6 +459,7 @@ export default function EditProfile({
                 )}
               </div>
 
+              {/* Biography */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Biography
@@ -557,6 +474,7 @@ export default function EditProfile({
                 />
               </div>
 
+              {/* Services */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Services (comma-separated)
@@ -571,6 +489,7 @@ export default function EditProfile({
                 />
               </div>
 
+              {/* Languages */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Languages (comma-separated)
@@ -585,6 +504,7 @@ export default function EditProfile({
                 />
               </div>
 
+              {/* Weekly Availability */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
                   Weekly Availability (Monday - Sunday)
@@ -594,7 +514,6 @@ export default function EditProfile({
                     Set your working hours for the entire week (applies to all
                     days)
                   </p>
-
                   <div className="flex items-center gap-4 flex-col md:flex-row">
                     <div className="flex-1 w-full">
                       <label className="block text-xs text-gray-600 mb-1">
@@ -609,9 +528,7 @@ export default function EditProfile({
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                       />
                     </div>
-
                     <span className="text-gray-400 mt-5 hidden md:flex">—</span>
-
                     <div className="flex-1 w-full">
                       <label className="block text-xs text-gray-600 mb-1">
                         To
@@ -626,7 +543,6 @@ export default function EditProfile({
                       />
                     </div>
                   </div>
-
                   <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
                     <p className="text-xs text-green-800 font-medium mb-1">
                       Preview Schedule:
@@ -646,6 +562,7 @@ export default function EditProfile({
 
           {isCHW && (
             <>
+              {/* Years of Experience */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Years of Experience
@@ -661,6 +578,7 @@ export default function EditProfile({
                 />
               </div>
 
+              {/* Available Checkbox */}
               <div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -681,6 +599,7 @@ export default function EditProfile({
             </>
           )}
 
+          {/* Location */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
@@ -732,6 +651,48 @@ export default function EditProfile({
             {locationError && (
               <p className="text-red-500 text-sm mt-2">{locationError}</p>
             )}
+          </div>
+
+          {/* Bank Account Section - Bottom of form */}
+          <div className="border-t border-gray-200 pt-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                <CreditCard className="w-5 h-5 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Add a Bank Account to Withdraw Your Funds
+              </h3>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+              <p className="text-sm font-semibold text-amber-800 mb-1">Note:</p>
+              <p className="text-sm text-amber-700 leading-relaxed">
+                Our platform only supports accounts generated by Sync360. Kindly
+                download the Sync360 app, set up your account, and complete your
+                KYC to generate your dedicated account number.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Account Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="account_number"
+                value={formData.account_number}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+                  setFormData((prev) => ({ ...prev, account_number: value }));
+                }}
+                maxLength={10}
+                placeholder="Enter your 10-digit Sync360 account number"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                This account will be used for withdrawals
+              </p>
+            </div>
           </div>
         </div>
 
