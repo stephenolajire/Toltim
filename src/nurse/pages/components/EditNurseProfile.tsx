@@ -6,7 +6,6 @@ import {
   Loader2,
   Camera,
   Upload,
-  AlertCircle,
   CreditCard,
 } from "lucide-react";
 import api from "../../../constant/api";
