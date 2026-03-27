@@ -26,9 +26,9 @@ const AdminNurses: React.FC = () => {
   }
 
   const nurseData = data.results || [];
-  const totalCount = data.verification_summary.nurse.verified + data.verification_summary.nurse.unverified || 0;
-  const verifiedCount = data.verification_summary.nurse.verified || 0;
-  const unverifiedCount = data.verification_summary.nurse.unverified || 0;
+  const totalCount = data.count || 0;
+  const verifiedCount = data.verification_summary?.nurse?.verified ?? 0;
+  const unverifiedCount = data.verification_summary?.nurse?.unverified ?? 0;
 
   return (
     <div>

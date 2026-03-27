@@ -24,11 +24,10 @@ const AdminCHW: React.FC = () => {
   if (!data || !data.results) {
     return <Loading />;
   }
-
   const nurseData = data.results || [];
-  const totalCount = data.verification_summary.chw.verified + data.verification_summary.chw.unverified || 0;
-  const verifiedCount = data.verification_summary.chw.verified || 0;
-  const unverifiedCount = data.verification_summary.chw.unverified || 0;
+  const totalCount = data.count || 0;
+  const verifiedCount = data.verification_summary?.chw?.verified ?? 0;
+  const unverifiedCount = data.verification_summary?.chw?.unverified ?? 0;
 
   return (
     <div>
